@@ -49,6 +49,7 @@ export default function RootLayout() {
         <Stack.Screen name="verify" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="forgot-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
     </ThemeProvider>
   );

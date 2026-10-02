@@ -1,4 +1,5 @@
-import { Bookmark, BookmarkCheck, Headphones, Share2, X } from "lucide-react-native";
+import { router } from "expo-router";
+import { Bookmark, BookmarkCheck, Headphones, ImageIcon, Share2, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -104,6 +105,17 @@ export function AyahSheet({ ayah, onClose }: { ayah: MushafAyah | null; onClose:
               className="size-11 items-center justify-center rounded-2xl border border-border"
             >
               <Share2 size={20} color={muted} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="مشاركة كصورة"
+              onPress={() => {
+                onClose();
+                router.push({ pathname: "/share-ayah", params: { surah: String(ayah.surah), ayah: String(ayah.ayah) } });
+              }}
+              className="size-11 items-center justify-center rounded-2xl border border-gold/50 bg-accent-soft"
+            >
+              <ImageIcon size={20} color={primary} />
             </Pressable>
           </View>
 
