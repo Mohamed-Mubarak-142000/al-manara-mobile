@@ -46,3 +46,21 @@ assets/fonts/     خطوط المصحف والروايات (محوّلة من wo
 ## الكود المنقول من الموقع
 
 الملفات اللي في `src/core/` نسخ من ملفات الموقع، وكل ملف أوله سطر بيقول جاي منين. الفرق الوحيد إن `fetch(url, { next: { revalidate } })` اتبدلت بـ `cachedFetch(url, ttl)` (`src/core/http.ts`). دي بتخزن الرد على الجهاز، فأي شاشة اتفتحت مرة تكمل تشتغل من غير إنترنت. لو ملف اتعدل في الموقع، انقل التعديل هنا بإيدك.
+
+## يعتمد على الموقع في
+
+| الخدمة                                         | المسار في ريبو الموقع (`feat/mobile-api-v1`)               |
+| ---------------------------------------------- | ---------------------------------------------------------- |
+| إنشاء حساب، أكواد الإيميل، استعادة كلمة المرور | `POST /api/v1/auth/register` و`/auth/code` و`/auth/verify` |
+| بدء الاختبار وتصحيحه وإصدار الشهادة            | `POST /api/v1/exams/start` و`/exams/submit`                |
+| مصاحف الروايات السبع                           | `GET /api/v1/riwayat/{key}`                                |
+| إشعارات التذكير (الجمعة، الصيام، المواسم)      | جدول `push_tokens` + كرون التذكيرات                        |
+
+باقي البيانات (الختمة، الخطة، التسميع، موضع القراءة، الشهادات) بتتقري وتتكتب في Supabase مباشرة بالـ RLS.
+
+## قبل النشر
+
+- `eas init` لربط المشروع بحساب Expo. ده كمان شرط لتسجيل إشعارات الـ push.
+- إنشاء منتجات الشراء بنفس الأسماء في App Store Connect وGoogle Play Console: `almanara.donation.small` و`almanara.donation.medium` و`almanara.donation.large` (consumable)، و`almanara.supporter.lifetime` (non-consumable).
+- تطبيق migration `push_tokens` على Supabase، ونشر فرع `feat/mobile-api-v1` على الموقع.
+- ويدجت iOS (WidgetKit) لسه متعملتش. الموجود حاليًا ويدجت أندرويد بس.
