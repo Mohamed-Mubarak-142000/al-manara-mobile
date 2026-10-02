@@ -88,7 +88,7 @@ export async function rescheduleAdhan(location: UserLocation): Promise<number> {
   await Promise.all(
     upcoming.map((moment) =>
       Notifications.scheduleNotificationAsync({
-        content: { title: moment.title, body: moment.body, sound: "default", data: { kind: "adhan" } },
+        content: { title: moment.title, body: moment.body, sound: "default", data: { kind: "adhan", url: "/prayer" } },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: moment.date, channelId: CHANNEL_ID },
       }),
     ),

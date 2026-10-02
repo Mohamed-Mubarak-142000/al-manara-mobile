@@ -11,7 +11,7 @@ import { StateMessage } from "@/components/ui/StateMessage";
 import { audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
 import { DownloadButton } from "@/features/downloads/DownloadButton";
 import { useReciters } from "@/features/listen/useReciters";
-import { useSurahIndex } from "@/features/quran/useSurahIndex";
+import { getSurah } from "@/features/mushaf/mushaf";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function trackId(reciter: Reciter, moshaf: Moshaf, surah: number) {
@@ -24,7 +24,6 @@ export default function ReciterScreen() {
   const heroFg = useThemeColor("hero-fg");
   const primary = useThemeColor("primary");
   const { reciters, riwayat, failed, reload } = useReciters();
-  const { surahs } = useSurahIndex();
   const player = usePlayer();
   const playing = currentTrack(player);
   const reciter = reciters?.find((entry) => String(entry.id) === reciterId);
@@ -33,16 +32,15 @@ export default function ReciterScreen() {
 
   const tracks: Track[] = useMemo(() => {
     if (!reciter || !moshaf) return [];
-    const names = new Map(surahs?.map((surah) => [surah.number, surah.name]));
     return [...moshaf.surahList]
       .sort((a, b) => a - b)
       .map((surah) => ({
         id: trackId(reciter, moshaf, surah),
-        title: `سورة ${names.get(surah) ?? toArabicDigits(surah)}`,
+        title: `سورة ${getSurah(surah)?.name ?? toArabicDigits(surah)}`,
         artist: reciter.name,
         url: buildSurahAudioUrl(moshaf, surah),
       }));
-  }, [reciter, moshaf, surahs]);
+  }, [reciter, moshaf]);
 
   if (!reciter) {
     return (

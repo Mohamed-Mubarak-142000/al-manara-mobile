@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen, Section } from "@/components/ui/Screen";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { SectionGrid } from "@/features/home/SectionGrid";
+import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function hijriLine(): string | null {
@@ -66,6 +67,10 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
       </View>
+
+      <Section className="mt-2">
+        <ContinueReadingCard />
+      </Section>
 
       <Section className="mt-6">
         <Text className="font-sans-bold text-sm text-accent-strong">أقسام المنارة</Text>

@@ -5,3 +5,4 @@ ios
 android
 src/uniwind-types.d.ts
 src/lib/database.types.ts
+src/data

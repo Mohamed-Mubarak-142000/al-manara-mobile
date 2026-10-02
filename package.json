@@ -16,6 +16,7 @@
     "expo-font": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-image": "~57.0.5",
+    "expo-keep-awake": "~57.0.2",
     "expo-linear-gradient": "~57.0.2",
     "expo-linking": "~57.0.11",
     "expo-localization": "~57.0.2",
@@ -57,7 +58,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "sync:tokens": "node scripts/sync-tokens.mjs",
-    "doctor": "expo-doctor"
+    "doctor": "expo-doctor",
+    "build:mushaf": "node scripts/build-mushaf.mjs"
   },
   "private": true
 }

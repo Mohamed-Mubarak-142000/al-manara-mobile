@@ -7,6 +7,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
+import { useLastReadSync } from "@/features/account/useLastReadSync";
+import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -16,6 +18,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
   useAdhanSchedule();
+  useLastReadSync();
+  useNotificationLinks(fontsLoaded || !!fontError);
   const scheme = useColorScheme();
   const bg = useThemeColor("bg");
   const surface = useThemeColor("surface");
@@ -38,6 +42,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="login" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
     </ThemeProvider>
   );
