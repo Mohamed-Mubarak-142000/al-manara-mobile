@@ -138,7 +138,9 @@ export const MushafPageView = memo(function MushafPageView({
                       onLongPress={() => onAyahLongPress(ayah)}
                       suppressHighlighting
                       style={
-                        highlighted ? { backgroundColor: theme === "night" ? "rgba(217,179,90,0.22)" : "rgba(205,162,62,0.22)" } : undefined
+                        highlighted
+                          ? { backgroundColor: theme === "night" || theme === "dusk" ? "rgba(217,179,90,0.22)" : "rgba(205,162,62,0.22)" }
+                          : undefined
                       }
                     >
                       {tajweedFor(ayah.surah, ayah.ayah)?.map((segment, index) => (

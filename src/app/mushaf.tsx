@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useKeepAwake } from "expo-keep-awake";
-import { ALargeSmall, Bookmark, BookmarkCheck, ChevronRight, Download, Minus, Plus } from "lucide-react-native";
+import { ALargeSmall, Bookmark, BookmarkCheck, ChevronRight, Download, Lock, Minus, Plus } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -15,7 +15,16 @@ import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
 import { Button } from "@/components/ui/Button";
-import { FONT_SIZES, READER_THEMES, isBookmarked, reader, useReaderState, type ReaderTheme } from "@/features/mushaf/readerPrefs";
+import {
+  FONT_SIZES,
+  READER_THEMES,
+  SUPPORTER_THEMES,
+  isBookmarked,
+  reader,
+  useReaderState,
+  type ReaderTheme,
+} from "@/features/mushaf/readerPrefs";
+import { useSupporter } from "@/features/support/supportStore";
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, index) => index + 1);
 
@@ -27,6 +36,7 @@ export default function MushafScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const state = useReaderState();
+  const supporter = useSupporter();
   const player = usePlayer();
   const [page, setPage] = useState(initialPage);
   const [chrome, setChrome] = useState(true);
@@ -73,7 +83,7 @@ export default function MushafScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.shell, paddingTop: insets.top, paddingBottom: insets.bottom }}>
-      <StatusBar style={state.prefs.theme === "night" ? "light" : "dark"} hidden={!chrome} />
+      <StatusBar style={state.prefs.theme === "night" || state.prefs.theme === "dusk" ? "light" : "dark"} hidden={!chrome} />
       {riwayaKey !== "hafs" && !riwaya ? (
         <View className="flex-1 items-center justify-center gap-4 px-8">
           <Text className="text-center font-display-bold text-xl" style={{ color: theme.ink }}>
@@ -197,19 +207,30 @@ export default function MushafScreen() {
               })}
             </ScrollView>
             <Text className="mt-5 font-sans-bold text-sm text-fg-muted">لون الصفحة</Text>
-            <View className="mt-2 flex-row gap-2">
+            <View className="mt-2 flex-row flex-wrap gap-2">
               {(Object.keys(READER_THEMES) as ReaderTheme[]).map((key) => {
                 const option = READER_THEMES[key];
                 const active = key === state.prefs.theme;
+                const locked = SUPPORTER_THEMES.includes(key) && !supporter;
                 return (
                   <Pressable
                     key={key}
                     accessibilityRole="radio"
                     accessibilityState={{ selected: active }}
-                    onPress={() => reader.setTheme(key)}
-                    className={`flex-1 items-center rounded-2xl border-2 py-3 ${active ? "border-primary" : "border-border"}`}
+                    accessibilityHint={locked ? "متاح مع باقة الداعمين" : undefined}
+                    onPress={() => {
+                      if (!locked) return reader.setTheme(key);
+                      setSettingsOpen(false);
+                      router.push("/support");
+                    }}
+                    className={`min-w-[30%] flex-1 items-center rounded-2xl border-2 py-3 ${active ? "border-primary" : "border-border"}`}
                     style={{ backgroundColor: option.page }}
                   >
+                    {locked && (
+                      <View className="absolute end-2 top-2">
+                        <Lock size={12} color={option.accent} />
+                      </View>
+                    )}
                     <Text className="font-quran text-lg" style={{ color: option.ink }}>
                       بِسْمِ
                     </Text>

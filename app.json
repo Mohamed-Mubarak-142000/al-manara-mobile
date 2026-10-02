@@ -44,7 +44,9 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["ar"],
+          "supportedLocales": [
+            "ar"
+          ],
           "forcesRTL": true
         }
       ],
@@ -67,9 +69,12 @@
         {
           "microphonePermission": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك.",
           "speechRecognitionPermission": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
         }
-      ]
+      ],
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true,

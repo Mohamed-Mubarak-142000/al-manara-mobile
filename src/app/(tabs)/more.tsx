@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ChevronLeft, Download, LayoutGrid } from "lucide-react-native";
+import { ChevronLeft, Download, HandHeart, LayoutGrid } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
@@ -36,6 +36,24 @@ function DownloadsLink() {
   );
 }
 
+function SupportLink() {
+  const gold = useThemeColor("gold-soft");
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push("/support")} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+      <View className="flex-row items-center gap-3 rounded-3xl bg-hero p-4 shadow-lift">
+        <View className="size-11 items-center justify-center rounded-2xl bg-white/10">
+          <HandHeart size={22} color={gold} />
+        </View>
+        <View className="flex-1">
+          <Text className="font-display-bold text-base text-hero-fg">ادعم المنارة</Text>
+          <Text className="font-sans text-xs text-white/70">صدقة جارية تبقي التطبيق مجانيًا بلا إعلانات</Text>
+        </View>
+        <ChevronLeft size={18} color={gold} />
+      </View>
+    </Pressable>
+  );
+}
+
 export default function MoreScreen() {
   return (
     <Screen bleed>
@@ -48,6 +66,7 @@ export default function MoreScreen() {
       <Section className="mt-5 gap-3">
         <AccountCard />
         <DownloadsLink />
+        <SupportLink />
       </Section>
       <Section className="mt-6">
         <SectionGrid />
