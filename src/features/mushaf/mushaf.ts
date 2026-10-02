@@ -95,11 +95,11 @@ export function juzStartPages(): { juz: number; page: number }[] {
   return starts;
 }
 
-let boundaries: Boundaries | null = null;
+let starts: { pageStarts: AyahRef[]; juzStarts: AyahRef[]; hizbStarts: AyahRef[] } | null = null;
 
-/** Where every page, hizb, juz and surah begins, for the khatma arithmetic — from the bundle, so offline. */
-export function mushafBoundaries(): Boundaries {
-  if (boundaries) return boundaries;
+/** The first ayah of every page, juz and hizb (the shape the website's Quran-API helpers return). */
+export function mushafStarts() {
+  if (starts) return starts;
   const pageStarts: AyahRef[] = [];
   const juzStarts: AyahRef[] = [];
   const hizbStarts: AyahRef[] = [];
@@ -111,6 +111,16 @@ export function mushafBoundaries(): Boundaries {
     const hizb = Math.ceil(ayah.hizbQuarter / 4);
     if (!hizbStarts[hizb - 1]) hizbStarts[hizb - 1] = ref;
   }
+  starts = { pageStarts, juzStarts, hizbStarts };
+  return starts;
+}
+
+let boundaries: Boundaries | null = null;
+
+/** Where every page, hizb, juz and surah begins, for the khatma arithmetic — from the bundle, so offline. */
+export function mushafBoundaries(): Boundaries {
+  if (boundaries) return boundaries;
+  const { pageStarts, juzStarts, hizbStarts } = mushafStarts();
   const built = buildBoundaries(pageStarts, juzStarts, hizbStarts);
   if (!built) throw new Error("The bundled mushaf is missing page, juz or hizb starts");
   boundaries = built;
