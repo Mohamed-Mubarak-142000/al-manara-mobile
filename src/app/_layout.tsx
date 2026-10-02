@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
+import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -14,6 +15,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
+  useAdhanSchedule();
   const scheme = useColorScheme();
   const bg = useThemeColor("bg");
   const surface = useThemeColor("surface");
@@ -35,6 +37,7 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
     </ThemeProvider>
   );

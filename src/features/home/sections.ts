@@ -29,6 +29,6 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "ابتهالات", icon: MoonStar, description: "ابتهالات كبار المبتهلين" },
   { label: "المواقيت", icon: Clock, description: "مواقيت الصلاة واتجاه القبلة", href: "/prayer" },
   { label: "التقويم", icon: CalendarDays, description: "التقويم الهجري والميلادي" },
-  { label: "الأذكار", icon: Sparkles, description: "أذكار وأدعية يومك" },
+  { label: "الأذكار", icon: Sparkles, description: "أذكار وأدعية يومك", href: "/adhkar" },
   { label: "الأطفال", icon: Trees, description: "حديقة القرآن للأطفال" },
 ];

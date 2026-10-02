@@ -48,7 +48,20 @@
           "forcesRTL": true
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true,
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#003e32"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

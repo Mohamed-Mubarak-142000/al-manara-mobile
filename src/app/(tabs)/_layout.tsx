@@ -1,7 +1,10 @@
 import { Tabs } from "expo-router";
 import { BookOpen, Clock, Headphones, Home, LayoutGrid } from "lucide-react-native";
 
+import { MiniPlayer } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
+// Not re-exported from "expo-router"; the stock bar is wrapped so the mini player rides on top of it.
+import { BottomTabBar } from "expo-router/build/react-navigation/bottom-tabs";
 
 export default function TabsLayout() {
   const surface = useThemeColor("surface");
@@ -11,6 +14,12 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => (
+        <>
+          <MiniPlayer />
+          <BottomTabBar {...props} />
+        </>
+      )}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: primary,

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { AdhanSettingsCard } from "@/features/prayer/AdhanSettingsCard";
 import { requestPreciseLocation, type GeolocateResult } from "@/features/prayer/locationStore";
 import { usePrayerDay } from "@/features/prayer/usePrayerDay";
 
@@ -75,6 +76,7 @@ export default function PrayerScreen() {
         ) : (
           <StateMessage loading />
         )}
+        <AdhanSettingsCard />
       </Section>
     </Screen>
   );

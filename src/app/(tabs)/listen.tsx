@@ -1,48 +1,46 @@
-import { Headphones } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { router } from "expo-router";
+import { ChevronLeft, Headphones } from "lucide-react-native";
+import { useMemo, useState } from "react";
+import { FlatList, Pressable, Text, View } from "react-native";
 
-import { getReciters, type Reciter } from "@/core/quran/api";
+import type { Reciter } from "@/core/quran/api";
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { useReciters } from "@/features/listen/useReciters";
+import { useThemeColor } from "@/theme/useThemeColor";
 
-function ReciterRow({ reciter }: { reciter: Reciter }) {
+function ReciterRow({ reciter, riwayaCount }: { reciter: Reciter; riwayaCount: number }) {
+  const muted = useThemeColor("fg-muted");
   const surahCount = Math.max(...reciter.moshaf.map((moshaf) => moshaf.surahList.length), 0);
   return (
-    <View className="mx-4 mb-2.5 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
-      <View className="size-11 items-center justify-center rounded-full bg-primary-soft">
-        <Text className="font-display-bold text-base text-primary">{reciter.letter}</Text>
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push({ pathname: "/listen/[reciterId]", params: { reciterId: String(reciter.id) } })}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      <View className="mx-4 mb-2.5 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+        <View className="size-11 items-center justify-center rounded-full bg-primary-soft">
+          <Text className="font-display-bold text-base text-primary">{reciter.letter}</Text>
+        </View>
+        <View className="flex-1">
+          <Text className="font-display-bold text-base text-fg">{reciter.name}</Text>
+          <Text className="font-sans text-xs text-fg-muted">
+            {riwayaCount > 1 ? `${toArabicDigits(riwayaCount)} روايات · ` : ""}
+            {toArabicDigits(surahCount)} سورة
+          </Text>
+        </View>
+        <ChevronLeft size={18} color={muted} />
       </View>
-      <View className="flex-1">
-        <Text className="font-display-bold text-base text-fg">{reciter.name}</Text>
-        <Text className="font-sans text-xs text-fg-muted">
-          {toArabicDigits(reciter.moshaf.length)} {reciter.moshaf.length > 2 ? "مصاحف" : "مصحف"} · {toArabicDigits(surahCount)} سورة
-        </Text>
-      </View>
-    </View>
+    </Pressable>
   );
 }
 
 export default function ListenScreen() {
-  const [reciters, setReciters] = useState<Reciter[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+  const { reciters, failed, reload } = useReciters();
   const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    getReciters().then((list) => {
-      if (cancelled) return;
-      if (list.length) setReciters(list);
-      else setFailed(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [attempt]);
 
   const visible = useMemo(() => {
     if (!reciters) return [];
@@ -55,7 +53,7 @@ export default function ListenScreen() {
       className="flex-1 bg-bg"
       data={visible}
       keyExtractor={(reciter) => String(reciter.id)}
-      renderItem={({ item }) => <ReciterRow reciter={item} />}
+      renderItem={({ item }) => <ReciterRow reciter={item} riwayaCount={item.moshaf.length} />}
       keyboardShouldPersistTaps="handled"
       initialNumToRender={14}
       contentContainerStyle={{ paddingBottom: 32 }}
@@ -74,13 +72,7 @@ export default function ListenScreen() {
       }
       ListEmptyComponent={
         failed ? (
-          <StateMessage
-            message="تعذّر تحميل قائمة القرّاء."
-            onRetry={() => {
-              setFailed(false);
-              setAttempt((value) => value + 1);
-            }}
-          />
+          <StateMessage message="تعذّر تحميل قائمة القرّاء." onRetry={reload} />
         ) : reciters ? (
           <StateMessage message="لا يوجد قارئ بهذا الاسم." />
         ) : (
