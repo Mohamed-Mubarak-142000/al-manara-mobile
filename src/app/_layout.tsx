@@ -12,6 +12,7 @@ import { useNotificationLinks } from "@/features/notifications/useNotificationLi
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
+import { useWidgetSync } from "@/widgets/useWidgetSync";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 SplashScreen.preventAutoHideAsync();
@@ -21,6 +22,7 @@ export default function RootLayout() {
   useAdhanSchedule();
   useLastReadSync();
   usePushRegistration();
+  useWidgetSync();
   useNotificationLinks(fontsLoaded || !!fontError);
   const scheme = useColorScheme();
   const bg = useThemeColor("bg");

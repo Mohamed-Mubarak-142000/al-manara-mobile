@@ -74,7 +74,40 @@
           ]
         }
       ],
-      "expo-iap"
+      "expo-iap",
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "NextPrayer",
+              "label": "الصلاة القادمة",
+              "description": "موعد الصلاة القادمة ومواقيت اليوم",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "ContinueReading",
+              "label": "تابع القراءة",
+              "description": "افتح المصحف من حيث توقفت",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 3600000
+            }
+          ]
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
