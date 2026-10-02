@@ -1,5 +1,6 @@
 import type { Href } from "expo-router";
 import {
+  BookMarked,
   BookOpen,
   CalendarDays,
   Clock,
@@ -23,6 +24,7 @@ export interface AppSection {
 /** The website's NAV_ITEMS (src/components/site/nav.ts), in the same order and wording. */
 export const APP_SECTIONS: readonly AppSection[] = [
   { label: "المصحف", icon: BookOpen, description: "اقرأ القرآن الكريم في مصحف مصفّح", href: "/quran" },
+  { label: "الختمة", icon: BookMarked, description: "اختم القرآن بوِرد يومي تختاره", href: "/khatma" },
   { label: "الاستماع", icon: Headphones, description: "تلاوات لأكثر من مئتي قارئ", href: "/listen" },
   { label: "الإذاعة", icon: Radio, description: "إذاعة القرآن الكريم بث مباشر" },
   { label: "الأحاديث", icon: ScrollText, description: "أحاديث نبوية مع شرحها وفوائدها" },

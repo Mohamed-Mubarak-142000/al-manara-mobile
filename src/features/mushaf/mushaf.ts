@@ -1,3 +1,6 @@
+import { buildBoundaries, type Boundaries } from "@/core/khatma/schedule";
+import type { AyahRef } from "@/core/quran/textApi";
+
 /**
  * The bundled Hafs mushaf (src/data/mushaf-hafs.json, built by `npm run build:mushaf`).
  * Everything here is synchronous and offline: no screen that reads the Quran text waits on the network.
@@ -90,6 +93,28 @@ export function juzStartPages(): { juz: number; page: number }[] {
   const starts: { juz: number; page: number }[] = [];
   for (const ayah of load().ayahs) if (!starts[ayah.juz - 1]) starts[ayah.juz - 1] = { juz: ayah.juz, page: ayah.page };
   return starts;
+}
+
+let boundaries: Boundaries | null = null;
+
+/** Where every page, hizb, juz and surah begins, for the khatma arithmetic — from the bundle, so offline. */
+export function mushafBoundaries(): Boundaries {
+  if (boundaries) return boundaries;
+  const pageStarts: AyahRef[] = [];
+  const juzStarts: AyahRef[] = [];
+  const hizbStarts: AyahRef[] = [];
+  for (const ayah of load().ayahs) {
+    const ref = { surah: ayah.surah, ayah: ayah.ayah };
+    if (!pageStarts[ayah.page - 1]) pageStarts[ayah.page - 1] = ref;
+    if (!juzStarts[ayah.juz - 1]) juzStarts[ayah.juz - 1] = ref;
+    // A hizb is four quarters; it starts where its first quarter does.
+    const hizb = Math.ceil(ayah.hizbQuarter / 4);
+    if (!hizbStarts[hizb - 1]) hizbStarts[hizb - 1] = ref;
+  }
+  const built = buildBoundaries(pageStarts, juzStarts, hizbStarts);
+  if (!built) throw new Error("The bundled mushaf is missing page, juz or hizb starts");
+  boundaries = built;
+  return built;
 }
 
 /** Surahs 1 (whose first ayah is the basmala) and 9 (which has none) carry no separate basmala. */
