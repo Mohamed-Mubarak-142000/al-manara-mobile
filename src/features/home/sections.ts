@@ -4,6 +4,7 @@ import {
   BookOpen,
   CalendarDays,
   Clock,
+  GraduationCap,
   Headphones,
   MoonStar,
   Radio,
@@ -32,5 +33,6 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "المواقيت", icon: Clock, description: "مواقيت الصلاة واتجاه القبلة", href: "/prayer" },
   { label: "التقويم", icon: CalendarDays, description: "التقويم الهجري والميلادي" },
   { label: "الأذكار", icon: Sparkles, description: "أذكار وأدعية يومك", href: "/adhkar" },
+  { label: "الاختبارات", icon: GraduationCap, description: "اختبر حفظك جزءًا جزءًا واحصل على شهادة", href: "/exams" },
   { label: "الأطفال", icon: Trees, description: "حديقة القرآن للأطفال" },
 ];

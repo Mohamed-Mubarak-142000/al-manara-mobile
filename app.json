@@ -44,7 +44,9 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["ar"],
+          "supportedLocales": [
+            "ar"
+          ],
           "forcesRTL": true
         }
       ],
@@ -61,7 +63,8 @@
         {
           "color": "#003e32"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
