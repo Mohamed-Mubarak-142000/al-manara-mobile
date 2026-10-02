@@ -44,9 +44,7 @@
       [
         "expo-localization",
         {
-          "supportedLocales": [
-            "ar"
-          ],
+          "supportedLocales": ["ar"],
           "forcesRTL": true
         }
       ],
@@ -54,8 +52,7 @@
       [
         "expo-audio",
         {
-          "enableBackgroundPlayback": true,
-          "microphonePermission": false
+          "enableBackgroundPlayback": true
         }
       ],
       [
@@ -64,7 +61,15 @@
           "color": "#003e32"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك.",
+          "speechRecognitionPermission": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
