@@ -77,12 +77,17 @@ export function activeLearnerId(account: AccountState): string | null {
   return account.status === "signed-in" ? (account.activeLearner?.id ?? null) : null;
 }
 
-export type SignInResult = { ok: true } | { ok: false; message: string };
+/** For non-React callers (the API client). */
+export function activeLearnerIdNow(): string | null {
+  return activeLearnerId(state);
+}
+
+export type SignInResult = { ok: true } | { ok: false; message: string; needsVerification?: boolean };
 
 /** Same messages as the website's authErrorMessage() for the cases a sign-in form can hit. */
 function signInMessage(code: string | undefined, message: string): string {
   if (code === "invalid_credentials" || /invalid login credentials/i.test(message)) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-  if (code === "email_not_confirmed") return "لم يتم تأكيد البريد بعد. أكمل التأكيد من الموقع ثم سجّل الدخول.";
+  if (code === "email_not_confirmed") return "لم يتم تأكيد بريدك بعد. أدخل الكود الذي أرسلناه لك.";
   if (code === "over_request_rate_limit" || /rate limit/i.test(message)) return "محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.";
   return "تعذّر تسجيل الدخول الآن. تحقق من الاتصال وحاول مجددًا.";
 }
@@ -91,7 +96,8 @@ export const account = {
   async signIn(email: string, password: string): Promise<SignInResult> {
     if (!supabase) return { ok: false, message: "تسجيل الدخول غير مفعّل في هذه النسخة." };
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-    return error ? { ok: false, message: signInMessage(error.code, error.message) } : { ok: true };
+    if (!error) return { ok: true };
+    return { ok: false, message: signInMessage(error.code, error.message), needsVerification: error.code === "email_not_confirmed" };
   },
   async signOut() {
     await supabase?.auth.signOut();

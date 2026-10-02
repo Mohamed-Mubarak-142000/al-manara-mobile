@@ -3,6 +3,7 @@ import { LogOut, UserRound } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
+import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { account, useAccount } from "./accountStore";
@@ -45,7 +46,13 @@ export function AccountCard() {
           <Text className="font-display-bold text-base text-fg">{name}</Text>
           <Text className="font-sans text-xs text-fg-muted">{state.email}</Text>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="تسجيل الخروج" onPress={account.signOut} hitSlop={10} className="p-2">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="تسجيل الخروج"
+          onPress={() => unregisterPushToken().finally(account.signOut)}
+          hitSlop={10}
+          className="p-2"
+        >
           <LogOut size={20} color={muted} />
         </Pressable>
       </View>

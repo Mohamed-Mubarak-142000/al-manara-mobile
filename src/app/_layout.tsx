@@ -9,6 +9,7 @@ import { useColorScheme } from "react-native";
 
 import { useLastReadSync } from "@/features/account/useLastReadSync";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
+import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -19,6 +20,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
   useAdhanSchedule();
   useLastReadSync();
+  usePushRegistration();
   useNotificationLinks(fontsLoaded || !!fontError);
   const scheme = useColorScheme();
   const bg = useThemeColor("bg");
@@ -43,6 +45,10 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="login" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="register" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="verify" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="forgot-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
     </ThemeProvider>
   );
