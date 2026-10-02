@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Real env file (public values only, but keep project URLs out of git)
+.env

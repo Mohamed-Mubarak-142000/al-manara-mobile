@@ -1,56 +1,48 @@
-# Welcome to your Expo app 👋
+# المنارة — تطبيق الموبايل
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+تطبيق iOS وAndroid لمنصة المنارة، مبني بـ Expo (React Native). ريبو منفصل عن الموقع (`eslam-platform`)، لكنه يستخدم **نفس الباك إند**: نفس مشروع Supabase (الحسابات والجداول والـ RLS)، ونفس مصادر المحتوى (mp3quran وalquran.cloud وaladhan وغيرها).
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## التشغيل
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env          # ضع مفاتيح Supabase العامة (نفس مفاتيح الموقع العامة)
+npx expo start                # ثم افتح التطبيق على جهاز أو محاكي
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+بعض المكتبات فيها كود native، فالأفضل التشغيل بـ development build (`npx expo run:android` أو `eas build --profile development`) بدل Expo Go. اتجاه RTL الإجباري كمان مبيشتغلش في Expo Go.
 
-### Other setup steps
+## الأوامر
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| الأمر                 | الوظيفة                                     |
+| --------------------- | ------------------------------------------- |
+| `npm run typecheck`   | فحص TypeScript                              |
+| `npm run lint`        | ESLint                                      |
+| `npm run format`      | Prettier بنفس إعدادات الموقع                |
+| `npm run sync:tokens` | نسخ ألوان الهوية من `globals.css` في الموقع |
+| `npm run doctor`      | فحص إعدادات Expo                            |
 
-## Learn more
+## البنية
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+src/app/          الشاشات (Expo Router): (tabs) والقارئ quran/[surah]
+src/core/         منطق ومصادر بيانات منقولة من الموقع، TypeScript نقي
+src/features/     منطق خاص بالموبايل (الموقع الجغرافي، المواقيت، الرئيسية…)
+src/components/   مكونات الواجهة بنفس شكل الموقع (Button وPageHeader وCard…)
+src/theme/        الخطوط وقراءة ألوان الثيم من JS
+src/global.css    الـ design system (Tailwind v4 عن طريق Uniwind)
+src/lib/          Supabase client وأنواع قاعدة البيانات
+assets/fonts/     خطوط المصحف والروايات (محوّلة من woff2 الموقع إلى ttf)
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## الـ Design System
 
-## Join the community
+- الستايل بـ **Uniwind** (Tailwind v4 لـ React Native)، فأسماء الكلاسات هي نفسها أسماء كلاسات الموقع.
+- ألوان الهوية (`emerald` و`gold` و`ivory`…) بتتنسخ من الموقع بـ `npm run sync:tokens`. متعدلهاش في `global.css` يدويًا.
+- في الشاشات استخدم الألوان الدلالية (`bg-bg`، `bg-surface`، `text-fg`، `text-fg-muted`، `bg-primary`، `text-accent`…). دي بتتبدل تلقائيًا بين الوضع الفاتح والليلي.
+- لما تحتاج لون كقيمة (أيقونة أو SVG أو navigator)، استخدم `useThemeColor("primary")`.
+- الخطوط: `font-sans` / `font-sans-bold` (Cairo)، `font-display-bold` (Alexandria)، `font-quran` (KFGQPC Uthmanic Hafs)، `font-kids` (Baloo Bhaijaan 2). كل وزن عائلة لوحده، فاستخدم `font-sans-bold` مش `font-bold`.
 
-Join our community of developers creating universal apps.
+## الكود المنقول من الموقع
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+الملفات اللي في `src/core/` نسخ من ملفات الموقع، وكل ملف أوله سطر بيقول جاي منين. الفرق الوحيد إن `fetch(url, { next: { revalidate } })` اتبدلت بـ `cachedFetch(url, ttl)` (`src/core/http.ts`). دي بتخزن الرد على الجهاز، فأي شاشة اتفتحت مرة تكمل تشتغل من غير إنترنت. لو ملف اتعدل في الموقع، انقل التعديل هنا بإيدك.

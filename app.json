@@ -1,21 +1,25 @@
 {
   "expo": {
-    "name": "almanara-mobile",
-    "slug": "almanara-mobile",
+    "name": "المنارة",
+    "slug": "almanara",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "almanaramobile",
+    "icon": "./assets/images/brand/icon.png",
+    "scheme": "almanara",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#fbf8f1",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.almanara.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "ar"
+      }
     },
     "android": {
+      "package": "com.almanara.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#003e32",
+        "foregroundImage": "./assets/images/brand/icon-maskable.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -28,11 +32,23 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#003e32",
+          "image": "./assets/images/brand/logo.png",
+          "imageWidth": 140,
+          "dark": {
+            "backgroundColor": "#012a22",
+            "image": "./assets/images/brand/logo.png"
+          }
         }
-      ]
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": ["ar"],
+          "forcesRTL": true
+        }
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

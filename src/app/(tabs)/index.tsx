@@ -1,0 +1,77 @@
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { BookOpen, Headphones } from "lucide-react-native";
+import { Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { getHijriDate } from "@/core/calendar/hijriDate";
+import { toArabicDigits } from "@/core/text/arabic";
+import { Button } from "@/components/ui/Button";
+import { Screen, Section } from "@/components/ui/Screen";
+import { NextPrayerCard } from "@/features/home/NextPrayerCard";
+import { SectionGrid } from "@/features/home/SectionGrid";
+import { useThemeColor } from "@/theme/useThemeColor";
+
+function hijriLine(): string | null {
+  try {
+    const hijri = getHijriDate();
+    return `${toArabicDigits(hijri.day)} ${hijri.monthName} ${toArabicDigits(hijri.year)} هـ`;
+  } catch {
+    return null;
+  }
+}
+
+export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const bg = useThemeColor("bg");
+  const enter = (index: number) => FadeInDown.duration(700).delay(150 + index * 120);
+  const hijri = hijriLine();
+
+  return (
+    <Screen bleed>
+      <View className="overflow-hidden bg-emerald-night" style={{ paddingTop: insets.top + 24 }}>
+        <Image source={require("@/assets/images/scenes/quran-terrace.png")} contentFit="cover" style={{ position: "absolute", inset: 0 }} />
+        <LinearGradient
+          colors={["rgba(1,42,34,0.35)", "rgba(1,42,34,0.85)", "#012a22"]}
+          locations={[0, 0.45, 1]}
+          style={{ position: "absolute", inset: 0 }}
+        />
+        <LinearGradient colors={["transparent", bg]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 64 }} />
+
+        <View className="px-5 pb-14">
+          <Animated.View entering={enter(0)} className="flex-row">
+            <View className="rounded-full border border-gold/30 bg-white/10 px-4 py-1.5">
+              <Text className="font-sans-bold text-sm text-gold-soft">{hijri ?? "بسم الله نبدأ"}</Text>
+            </View>
+          </Animated.View>
+          <Animated.Text entering={enter(1)} className="mt-5 font-display-bold text-[34px] leading-[54px] text-white">
+            علمٌ ينير قلبك،{"\n"}
+            <Text className="text-gold-soft">ومعرفةٌ ترافق يومك</Text>
+          </Animated.Text>
+          <Animated.Text entering={enter(2)} className="mt-3 font-sans text-base leading-8 text-white/80">
+            اقرأ القرآن الكريم، واستمع لأجمل التلاوات، واجعل للذكر مكانًا ثابتًا في يومك.
+          </Animated.Text>
+          <Animated.View entering={enter(3)} className="mt-6 flex-row flex-wrap gap-3">
+            <Button variant="gold" icon={BookOpen} onPress={() => router.push("/quran")}>
+              اقرأ القرآن
+            </Button>
+            <Button variant="light" icon={Headphones} onPress={() => router.push("/listen")}>
+              استمع
+            </Button>
+          </Animated.View>
+          <Animated.View entering={enter(4)} className="mt-8">
+            <NextPrayerCard />
+          </Animated.View>
+        </View>
+      </View>
+
+      <Section className="mt-6">
+        <Text className="font-sans-bold text-sm text-accent-strong">أقسام المنارة</Text>
+        <Text className="mb-4 mt-1 font-display-bold text-2xl text-fg">كل ما تحتاجه في يومك</Text>
+        <SectionGrid />
+      </Section>
+    </Screen>
+  );
+}

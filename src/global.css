@@ -1,9 +1,93 @@
-:root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+@import "tailwindcss";
+@import "uniwind";
+
+/*
+ * The Al-Manara design system, shared with the website.
+ *
+ * The brand palette between the @sync markers is copied from eslam-platform/src/app/globals.css by
+ * `npm run sync:tokens` — edit it on the website and re-run the script, never here.
+ * Screens should prefer the semantic tokens below (bg-surface, text-fg…), which follow light/dark mode.
+ */
+@theme {
+  /* @sync:brand:start */
+  --color-ivory: #fbf8f1;
+  --color-ivory-deep: #f3ecdc;
+  --color-parchment: #f7f0df;
+  --color-ink: #183d34;
+  --color-muted: #68766e;
+  --color-line: #e5e6dc;
+  --color-emerald: #005544;
+  --color-emerald-deep: #003e32;
+  --color-emerald-night: #012a22;
+  --color-emerald-soft: #dceae5;
+  --color-emerald-mist: #eef5f2;
+  --color-gold: #cda23e;
+  --color-gold-deep: #9c7a26;
+  --color-gold-soft: #e8d7a6;
+  --color-gold-mist: #f7efdc;
+  --color-rose: #e0526b;
+  --color-sky: #2f9bd6;
+  --shadow-soft: 0 1px 2px rgb(24 61 52 / 6%), 0 8px 24px -12px rgb(24 61 52 / 18%);
+  --shadow-lift: 0 2px 4px rgb(24 61 52 / 6%), 0 22px 44px -18px rgb(24 61 52 / 32%);
+  --shadow-gold: 0 10px 30px -12px rgb(205 162 62 / 55%);
+  /* @sync:brand:end */
+
+  /* React Native has no font-weight synthesis: every weight is its own loaded family. */
+  --font-sans: "Cairo_400Regular";
+  --font-sans-medium: "Cairo_500Medium";
+  --font-sans-semibold: "Cairo_600SemiBold";
+  --font-sans-bold: "Cairo_700Bold";
+  --font-sans-black: "Cairo_800ExtraBold";
+  --font-display: "Alexandria_600SemiBold";
+  --font-display-bold: "Alexandria_700Bold";
+  --font-display-black: "Alexandria_800ExtraBold";
+  --font-quran: "UthmanicHafs";
+  --font-quran-fallback: "AmiriQuran_400Regular";
+  --font-kids: "BalooBhaijaan2_600SemiBold";
+  --font-kids-bold: "BalooBhaijaan2_800ExtraBold";
+}
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-bg: #fbf8f1;
+      --color-bg-deep: #f3ecdc;
+      --color-surface: #ffffff;
+      --color-surface-alt: #f7f0df;
+      --color-fg: #183d34;
+      --color-fg-muted: #68766e;
+      --color-border: #e5e6dc;
+      --color-primary: #005544;
+      --color-primary-strong: #003e32;
+      --color-primary-soft: #eef5f2;
+      --color-on-primary: #fbf8f1;
+      --color-accent: #cda23e;
+      --color-accent-strong: #9c7a26;
+      --color-accent-soft: #f7efdc;
+      --color-hero: #003e32;
+      --color-hero-fg: #fbf8f1;
+      --color-danger: #e0526b;
+    }
+
+    /* The night palette grows out of the reader's night theme: deep emerald ground, warm ivory text. */
+    @variant dark {
+      --color-bg: #0a1714;
+      --color-bg-deep: #071210;
+      --color-surface: #10221d;
+      --color-surface-alt: #152b25;
+      --color-fg: #ede6d4;
+      --color-fg-muted: #9db0a6;
+      --color-border: #22392f;
+      --color-primary: #3aa688;
+      --color-primary-strong: #5cc2a4;
+      --color-primary-soft: #12302a;
+      --color-on-primary: #04130f;
+      --color-accent: #d9b356;
+      --color-accent-strong: #e8c873;
+      --color-accent-soft: #2a2414;
+      --color-hero: #012a22;
+      --color-hero-fg: #ede6d4;
+      --color-danger: #ef7186;
+    }
+  }
 }
