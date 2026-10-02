@@ -34,13 +34,17 @@ function tracksFrom(ayah: MushafAyah, voice: Voice): Track[] {
     }));
 }
 
-export function AyahSheet({ ayah, onClose }: { ayah: MushafAyah | null; onClose: () => void }) {
+/**
+ * `riwaya` names another riwaya being read: its ayah numbering differs from Hafs, so the Hafs-keyed
+ * extras (recitation, tafsir, the image card, bookmarks) are left out rather than shown misaligned.
+ */
+export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; riwaya: string | null; onClose: () => void }) {
   const insets = useSafeAreaInsets();
   const state = useReaderState();
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   const [tafsir, setTafsir] = useState<{ surah: number; list: TafsirAyah[] } | null>(null);
-  const surah = ayah?.surah;
+  const surah = riwaya ? undefined : ayah?.surah;
   const list = surah !== undefined ? (tafsirMemory.get(surah) ?? (tafsir?.surah === surah ? tafsir.list : undefined)) : undefined;
 
   useEffect(() => {
@@ -76,28 +80,31 @@ export function AyahSheet({ ayah, onClose }: { ayah: MushafAyah | null; onClose:
           </View>
 
           <View className="mt-4 flex-row gap-2">
-            {(Object.keys(VOICES) as Voice[]).map((voice) => (
+            {!riwaya &&
+              (Object.keys(VOICES) as Voice[]).map((voice) => (
+                <Pressable
+                  key={voice}
+                  accessibilityRole="button"
+                  onPress={() => {
+                    audio.playQueue(tracksFrom(ayah, voice), 0);
+                    onClose();
+                  }}
+                  className="flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl bg-primary py-2.5"
+                >
+                  <Headphones size={16} color="#fbf8f1" />
+                  <Text className="font-sans-bold text-sm text-on-primary">{VOICES[voice].label}</Text>
+                </Pressable>
+              ))}
+            {!riwaya && (
               <Pressable
-                key={voice}
                 accessibilityRole="button"
-                onPress={() => {
-                  audio.playQueue(tracksFrom(ayah, voice), 0);
-                  onClose();
-                }}
-                className="flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl bg-primary py-2.5"
+                accessibilityLabel={marked ? "إزالة العلامة" : "حفظ علامة"}
+                onPress={() => reader.toggleBookmark({ surah: ayah.surah, ayah: ayah.ayah, page: ayah.page })}
+                className="size-11 items-center justify-center rounded-2xl border border-border"
               >
-                <Headphones size={16} color="#fbf8f1" />
-                <Text className="font-sans-bold text-sm text-on-primary">{VOICES[voice].label}</Text>
+                {marked ? <BookmarkCheck size={20} color={primary} /> : <Bookmark size={20} color={muted} />}
               </Pressable>
-            ))}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={marked ? "إزالة العلامة" : "حفظ علامة"}
-              onPress={() => reader.toggleBookmark({ surah: ayah.surah, ayah: ayah.ayah, page: ayah.page })}
-              className="size-11 items-center justify-center rounded-2xl border border-border"
-            >
-              {marked ? <BookmarkCheck size={20} color={primary} /> : <Bookmark size={20} color={muted} />}
-            </Pressable>
+            )}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="مشاركة"
@@ -106,29 +113,37 @@ export function AyahSheet({ ayah, onClose }: { ayah: MushafAyah | null; onClose:
             >
               <Share2 size={20} color={muted} />
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="مشاركة كصورة"
-              onPress={() => {
-                onClose();
-                router.push({ pathname: "/share-ayah", params: { surah: String(ayah.surah), ayah: String(ayah.ayah) } });
-              }}
-              className="size-11 items-center justify-center rounded-2xl border border-gold/50 bg-accent-soft"
-            >
-              <ImageIcon size={20} color={primary} />
-            </Pressable>
+            {!riwaya && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="مشاركة كصورة"
+                onPress={() => {
+                  onClose();
+                  router.push({ pathname: "/share-ayah", params: { surah: String(ayah.surah), ayah: String(ayah.ayah) } });
+                }}
+                className="size-11 items-center justify-center rounded-2xl border border-gold/50 bg-accent-soft"
+              >
+                <ImageIcon size={20} color={primary} />
+              </Pressable>
+            )}
           </View>
 
-          <ScrollView className="mt-4" showsVerticalScrollIndicator={false}>
-            <Text className="font-sans-bold text-sm text-accent-strong">التفسير الميسر</Text>
-            {tafsirText ? (
-              <Text className="mt-2 font-sans text-base leading-8 text-fg">{tafsirText}</Text>
-            ) : list ? (
-              <Text className="mt-2 font-sans text-sm text-fg-muted">تعذّر تحميل التفسير. يحتاج أول فتح لاتصال بالإنترنت.</Text>
-            ) : (
-              <ActivityIndicator className="mt-4" color={primary} />
-            )}
-          </ScrollView>
+          {riwaya ? (
+            <Text className="mt-4 font-sans text-sm leading-6 text-fg-muted">
+              أنت تقرأ برواية {riwaya}. التفسير والاستماع آية بآية متاحان برواية حفص.
+            </Text>
+          ) : (
+            <ScrollView className="mt-4" showsVerticalScrollIndicator={false}>
+              <Text className="font-sans-bold text-sm text-accent-strong">التفسير الميسر</Text>
+              {tafsirText ? (
+                <Text className="mt-2 font-sans text-base leading-8 text-fg">{tafsirText}</Text>
+              ) : list ? (
+                <Text className="mt-2 font-sans text-sm text-fg-muted">تعذّر تحميل التفسير. يحتاج أول فتح لاتصال بالإنترنت.</Text>
+              ) : (
+                <ActivityIndicator className="mt-4" color={primary} />
+              )}
+            </ScrollView>
+          )}
         </View>
       )}
     </Modal>

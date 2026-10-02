@@ -1,6 +1,8 @@
 import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 
+import type { RiwayaKey } from "./riwayat";
+
 export type ReaderTheme = "light" | "sepia" | "night";
 
 /** The website reader's three themes (MushafReader.tsx THEMES), as plain values. */
@@ -18,6 +20,9 @@ export const FONT_SIZES = [19, 22, 25, 28, 32] as const;
 export interface ReaderPrefs {
   theme: ReaderTheme;
   fontStep: number;
+  /** On by default, like the website reader. */
+  tajweed: boolean;
+  riwaya: RiwayaKey;
 }
 
 export interface Bookmark {
@@ -41,7 +46,7 @@ interface ReaderState {
 }
 
 const KEY = "al-manara:reader:v1";
-const DEFAULTS: ReaderState = { prefs: { theme: "light", fontStep: 1 }, bookmarks: [], lastRead: null };
+const DEFAULTS: ReaderState = { prefs: { theme: "light", fontStep: 1, tajweed: true, riwaya: "hafs" }, bookmarks: [], lastRead: null };
 
 let cached: ReaderState | null = null;
 const listeners = new Set<() => void>();
@@ -86,6 +91,12 @@ export const reader = {
   },
   setTheme(theme: ReaderTheme) {
     write({ prefs: { ...read().prefs, theme } });
+  },
+  setRiwaya(riwaya: RiwayaKey) {
+    write({ prefs: { ...read().prefs, riwaya } });
+  },
+  setTajweed(tajweed: boolean) {
+    write({ prefs: { ...read().prefs, tajweed } });
   },
   setFontStep(fontStep: number) {
     write({ prefs: { ...read().prefs, fontStep: Math.max(0, Math.min(FONT_SIZES.length - 1, fontStep)) } });
