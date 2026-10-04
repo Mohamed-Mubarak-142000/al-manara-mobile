@@ -13,10 +13,12 @@ import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
+import { applySavedTextScale } from "@/theme/textScale";
 import { useWidgetSync } from "@/widgets/useWidgetSync";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 SplashScreen.preventAutoHideAsync();
+applySavedTextScale();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
