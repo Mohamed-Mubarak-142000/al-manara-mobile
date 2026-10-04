@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { recordActivity } from "@/features/journey/progress";
 import { getSurah } from "@/features/mushaf/mushaf";
 import { reader, useReaderState } from "@/features/mushaf/readerPrefs";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +43,7 @@ export function useLastReadSync() {
     const client = supabase;
     const timer = setTimeout(() => {
       lastPushed.current = lastRead.at;
+      recordActivity(learnerId);
       client
         .from("reading_position")
         .upsert(

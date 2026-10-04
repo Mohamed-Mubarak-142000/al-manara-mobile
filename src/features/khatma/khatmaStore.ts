@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { nextPortion, pagesForDuration, TOTAL_AYAHS } from "@/core/khatma/schedule";
 import { planDay } from "@/core/plan/schedule";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
+import { recordActivity } from "@/features/journey/progress";
 import { mushafBoundaries } from "@/features/mushaf/mushaf";
 import type { KhatmaRow, KhatmaUnit } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
@@ -206,6 +207,7 @@ export const khatma = {
       return { ok: true };
     }
 
+    recordActivity(learnerId);
     const { error: logError } = await supabase
       .from("khatma_log")
       .insert({ khatma_id: row.id, learner_id: learnerId, day: today, from_ayah: portion.from, to_ayah: portion.to });

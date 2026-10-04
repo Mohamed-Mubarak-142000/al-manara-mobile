@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { audio } from "@/features/audio/playerStore";
+import { recordActivity } from "@/features/journey/progress";
 import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mushaf";
 import { useSpeech, type SpeechError } from "@/features/tasmee/useSpeech";
 import { supabase } from "@/lib/supabase";
@@ -90,6 +91,7 @@ export default function TasmeeSessionScreen() {
       mistakes: final.filter((item) => item.mark === "mistake").length,
     });
     setSaved(error ? "failed" : "saved");
+    if (!error) recordActivity(learnerId);
   }
 
   function markMany(marks: Map<number, Mark>) {

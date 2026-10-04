@@ -14,6 +14,7 @@ import {
 import { buildJuzRanges, type JuzRange } from "@/core/progress/juz";
 import { getSurahAyahCount } from "@/core/quran/surahAyahCounts";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
+import { recordActivity, scheduleCompletedSurahs } from "@/features/journey/progress";
 import { mushafStarts } from "@/features/mushaf/mushaf";
 import { supabase } from "@/lib/supabase";
 
@@ -108,6 +109,11 @@ async function markMemorized(learnerId: string, groups: { surah: number; ayahs: 
       .from("memorized_ayahs")
       .upsert(rows.slice(index, index + 500), { onConflict: "learner_id,surah,ayah", ignoreDuplicates: true });
   }
+  recordActivity(learnerId);
+  await scheduleCompletedSurahs(
+    learnerId,
+    groups.map((group) => group.surah),
+  );
 }
 
 /** Every ayah of the given whole surahs and juz, per surah (the website's knownAyahs). */
