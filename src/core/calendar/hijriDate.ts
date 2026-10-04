@@ -1,4 +1,6 @@
-// Ported from eslam-platform/src/features/calendar/hijriDate.ts — keep in sync by hand.
+// Ported from eslam-platform/src/features/calendar/hijriDate.ts — keep in sync by hand (plus a fallback below).
+import umalqura from "@umalqura/core";
+
 export interface HijriDate {
   day: number;
   month: number;
@@ -26,13 +28,57 @@ function nameFormatter(): Intl.DateTimeFormat {
   return names;
 }
 
+// App-only fallback (not on the website): Hermes on some devices has no Umm al-Qura calendar in Intl
+// and formats the Gregorian date instead. @umalqura/core carries the Umm al-Qura table (checked to match
+// Intl's islamic-umalqura day for day from 2019 to 2029).
+const HIJRI_MONTH_NAMES = [
+  "محرم",
+  "صفر",
+  "ربيع الأول",
+  "ربيع الآخر",
+  "جمادى الأولى",
+  "جمادى الآخرة",
+  "رجب",
+  "شعبان",
+  "رمضان",
+  "شوال",
+  "ذو القعدة",
+  "ذو الحجة",
+];
+
+function tableHijri(date: Date): { day: number; month: number; year: number } {
+  const value = umalqura(date);
+  return { day: value.hd, month: value.hm, year: value.hy };
+}
+
+let intlWorks: boolean | null = null;
+
 export function getHijriDate(date: Date = new Date()): HijriDate {
-  const parts = numericFormatter().formatToParts(date);
-  const day = Number(parts.find((part) => part.type === "day")?.value ?? "0");
-  const month = Number(parts.find((part) => part.type === "month")?.value ?? "0");
-  const year = Number(parts.find((part) => part.type === "year")?.value ?? "0");
-  const monthName = nameFormatter().format(date);
-  return { day, month, monthName, year, isRamadan: month === RAMADAN_MONTH_NUMBER };
+  if (intlWorks !== false) {
+    try {
+      const parts = numericFormatter().formatToParts(date);
+      const day = Number(parts.find((part) => part.type === "day")?.value ?? "0");
+      const month = Number(parts.find((part) => part.type === "month")?.value ?? "0");
+      const year = Number(parts.find((part) => part.type === "year")?.value ?? "0");
+      // A Gregorian year back means the calendar extension isn't there.
+      if (year > 1300 && year < 1600 && month >= 1 && month <= 12) {
+        intlWorks = true;
+        const monthName = nameFormatter().format(date);
+        return {
+          day,
+          month,
+          monthName: /[0-9]/.test(monthName) ? HIJRI_MONTH_NAMES[month - 1]! : monthName,
+          year,
+          isRamadan: month === RAMADAN_MONTH_NUMBER,
+        };
+      }
+    } catch {
+      // Fall through to the arithmetic calendar.
+    }
+    intlWorks = false;
+  }
+  const { day, month, year } = tableHijri(date);
+  return { day, month, monthName: HIJRI_MONTH_NAMES[month - 1]!, year, isRamadan: month === RAMADAN_MONTH_NUMBER };
 }
 
 /** Searches forward day-by-day for the next Gregorian date that is the 1st of Ramadan. */

@@ -1,4 +1,5 @@
-import { Clock, LocateFixed } from "lucide-react-native";
+import { router } from "expo-router";
+import { CalendarRange, Clock, Compass, LocateFixed } from "lucide-react-native";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
@@ -76,6 +77,14 @@ export default function PrayerScreen() {
         ) : (
           <StateMessage loading />
         )}
+        <View className="mt-4 flex-row gap-3">
+          <Button variant="outline" icon={CalendarRange} className="flex-1" onPress={() => router.push("/prayer-month")}>
+            جدول الشهر
+          </Button>
+          <Button variant="outline" icon={Compass} className="flex-1" onPress={() => router.push("/qibla")}>
+            اتجاه القبلة
+          </Button>
+        </View>
         <AdhanSettingsCard />
       </Section>
     </Screen>
