@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { account } from "@/features/account/accountStore";
-import { AuthField, AuthLayout, FormError, TextLink } from "@/features/account/AuthLayout";
+import { AuthField, AuthLayout, FormError, GoogleButton, TextLink } from "@/features/account/AuthLayout";
 import { authFlows } from "@/features/account/authFlows";
 
 /** Sign-in with the website account. */
@@ -35,6 +35,7 @@ export default function LoginScreen() {
 
   return (
     <AuthLayout title="تسجيل الدخول" description="بنفس حسابك على موقع المنارة، ليتابع معك حفظك وختمتك وموضع قراءتك أينما كنت.">
+      <GoogleButton onDone={() => router.back()} />
       <AuthField
         label="البريد الإلكتروني"
         value={email}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import { AuthField, AuthLayout, FormError, TextLink, emailProblem, passwordProblem } from "@/features/account/AuthLayout";
+import { AuthField, AuthLayout, FormError, GoogleButton, TextLink, emailProblem, passwordProblem } from "@/features/account/AuthLayout";
 import { authFlows } from "@/features/account/authFlows";
 
 type Errors = Partial<Record<"fullName" | "email" | "password" | "confirm", string>>;
@@ -40,6 +40,7 @@ export default function RegisterScreen() {
 
   return (
     <AuthLayout title="حساب جديد" description="أنشئ حسابك مرة واحدة واستخدمه على الموقع والتطبيق.">
+      <GoogleButton onDone={() => router.dismissAll()} />
       <AuthField
         label="الاسم"
         value={fullName}

@@ -21,6 +21,8 @@ export const supabase: SupabaseClient<Database> | null =
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: false,
+          // PKCE: the Google sign-in comes back to the app with a one-time code, exchanged on the device.
+          flowType: "pkce",
         },
       })
     : null;

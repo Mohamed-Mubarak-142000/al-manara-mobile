@@ -1,3 +1,6 @@
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
@@ -48,3 +51,27 @@ export const authFlows = {
     return { ok: false, error: "تعذّر تغيير كلمة المرور، حاول مرة أخرى." };
   },
 };
+
+/** The app's deep link Supabase sends the user back to after Google (allow-listed in Supabase Auth). */
+export const OAUTH_REDIRECT = Linking.createURL("auth/callback");
+
+/**
+ * Google sign-in with the website's Supabase Google provider: a secure browser sheet to Google, back to
+ * the app with a PKCE code, exchanged for a session here. Returns ok: false with no error when the user
+ * closes the sheet.
+ */
+export async function signInWithGoogle(): Promise<FlowResult | { ok: false; error: null }> {
+  if (!supabase) return { ok: false, error: "الحسابات غير مفعّلة في هذه النسخة." };
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: OAUTH_REDIRECT, skipBrowserRedirect: true, queryParams: { prompt: "select_account" } },
+  });
+  if (error || !data.url) return { ok: false, error: "تعذّر بدء الدخول بجوجل الآن." };
+  const result = await WebBrowser.openAuthSessionAsync(data.url, OAUTH_REDIRECT);
+  if (result.type !== "success") return { ok: false, error: null };
+  const params = new URL(result.url).searchParams;
+  const code = params.get("code");
+  if (!code) return { ok: false, error: params.get("error_description") ?? "لم يكتمل الدخول بجوجل." };
+  const exchanged = await supabase.auth.exchangeCodeForSession(code);
+  return exchanged.error ? { ok: false, error: "لم يكتمل الدخول بجوجل، حاول مرة أخرى." } : { ok: true };
+}

@@ -1,11 +1,13 @@
 import { router } from "expo-router";
 import { ChevronRight } from "lucide-react-native";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Divider } from "@/components/ui/Ornament";
 import { useThemeColor } from "@/theme/useThemeColor";
+
+import { signInWithGoogle } from "./authFlows";
 
 /** The shared frame of the account screens: emerald header, then the form. */
 export function AuthLayout({ title, description, children }: { title: string; description: string; children: ReactNode }) {
@@ -81,4 +83,39 @@ export function passwordProblem(password: string): string | undefined {
 
 export function emailProblem(email: string): string | undefined {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? undefined : "أدخل بريدًا إلكترونيًا صحيحًا";
+}
+
+/** "متابعة باستخدام Google", above the email form on sign-in and registration. */
+export function GoogleButton({ onDone }: { onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <View className="gap-2">
+      <Pressable
+        accessibilityRole="button"
+        disabled={busy}
+        onPress={async () => {
+          setBusy(true);
+          setError(null);
+          const result = await signInWithGoogle();
+          setBusy(false);
+          if (result.ok) onDone();
+          else if (result.error) setError(result.error);
+        }}
+        className="h-12 flex-row items-center justify-center gap-2 rounded-full border border-border bg-surface"
+        style={{ opacity: busy ? 0.6 : 1 }}
+      >
+        <Text className="font-display-black text-lg" style={{ color: "#4285F4" }}>
+          G
+        </Text>
+        <Text className="font-sans-bold text-base text-fg">{busy ? "جارٍ الدخول…" : "متابعة باستخدام Google"}</Text>
+      </Pressable>
+      <FormError message={error} />
+      <View className="flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-border" />
+        <Text className="font-sans text-xs text-fg-muted">أو بالبريد الإلكتروني</Text>
+        <View className="h-px flex-1 bg-border" />
+      </View>
+    </View>
+  );
 }

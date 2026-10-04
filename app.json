@@ -14,7 +14,9 @@
       "infoPlist": {
         "CFBundleDevelopmentRegion": "ar",
         "ExpoLocalization_forcesRTL": true,
-        "CFBundleLocalizations": ["ar"],
+        "CFBundleLocalizations": [
+          "ar"
+        ],
         "NSSpeechRecognitionUsageDescription": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
         "NSMicrophoneUsageDescription": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك."
       }
@@ -54,7 +56,9 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["ar"],
+          "supportedLocales": [
+            "ar"
+          ],
           "forcesRTL": true
         }
       ],
@@ -77,14 +81,18 @@
         {
           "microphonePermission": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك.",
           "speechRecognitionPermission": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
         }
       ],
       "expo-iap",
       [
         "react-native-android-widget",
         {
-          "fonts": ["./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"],
+          "fonts": [
+            "./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"
+          ],
           "widgets": [
             {
               "name": "NextPrayer",
@@ -111,7 +119,8 @@
           ]
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
