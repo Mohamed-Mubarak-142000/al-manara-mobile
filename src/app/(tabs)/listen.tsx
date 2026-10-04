@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useReciters } from "@/features/listen/useReciters";
+import { useOnboarding } from "@/features/onboarding/onboardingStore";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function ReciterRow({ reciter, riwayaCount }: { reciter: Reciter; riwayaCount: number }) {
@@ -40,13 +41,17 @@ function ReciterRow({ reciter, riwayaCount }: { reciter: Reciter; riwayaCount: n
 
 export default function ListenScreen() {
   const { reciters, failed, reload } = useReciters();
+  const { favoriteReciterId } = useOnboarding();
   const [query, setQuery] = useState("");
 
   const visible = useMemo(() => {
     if (!reciters) return [];
     const needle = normalizeArabic(query.trim());
-    return needle ? reciters.filter((reciter) => normalizeArabic(reciter.name).includes(needle)) : reciters;
-  }, [reciters, query]);
+    if (needle) return reciters.filter((reciter) => normalizeArabic(reciter.name).includes(needle));
+    // The favourite reciter chosen at first run leads the list.
+    const favorite = reciters.find((reciter) => reciter.id === favoriteReciterId);
+    return favorite ? [favorite, ...reciters.filter((reciter) => reciter !== favorite)] : reciters;
+  }, [reciters, query, favoriteReciterId]);
 
   return (
     <FlatList

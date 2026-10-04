@@ -1,7 +1,7 @@
 import "@/global.css";
 
 import { useFonts } from "expo-font";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -9,6 +9,7 @@ import { useColorScheme } from "react-native";
 
 import { useLastReadSync } from "@/features/account/useLastReadSync";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
+import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
@@ -32,7 +33,10 @@ export default function RootLayout() {
   const primary = useThemeColor("primary");
 
   useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
+    if (!fontsLoaded && !fontError) return;
+    SplashScreen.hideAsync();
+    // First launch: the three setup steps before anything else.
+    if (!onboarding.isDone()) router.replace("/onboarding");
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;
@@ -45,6 +49,7 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: "fade" }} />
         <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="login" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="register" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
