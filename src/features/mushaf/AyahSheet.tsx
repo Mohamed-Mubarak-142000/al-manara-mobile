@@ -1,19 +1,17 @@
 import { router } from "expo-router";
 import { Bookmark, BookmarkCheck, Headphones, ImageIcon, NotebookPen, Repeat, Share2, X } from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
+import { useState } from "react";
+import { Modal, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { alafasyAyahUrl, husaryAyahUrl } from "@/core/quran/ayahAudio";
-import { getSurahTafsir, type TafsirAyah } from "@/core/quran/textApi";
 import { toArabicDigits } from "@/core/text/arabic";
 import { audio, type Track } from "@/features/audio/playerStore";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { getSurah, getSurahAyahs, type MushafAyah } from "./mushaf";
 import { isBookmarked, noteFor, reader, useReaderState } from "./readerPrefs";
-
-const tafsirMemory = new Map<number, TafsirAyah[]>();
+import { tafsirFor } from "./tafsir";
 
 type Voice = "husary" | "alafasy";
 const VOICES: Record<Voice, { label: string; url: (id: number) => string }> = {
@@ -43,30 +41,14 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
   const state = useReaderState();
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
-  const [tafsir, setTafsir] = useState<{ surah: number; list: TafsirAyah[] } | null>(null);
-  const surah = riwaya ? undefined : ayah?.surah;
-  const list = surah !== undefined ? (tafsirMemory.get(surah) ?? (tafsir?.surah === surah ? tafsir.list : undefined)) : undefined;
-
-  useEffect(() => {
-    if (surah === undefined || tafsirMemory.has(surah)) return;
-    let cancelled = false;
-    getSurahTafsir(surah).then((result) => {
-      if (cancelled) return;
-      if (result.length) tafsirMemory.set(surah, result);
-      setTafsir({ surah, list: result });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [surah]);
-
   const name = ayah ? getSurah(ayah.surah)?.name : "";
   const marked = ayah ? isBookmarked(state, ayah.surah, ayah.ayah) : false;
   const note = ayah ? noteFor(state, ayah.surah, ayah.ayah) : undefined;
   const fg = useThemeColor("fg");
   const [noteDraft, setNoteDraft] = useState<{ id: number; text: string } | null>(null);
   const editing = ayah !== null && noteDraft?.id === ayah.id;
-  const tafsirText = ayah ? list?.find((entry) => entry.numberInSurah === ayah.ayah)?.text : undefined;
+  // Bundled with the app, so it is there offline from the first launch.
+  const tafsirText = ayah && !riwaya ? tafsirFor(ayah.id) : undefined;
 
   return (
     <Modal visible={ayah !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -198,13 +180,7 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
           ) : (
             <ScrollView className="mt-4" showsVerticalScrollIndicator={false}>
               <Text className="font-sans-bold text-sm text-accent-strong">التفسير الميسر</Text>
-              {tafsirText ? (
-                <Text className="mt-2 font-sans text-base leading-8 text-fg">{tafsirText}</Text>
-              ) : list ? (
-                <Text className="mt-2 font-sans text-sm text-fg-muted">تعذّر تحميل التفسير. يحتاج أول فتح لاتصال بالإنترنت.</Text>
-              ) : (
-                <ActivityIndicator className="mt-4" color={primary} />
-              )}
+              <Text className="mt-2 font-sans text-base leading-8 text-fg">{tafsirText}</Text>
             </ScrollView>
           )}
         </View>

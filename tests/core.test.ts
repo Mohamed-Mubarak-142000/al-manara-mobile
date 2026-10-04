@@ -118,3 +118,12 @@ describe("quran search", () => {
     expect(searchQuran("ا").total).toBe(0);
   });
 });
+
+describe("bundled tafsir", () => {
+  it("has al-Muyassar for every ayah", () => {
+    const { tafsirFor } = jest.requireActual<typeof import("@/features/mushaf/tafsir")>("@/features/mushaf/tafsir");
+    expect(tafsirFor(1)?.length).toBeGreaterThan(10);
+    expect(tafsirFor(262)?.length).toBeGreaterThan(50); // Ayat al-Kursi (2:255)
+    expect(tafsirFor(6236)?.length).toBeGreaterThan(10);
+  });
+});

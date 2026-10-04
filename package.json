@@ -74,7 +74,8 @@
     "sync:tokens": "node scripts/sync-tokens.mjs",
     "doctor": "expo-doctor",
     "build:mushaf": "node scripts/build-mushaf.mjs",
-    "test": "jest"
+    "test": "jest",
+    "build:tafsir": "node scripts/build-tafsir.mjs"
   },
   "private": true,
   "jest": {
