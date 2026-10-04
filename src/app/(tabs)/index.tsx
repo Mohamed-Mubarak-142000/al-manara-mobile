@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen, Section } from "@/components/ui/Screen";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { SectionGrid } from "@/features/home/SectionGrid";
+import { SponsorCard } from "@/features/home/SponsorCard";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
 import { RamadanCard } from "@/features/ramadan/RamadanCard";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -78,6 +79,10 @@ export default function HomeScreen() {
         <Text className="font-sans-bold text-sm text-accent-strong">أقسام المنارة</Text>
         <Text className="mb-4 mt-1 font-display-bold text-2xl text-fg">كل ما تحتاجه في يومك</Text>
         <SectionGrid />
+      </Section>
+
+      <Section className="mt-6">
+        <SponsorCard />
       </Section>
     </Screen>
   );
