@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
 import { ALL_PRODUCT_IDS, DONATIONS, SUPPORTER_PACK, isDonation, setSupporter, useSupporter } from "@/features/support/supportStore";
+import { track } from "@/lib/telemetry";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const PERKS = ["ألوان إضافية لصفحات المصحف", "شكر خاص في صفحة الداعمين", "أجر المساهمة في نشر القرآن بإذن الله"];
@@ -30,6 +31,7 @@ export default function SupportScreen() {
       // Grant first, then finish: an unfinished purchase is redelivered, a finished one is not.
       if (purchase.productId === SUPPORTER_PACK) setSupporter(true);
       await finishTransaction({ purchase, isConsumable: isDonation(purchase.productId) });
+      track("support_purchase", { product: purchase.productId });
       setPending(null);
       setThanks(
         purchase.productId === SUPPORTER_PACK ? "أصبحت من داعمي المنارة. جزاك الله خيرًا." : "تقبّل الله صدقتك وجعلها في ميزان حسناتك.",

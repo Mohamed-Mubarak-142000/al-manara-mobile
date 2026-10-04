@@ -1,7 +1,7 @@
 import "@/global.css";
 
 import { useFonts } from "expo-font";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -13,6 +13,7 @@ import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
+import { trackScreen, withTelemetry } from "@/lib/telemetry";
 import { applySavedTextScale } from "@/theme/textScale";
 import { useWidgetSync } from "@/widgets/useWidgetSync";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -20,12 +21,16 @@ import { useThemeColor } from "@/theme/useThemeColor";
 SplashScreen.preventAutoHideAsync();
 applySavedTextScale();
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
   useAdhanSchedule();
   useLastReadSync();
   usePushRegistration();
   useWidgetSync();
+  const pathname = usePathname();
+  useEffect(() => {
+    trackScreen(pathname);
+  }, [pathname]);
   useNotificationLinks(fontsLoaded || !!fontError);
   const scheme = useColorScheme();
   const bg = useThemeColor("bg");
@@ -65,3 +70,5 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+export default withTelemetry(RootLayout);

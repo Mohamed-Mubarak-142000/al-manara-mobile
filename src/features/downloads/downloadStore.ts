@@ -2,6 +2,8 @@ import { Directory, File, Paths, type DownloadTask } from "expo-file-system";
 import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 
+import { track as trackEvent } from "@/lib/telemetry";
+
 export interface DownloadMeta {
   id: string;
   title: string;
@@ -97,6 +99,7 @@ export const downloads = {
       }
       const meta: DownloadMeta = { ...track, bytes: file.size ?? 0, savedAt: Date.now() };
       patch(track.id, { status: "done", meta });
+      trackEvent("surah_downloaded");
     } catch {
       if (destination.exists) destination.delete();
       patch(track.id, { status: "failed" });

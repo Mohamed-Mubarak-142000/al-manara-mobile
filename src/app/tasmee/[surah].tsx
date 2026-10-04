@@ -17,6 +17,7 @@ import { recordActivity } from "@/features/journey/progress";
 import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mushaf";
 import { useSpeech, type SpeechError } from "@/features/tasmee/useSpeech";
 import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/telemetry";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 type Mode = "voice" | "manual";
@@ -101,7 +102,10 @@ export default function TasmeeSessionScreen() {
     });
     itemsRef.current = next;
     setItems(next);
-    if (next.every((item) => item.mark !== null)) save(next);
+    if (next.every((item) => item.mark !== null)) {
+      track("tasmee_finished", { ayahs: next.length, mistakes: next.filter((item) => item.mark === "mistake").length });
+      save(next);
+    }
   }
 
   function advanceTo(next: number) {

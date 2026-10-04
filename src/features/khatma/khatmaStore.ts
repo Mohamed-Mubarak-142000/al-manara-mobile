@@ -6,6 +6,7 @@ import { planDay } from "@/core/plan/schedule";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { recordActivity } from "@/features/journey/progress";
 import { mushafBoundaries } from "@/features/mushaf/mushaf";
+import { track } from "@/lib/telemetry";
 import type { KhatmaRow, KhatmaUnit } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
 
@@ -134,6 +135,7 @@ export const khatma = {
   async create(input: NewKhatma): Promise<KhatmaResult> {
     const amount = validate(input);
     if (typeof amount === "string") return { ok: false, error: amount };
+    track("khatma_started", { unit: amount.unit, perSession: amount.perSession });
     const days = [...new Set(input.days)].sort();
     const learnerId = owner();
 
@@ -184,6 +186,7 @@ export const khatma = {
     if (log.some((entry) => entry.day === today)) return { ok: true };
     const portion = nextPortion(row, mushafBoundaries());
     if (!portion) return { ok: true };
+    track("khatma_day_read");
     const finished = portion.to >= TOTAL_AYAHS;
     const learnerId = owner();
 

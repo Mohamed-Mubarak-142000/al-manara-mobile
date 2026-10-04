@@ -1,5 +1,6 @@
 import type { CertificateRow } from "@/lib/database.types";
 import { api } from "@/lib/api";
+import { track } from "@/lib/telemetry";
 import { supabase } from "@/lib/supabase";
 
 /** What the learner sees of a question; the answer key never leaves the server. */
@@ -100,7 +101,11 @@ export interface SubmitResult {
 
 export const exams = {
   start: (juz: number) => api<{ attemptId: string; resumed: boolean }>("/api/v1/exams/start", { juz }),
-  submit: (attemptId: string, answers: number[]) => api<SubmitResult>("/api/v1/exams/submit", { attemptId, answers }),
+  submit: async (attemptId: string, answers: number[]) => {
+    const result = await api<SubmitResult>("/api/v1/exams/submit", { attemptId, answers });
+    if (result.ok) track("exam_submitted", { status: result.status });
+    return result;
+  },
 };
 
 export async function getMyCertificates(learnerIds: string[]) {

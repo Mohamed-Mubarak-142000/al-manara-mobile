@@ -216,7 +216,8 @@
       ],
       "expo-asset",
       "expo-web-browser",
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true,

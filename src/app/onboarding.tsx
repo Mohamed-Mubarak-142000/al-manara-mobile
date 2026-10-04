@@ -18,6 +18,7 @@ import { onboarding, useOnboarding } from "@/features/onboarding/onboardingStore
 import { ensureAdhanPermission } from "@/features/prayer/adhanScheduler";
 import { writeAdhanSettings } from "@/features/prayer/adhanSettings";
 import { chooseCity, requestPreciseLocation, useUserLocation } from "@/features/prayer/locationStore";
+import { track } from "@/lib/telemetry";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const STEPS = 3;
@@ -64,6 +65,7 @@ export default function OnboardingScreen() {
     if (wird) await khatma.create({ mode: "amount", unit: "pages", perSession: wird, targetDay: "", days: [...ALL_DAYS] });
     if (adhan && (await ensureAdhanPermission())) writeAdhanSettings({ enabled: true });
     onboarding.finish();
+    track("onboarding_finished", { wird: wird ?? 0, adhan });
     setBusy(false);
     router.replace("/");
   }

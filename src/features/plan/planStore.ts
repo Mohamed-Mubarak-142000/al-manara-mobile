@@ -16,6 +16,7 @@ import { getSurahAyahCount } from "@/core/quran/surahAyahCounts";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { recordActivity, scheduleCompletedSurahs } from "@/features/journey/progress";
 import { mushafStarts } from "@/features/mushaf/mushaf";
+import { track } from "@/lib/telemetry";
 import { supabase } from "@/lib/supabase";
 
 import { resolveSegments, spansToAyahs } from "./portion";
@@ -197,6 +198,7 @@ export const planActions = {
     if (error) return { ok: false, error: GENERIC_ERROR };
     await markMemorized(learnerId, knownAyahs(priorSurahs, priorJuz, buildJuzRanges(juzStarts)));
     await refresh(learnerId);
+    track("plan_created", { kind: input.kind });
     return { ok: true, message: "أُنشئت خطتك، بالتوفيق!" };
   },
 

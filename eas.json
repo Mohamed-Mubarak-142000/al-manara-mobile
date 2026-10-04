@@ -10,7 +10,8 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://vdxxiiafwniikiitwzth.supabase.co",
         "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_hIYO3xPms3s9w90ThiN_9Q_lGsXQP_s",
-        "EXPO_PUBLIC_SITE_URL": "https://eslami-platform.vercel.app"
+        "EXPO_PUBLIC_SITE_URL": "https://eslami-platform.vercel.app",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "preview": {
@@ -21,7 +22,8 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://vdxxiiafwniikiitwzth.supabase.co",
         "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_hIYO3xPms3s9w90ThiN_9Q_lGsXQP_s",
-        "EXPO_PUBLIC_SITE_URL": "https://eslami-platform.vercel.app"
+        "EXPO_PUBLIC_SITE_URL": "https://eslami-platform.vercel.app",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
@@ -29,7 +31,8 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://vdxxiiafwniikiitwzth.supabase.co",
         "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_hIYO3xPms3s9w90ThiN_9Q_lGsXQP_s",
-        "EXPO_PUBLIC_SITE_URL": "https://eslami-platform.vercel.app"
+        "EXPO_PUBLIC_SITE_URL": "https://eslami-platform.vercel.app",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },
