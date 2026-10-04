@@ -1,10 +1,11 @@
 import { router } from "expo-router";
-import { BookOpen, Bookmark } from "lucide-react-native";
+import { BookOpen, Bookmark, TextSearch } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
+import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
@@ -13,13 +14,14 @@ import { getSurah, getSurahs, juzStartPages } from "@/features/mushaf/mushaf";
 import { useReaderState } from "@/features/mushaf/readerPrefs";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-type Tab = "surahs" | "juz" | "bookmarks";
+type Tab = "surahs" | "juz" | "bookmarks" | "notes";
 type Row = { key: string; badge: string; title: string; subtitle: string; page: number };
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "surahs", label: "السور" },
   { key: "juz", label: "الأجزاء" },
   { key: "bookmarks", label: "العلامات" },
+  { key: "notes", label: "ملاحظاتي" },
 ];
 
 function openPage(page: number) {
@@ -37,7 +39,9 @@ function IndexRow({ row, icon }: { row: Row; icon?: boolean }) {
         </View>
         <View className="flex-1">
           <Text className="font-display-bold text-base text-fg">{row.title}</Text>
-          <Text className="font-sans text-xs text-fg-muted">{row.subtitle}</Text>
+          <Text className="font-sans text-xs text-fg-muted" numberOfLines={2}>
+            {row.subtitle}
+          </Text>
         </View>
         <Text className="font-sans text-xs text-fg-muted">ص {toArabicDigits(row.page)}</Text>
       </View>
@@ -48,7 +52,7 @@ function IndexRow({ row, icon }: { row: Row; icon?: boolean }) {
 export default function QuranIndexScreen() {
   const [tab, setTab] = useState<Tab>("surahs");
   const [query, setQuery] = useState("");
-  const { bookmarks } = useReaderState();
+  const { bookmarks, notes } = useReaderState();
 
   const rows: Row[] = useMemo(() => {
     if (tab === "juz") {
@@ -59,6 +63,17 @@ export default function QuranIndexScreen() {
         subtitle: `يبدأ من صفحة ${toArabicDigits(page)}`,
         page,
       }));
+    }
+    if (tab === "notes") {
+      return Object.values(notes)
+        .sort((a, b) => b.savedAt - a.savedAt)
+        .map((note) => ({
+          key: `note-${note.surah}-${note.ayah}`,
+          badge: "",
+          title: `سورة ${getSurah(note.surah)?.name ?? ""} · الآية ${toArabicDigits(note.ayah)}`,
+          subtitle: note.text,
+          page: note.page,
+        }));
     }
     if (tab === "bookmarks") {
       return bookmarks.map((mark) => ({
@@ -79,14 +94,14 @@ export default function QuranIndexScreen() {
         subtitle: `${surah.meccan ? "مكية" : "مدنية"} · ${toArabicDigits(surah.ayahCount)} آية · الجزء ${toArabicDigits(surah.juzStart)}`,
         page: surah.startPage,
       }));
-  }, [tab, query, bookmarks]);
+  }, [tab, query, bookmarks, notes]);
 
   return (
     <FlatList
       className="flex-1 bg-bg"
       data={rows}
       keyExtractor={(row) => row.key}
-      renderItem={({ item }) => <IndexRow row={item} icon={tab === "bookmarks"} />}
+      renderItem={({ item }) => <IndexRow row={item} icon={tab === "bookmarks" || tab === "notes"} />}
       keyboardShouldPersistTaps="handled"
       initialNumToRender={14}
       contentContainerStyle={{ paddingBottom: 32 }}
@@ -100,6 +115,9 @@ export default function QuranIndexScreen() {
           />
           <View className="-mt-6 gap-3 px-4">
             {tab === "surahs" && <SearchField value={query} onChangeText={setQuery} placeholder="ابحث باسم السورة أو رقمها" />}
+            <Button variant="outline" size="sm" icon={TextSearch} className="self-start" onPress={() => router.push("/search")}>
+              ابحث في نص القرآن
+            </Button>
             <ContinueReadingCard />
             <View className="flex-row rounded-full border border-border bg-surface p-1">
               {TABS.map((entry) => {
@@ -121,7 +139,15 @@ export default function QuranIndexScreen() {
         </View>
       }
       ListEmptyComponent={
-        <StateMessage message={tab === "bookmarks" ? "لا توجد علامات بعد. اضغط مطولًا على أي آية لحفظها." : "لا توجد سورة بهذا الاسم."} />
+        <StateMessage
+          message={
+            tab === "bookmarks"
+              ? "لا توجد علامات بعد. اضغط مطولًا على أي آية لحفظها."
+              : tab === "notes"
+                ? "لا توجد ملاحظات بعد. اضغط مطولًا على أي آية لتكتب ملاحظتك."
+                : "لا توجد سورة بهذا الاسم."
+          }
+        />
       }
     />
   );

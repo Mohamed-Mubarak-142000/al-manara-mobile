@@ -99,3 +99,22 @@ describe("hijri date", () => {
     expect(date.isRamadan).toBe(true);
   });
 });
+
+describe("quran search", () => {
+  const { searchQuran } = jest.requireActual<typeof import("@/features/mushaf/search")>("@/features/mushaf/search");
+
+  it("finds Uthmani text from everyday spelling", () => {
+    const { results } = searchQuran("الصلاة");
+    expect(results.length).toBeGreaterThan(50);
+    expect(results.some((ayah) => ayah.surah === 2 && ayah.ayah === 3)).toBe(true);
+  });
+
+  it("finds ayat al-kursi by its opening", () => {
+    const { results } = searchQuran("الله لا اله الا هو الحي القيوم");
+    expect(results.map((ayah) => `${ayah.surah}:${ayah.ayah}`)).toContain("2:255");
+  });
+
+  it("ignores queries that are too short", () => {
+    expect(searchQuran("ا").total).toBe(0);
+  });
+});

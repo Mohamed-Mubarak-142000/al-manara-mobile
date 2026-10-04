@@ -45,14 +45,29 @@ export interface LastRead {
   at: number;
 }
 
+export interface AyahNote {
+  surah: number;
+  ayah: number;
+  page: number;
+  text: string;
+  savedAt: number;
+}
+
 interface ReaderState {
   prefs: ReaderPrefs;
   bookmarks: Bookmark[];
   lastRead: LastRead | null;
+  /** Personal notes on ayahs, keyed "surah:ayah". Kept on this device. */
+  notes: Record<string, AyahNote>;
 }
 
 const KEY = "al-manara:reader:v1";
-const DEFAULTS: ReaderState = { prefs: { theme: "light", fontStep: 1, tajweed: true, riwaya: "hafs" }, bookmarks: [], lastRead: null };
+const DEFAULTS: ReaderState = {
+  prefs: { theme: "light", fontStep: 1, tajweed: true, riwaya: "hafs" },
+  bookmarks: [],
+  lastRead: null,
+  notes: {},
+};
 
 let cached: ReaderState | null = null;
 const listeners = new Set<() => void>();
@@ -61,7 +76,7 @@ function read(): ReaderState {
   if (cached) return cached;
   try {
     const saved = JSON.parse(Storage.getItemSync(KEY) ?? "null") as Partial<ReaderState> | null;
-    cached = { ...DEFAULTS, ...saved, prefs: { ...DEFAULTS.prefs, ...saved?.prefs } };
+    cached = { ...DEFAULTS, ...saved, prefs: { ...DEFAULTS.prefs, ...saved?.prefs }, notes: saved?.notes ?? {} };
   } catch {
     cached = DEFAULTS;
   }
@@ -112,6 +127,14 @@ export const reader = {
     if (last?.page === position.page && last.surah === position.surah && last.ayah === position.ayah) return;
     write({ lastRead: { ...position, at: Date.now() } });
   },
+  /** Saves a note on an ayah; an empty note removes it. */
+  setNote(surah: number, ayah: number, page: number, text: string) {
+    const notes = { ...read().notes };
+    const key = `${surah}:${ayah}`;
+    if (text.trim()) notes[key] = { surah, ayah, page, text: text.trim(), savedAt: Date.now() };
+    else delete notes[key];
+    write({ notes });
+  },
   toggleBookmark(bookmark: Omit<Bookmark, "savedAt">) {
     const { bookmarks } = read();
     const exists = bookmarks.some((entry) => entry.surah === bookmark.surah && entry.ayah === bookmark.ayah);
@@ -122,6 +145,10 @@ export const reader = {
     });
   },
 };
+
+export function noteFor(state: ReaderState, surah: number, ayah: number): AyahNote | undefined {
+  return state.notes[`${surah}:${ayah}`];
+}
 
 export function isBookmarked(state: ReaderState, surah: number, ayah: number): boolean {
   return state.bookmarks.some((entry) => entry.surah === surah && entry.ayah === ayah);

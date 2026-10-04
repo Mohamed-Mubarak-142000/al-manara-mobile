@@ -1,7 +1,7 @@
 import { router } from "expo-router";
-import { Bookmark, BookmarkCheck, Headphones, ImageIcon, Repeat, Share2, X } from "lucide-react-native";
+import { Bookmark, BookmarkCheck, Headphones, ImageIcon, NotebookPen, Repeat, Share2, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Share, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { alafasyAyahUrl, husaryAyahUrl } from "@/core/quran/ayahAudio";
@@ -11,7 +11,7 @@ import { audio, type Track } from "@/features/audio/playerStore";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { getSurah, getSurahAyahs, type MushafAyah } from "./mushaf";
-import { isBookmarked, reader, useReaderState } from "./readerPrefs";
+import { isBookmarked, noteFor, reader, useReaderState } from "./readerPrefs";
 
 const tafsirMemory = new Map<number, TafsirAyah[]>();
 
@@ -62,6 +62,10 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
 
   const name = ayah ? getSurah(ayah.surah)?.name : "";
   const marked = ayah ? isBookmarked(state, ayah.surah, ayah.ayah) : false;
+  const note = ayah ? noteFor(state, ayah.surah, ayah.ayah) : undefined;
+  const fg = useThemeColor("fg");
+  const [noteDraft, setNoteDraft] = useState<{ id: number; text: string } | null>(null);
+  const editing = ayah !== null && noteDraft?.id === ayah.id;
   const tafsirText = ayah ? list?.find((entry) => entry.numberInSurah === ayah.ayah)?.text : undefined;
 
   return (
@@ -127,6 +131,51 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
               </Pressable>
             )}
           </View>
+
+          {!riwaya &&
+            (editing ? (
+              <View className="mt-3 gap-2">
+                <TextInput
+                  value={noteDraft.text}
+                  onChangeText={(text) => setNoteDraft({ id: ayah.id, text })}
+                  placeholder="اكتب ملاحظتك على هذه الآية"
+                  multiline
+                  autoFocus
+                  className="min-h-20 rounded-2xl border border-border bg-bg p-3 font-sans text-base"
+                  style={{ color: fg, textAlign: "right", textAlignVertical: "top" }}
+                />
+                <View className="flex-row gap-2">
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      reader.setNote(ayah.surah, ayah.ayah, ayah.page, noteDraft.text);
+                      setNoteDraft(null);
+                    }}
+                    className="flex-1 items-center rounded-2xl bg-primary py-2.5"
+                  >
+                    <Text className="font-sans-bold text-sm text-on-primary">حفظ الملاحظة</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setNoteDraft(null)}
+                    className="items-center rounded-2xl border border-border px-4 py-2.5"
+                  >
+                    <Text className="font-sans-bold text-sm text-fg">إلغاء</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setNoteDraft({ id: ayah.id, text: note?.text ?? "" })}
+                className="mt-3 flex-row items-start gap-2 rounded-2xl bg-accent-soft p-3"
+              >
+                <NotebookPen size={16} color={primary} />
+                <Text className={`flex-1 font-sans text-sm leading-6 ${note ? "text-fg" : "text-fg-muted"}`}>
+                  {note ? note.text : "أضف ملاحظة على هذه الآية"}
+                </Text>
+              </Pressable>
+            ))}
 
           {!riwaya && (
             <Pressable
