@@ -93,6 +93,12 @@ function signInMessage(code: string | undefined, message: string): string {
 }
 
 export const account = {
+  /** Re-reads the profile and learners after an edit. */
+  async reload() {
+    if (!supabase) return;
+    const { data } = await supabase.auth.getSession();
+    await loadSession(data.session);
+  },
   async signIn(email: string, password: string): Promise<SignInResult> {
     if (!supabase) return { ok: false, message: "تسجيل الدخول غير مفعّل في هذه النسخة." };
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { LogOut, UserRound } from "lucide-react-native";
+import { BookOpenCheck, LogOut, Settings, UserRound } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
@@ -74,6 +74,14 @@ export function AccountCard() {
           })}
         </View>
       )}
+      <View className="mt-4 flex-row gap-2">
+        <Button size="sm" variant="outline" icon={BookOpenCheck} className="flex-1" onPress={() => router.push("/journey")}>
+          رحلتي
+        </Button>
+        <Button size="sm" variant="outline" icon={Settings} className="flex-1" onPress={() => router.push("/account")}>
+          إعدادات الحساب
+        </Button>
+      </View>
     </View>
   );
 }
