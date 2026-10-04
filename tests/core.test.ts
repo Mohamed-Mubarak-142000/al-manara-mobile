@@ -127,3 +127,24 @@ describe("bundled tafsir", () => {
     expect(tafsirFor(6236)?.length).toBeGreaterThan(10);
   });
 });
+
+describe("website links", () => {
+  const { websitePathToAppRoute } = jest.requireActual<typeof import("@/features/links/websiteLinks")>("@/features/links/websiteLinks");
+  const route = (url: string) => {
+    const parsed = new URL(url, "https://eslami-platform.vercel.app");
+    return websitePathToAppRoute(parsed.pathname, parsed.searchParams);
+  };
+
+  it("maps the website's pages to the app's screens", () => {
+    expect(route("/quran/2?page=5")).toBe("/mushaf?page=5");
+    expect(route("/quran/18")).toBe("/mushaf?page=293");
+    expect(route("/prayer-times")).toBe("/prayer");
+    expect(route("/dashboard")).toBe("/journey");
+    expect(route("/certificates/ABCDE-12345")).toBe("/certificate/ABCDE-12345");
+    expect(route("/certificates/mine")).toBe("/certificates");
+    expect(route("/hadith/category/5")).toBe("/hadith/category/5");
+    expect(route("/tawasheeh")).toBe("/sounds/tawasheeh");
+    expect(route("/listen/123")).toBe("/listen/123");
+    expect(route("/admin")).toBe("/");
+  });
+});

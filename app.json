@@ -14,12 +14,11 @@
       "infoPlist": {
         "CFBundleDevelopmentRegion": "ar",
         "ExpoLocalization_forcesRTL": true,
-        "CFBundleLocalizations": [
-          "ar"
-        ],
+        "CFBundleLocalizations": ["ar"],
         "NSSpeechRecognitionUsageDescription": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
         "NSMicrophoneUsageDescription": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك."
-      }
+      },
+      "associatedDomains": ["applinks:eslami-platform.vercel.app"]
     },
     "android": {
       "package": "com.almanara.app",
@@ -33,6 +32,105 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/quran"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/listen"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/radio"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/hadith"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/prayer-times"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/calendar"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/adhkar"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/ibtihalat"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/tawasheeh"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/duas"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/adhan"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/stories"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/dashboard"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/plan"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/khatma"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/exams"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/certificates"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/tasmee"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
@@ -56,9 +154,7 @@
       [
         "expo-localization",
         {
-          "supportedLocales": [
-            "ar"
-          ],
+          "supportedLocales": ["ar"],
           "forcesRTL": true
         }
       ],
@@ -81,18 +177,14 @@
         {
           "microphonePermission": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك.",
           "speechRecognitionPermission": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
-          "androidSpeechServicePackages": [
-            "com.google.android.googlequicksearchbox"
-          ]
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
         }
       ],
       "expo-iap",
       [
         "react-native-android-widget",
         {
-          "fonts": [
-            "./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"
-          ],
+          "fonts": ["./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"],
           "widgets": [
             {
               "name": "NextPrayer",
