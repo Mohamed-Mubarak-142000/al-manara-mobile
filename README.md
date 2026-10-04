@@ -49,18 +49,29 @@ assets/fonts/     خطوط المصحف والروايات (محوّلة من wo
 
 ## يعتمد على الموقع في
 
-| الخدمة                                         | المسار في ريبو الموقع (`feat/mobile-api-v1`)               |
-| ---------------------------------------------- | ---------------------------------------------------------- |
-| إنشاء حساب، أكواد الإيميل، استعادة كلمة المرور | `POST /api/v1/auth/register` و`/auth/code` و`/auth/verify` |
-| بدء الاختبار وتصحيحه وإصدار الشهادة            | `POST /api/v1/exams/start` و`/exams/submit`                |
-| مصاحف الروايات السبع                           | `GET /api/v1/riwayat/{key}`                                |
-| إشعارات التذكير (الجمعة، الصيام، المواسم)      | جدول `push_tokens` + كرون التذكيرات                        |
+| الخدمة                                          | المسار في ريبو الموقع (`feat/mobile-api-v1`)  |
+| ----------------------------------------------- | --------------------------------------------- |
+| إنشاء حساب (من غير كود) وتأكيد الحسابات القديمة | `POST /api/v1/auth/register` و`/auth/confirm` |
+| استعادة كلمة المرور بالكود                      | `POST /api/v1/auth/code` و`/auth/verify`      |
+| حذف الحساب                                      | `POST /api/v1/account/delete`                 |
+| بدء الاختبار وتصحيحه وإصدار الشهادة             | `POST /api/v1/exams/start` و`/exams/submit`   |
+| مصاحف الروايات السبع                            | `GET /api/v1/riwayat/{key}`                   |
+| إشعارات التذكير (الجمعة، الصيام، المواسم)       | جدول `push_tokens` + كرون التذكيرات           |
 
-باقي البيانات (الختمة، الخطة، التسميع، موضع القراءة، الشهادات) بتتقري وتتكتب في Supabase مباشرة بالـ RLS.
+باقي البيانات (الختمة، الخطة، التسميع، موضع القراءة، الشهادات، رحلتي، القصص، إعدادات الحساب) بتتقري وتتكتب في Supabase مباشرة بالـ RLS.
 
-## قبل النشر
+## إصدار نسخة
 
-- `eas init` لربط المشروع بحساب Expo. ده كمان شرط لتسجيل إشعارات الـ push.
+المشروع مربوط بـ EAS (`@mhamed_mubarak/almanara`). الإعدادات العامة (رابط Supabase والمفتاح العام ورابط الموقع) موجودة في `eas.json`.
+
+```bash
+npx eas-cli build -p android --profile preview      # APK للتجربة والتوزيع المباشر
+npx eas-cli build -p android --profile production   # AAB لـ Google Play
+npx eas-cli build -p ios --profile production       # محتاج حساب Apple Developer
+```
+
+## قبل النشر في المتاجر
+
 - إنشاء منتجات الشراء بنفس الأسماء في App Store Connect وGoogle Play Console: `almanara.donation.small` و`almanara.donation.medium` و`almanara.donation.large` (consumable)، و`almanara.supporter.lifetime` (non-consumable).
-- تطبيق migration `push_tokens` على Supabase، ونشر فرع `feat/mobile-api-v1` على الموقع.
+- تطبيق migration `push_tokens` على Supabase، ونشر فرع `feat/mobile-api-v1` على الموقع. من غيره إنشاء الحساب والاختبارات والروايات وحذف الحساب مش هيشتغلوا.
 - ويدجت iOS (WidgetKit) لسه متعملتش. الموجود حاليًا ويدجت أندرويد بس.
