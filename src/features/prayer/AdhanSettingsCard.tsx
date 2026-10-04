@@ -1,4 +1,5 @@
-import { Bell, BellOff } from "lucide-react-native";
+import { router } from "expo-router";
+import { Bell, BellOff, ChevronLeft } from "lucide-react-native";
 import { useState } from "react";
 import { Linking, Pressable, Switch, Text, View } from "react-native";
 
@@ -7,6 +8,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { ensureAdhanPermission } from "./adhanScheduler";
+import { useAdhanVoice } from "./adhanSound";
 import { useAdhanSettings, writeAdhanSettings, type AdhanPrayer, type AdhanSettings } from "./adhanSettings";
 
 const PRAYERS: readonly AdhanPrayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
@@ -15,6 +17,7 @@ const REMINDERS: readonly AdhanSettings["reminderMinutes"][] = [0, 10, 15, 30];
 /** Prayer notifications: a master switch, one switch per prayer, and an optional heads-up. */
 export function AdhanSettingsCard() {
   const settings = useAdhanSettings();
+  const voice = useAdhanVoice();
   const primary = useThemeColor("primary");
   const border = useThemeColor("border");
   const surface = useThemeColor("surface");
@@ -65,6 +68,19 @@ export function AdhanSettingsCard() {
               </View>
             ))}
           </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/adhan-voice")}
+            className="mt-3 flex-row items-center justify-between rounded-2xl bg-bg px-4 py-3"
+          >
+            <View className="flex-1">
+              <Text className="font-sans-bold text-sm text-fg">صوت الأذان</Text>
+              <Text className="font-sans text-xs text-fg-muted" numberOfLines={1}>
+                {voice ? voice.artist : "صوت الإشعار فقط"}
+              </Text>
+            </View>
+            <ChevronLeft size={18} color={primary} />
+          </Pressable>
           <Text className="mt-3 font-sans-bold text-sm text-fg">تذكير قبل الصلاة</Text>
           <View className="mt-2 flex-row flex-wrap gap-2">
             {REMINDERS.map((minutes) => {

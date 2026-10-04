@@ -60,6 +60,7 @@ export default function RootLayout() {
         <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
     </ThemeProvider>
   );

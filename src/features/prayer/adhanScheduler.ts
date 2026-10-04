@@ -67,7 +67,8 @@ export async function rescheduleAdhan(location: UserLocation): Promise<number> {
     ...nextMonth.map((day) => ({ day, year: next.getFullYear(), month: next.getMonth() + 1 })),
   ];
 
-  const moments: { date: Date; title: string; body: string }[] = [];
+  /** `play`: the prayer time itself, when the chosen muezzin's adhan is raised (not the reminders). */
+  const moments: { date: Date; title: string; body: string; play?: boolean }[] = [];
   for (const { day, year, month } of days) {
     for (const key of ORDER) {
       if (!settings.prayers[key]) continue;
@@ -92,8 +93,8 @@ export async function rescheduleAdhan(location: UserLocation): Promise<number> {
       if (date > now)
         moments.push(
           ramadan && key === "maghrib"
-            ? { date, title: "حان الآن وقت الإفطار وصلاة المغرب", body: "ذهب الظمأ وابتلت العروق وثبت الأجر إن شاء الله" }
-            : { date, title: `حان الآن وقت صلاة ${PRAYER_LABELS[key]}`, body: `حسب التوقيت المحلي لـ${location.label}` },
+            ? { date, title: "حان الآن وقت الإفطار وصلاة المغرب", body: "ذهب الظمأ وابتلت العروق وثبت الأجر إن شاء الله", play: true }
+            : { date, title: `حان الآن وقت صلاة ${PRAYER_LABELS[key]}`, body: `حسب التوقيت المحلي لـ${location.label}`, play: true },
         );
     }
   }
@@ -102,7 +103,12 @@ export async function rescheduleAdhan(location: UserLocation): Promise<number> {
   await Promise.all(
     upcoming.map((moment) =>
       Notifications.scheduleNotificationAsync({
-        content: { title: moment.title, body: moment.body, sound: "default", data: { kind: "adhan", url: "/prayer" } },
+        content: {
+          title: moment.title,
+          body: moment.body,
+          sound: "default",
+          data: { kind: "adhan", url: "/prayer", play: moment.play === true },
+        },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: moment.date, channelId: CHANNEL_ID },
       }),
     ),
