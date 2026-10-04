@@ -72,6 +72,19 @@ npx eas-cli build -p ios --profile production       # محتاج حساب Apple 
 
 ## قبل النشر في المتاجر
 
+**على الموقع وSupabase**
+
+- نشر فرع `feat/mobile-api-v1` على الموقع. من غيره إنشاء الحساب والاختبارات والروايات وحذف الحساب مش هيشتغلوا، ولا الـ App Links.
+- تطبيق migrations: `push_tokens` و`sponsors`.
+- إضافة `almanara://auth/callback` لـ Redirect URLs في Supabase Auth، عشان الدخول بجوجل.
+
+**المتاجر**
+
 - إنشاء منتجات الشراء بنفس الأسماء في App Store Connect وGoogle Play Console: `almanara.donation.small` و`almanara.donation.medium` و`almanara.donation.large` (consumable)، و`almanara.supporter.lifetime` (non-consumable).
-- تطبيق migration `push_tokens` على Supabase، ونشر فرع `feat/mobile-api-v1` على الموقع. من غيره إنشاء الحساب والاختبارات والروايات وحذف الحساب مش هيشتغلوا.
-- ويدجت iOS (WidgetKit) لسه متعملتش. الموجود حاليًا ويدجت أندرويد بس.
+- بعد الرفع على Google Play: إضافة بصمة Play App Signing في `public/.well-known/assetlinks.json` في ريبو الموقع.
+- iOS: حط `ios.appleTeamId` في `app.json` (من حساب Apple Developer)، وملف `apple-app-site-association` على الموقع، قبل أي بناء للآيفون.
+
+**اختياري**
+
+- `EXPO_PUBLIC_SENTRY_DSN` و`EXPO_PUBLIC_POSTHOG_KEY` في `eas.json` لتشغيل تتبّع الأعطال والتحليلات.
+- صوت أذان داخل الإشعار نفسه: محتاج تسجيل بترخيص واضح، مدته ٣٠ ثانية أو أقل. دلوقتي الأذان الكامل بيشتغل جوه التطبيق.
