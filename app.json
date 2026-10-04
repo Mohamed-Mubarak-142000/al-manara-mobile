@@ -18,7 +18,10 @@
         "NSSpeechRecognitionUsageDescription": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
         "NSMicrophoneUsageDescription": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك."
       },
-      "associatedDomains": ["applinks:eslami-platform.vercel.app"]
+      "associatedDomains": ["applinks:eslami-platform.vercel.app"],
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.almanara.app"]
+      }
     },
     "android": {
       "package": "com.almanara.app",
@@ -212,7 +215,8 @@
         }
       ],
       "expo-asset",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true,
