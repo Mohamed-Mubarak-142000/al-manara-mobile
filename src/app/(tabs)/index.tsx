@@ -13,6 +13,7 @@ import { Screen, Section } from "@/components/ui/Screen";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
+import { RamadanCard } from "@/features/ramadan/RamadanCard";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function hijriLine(): string | null {
@@ -68,7 +69,8 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <Section className="mt-2">
+      <Section className="mt-2 gap-3">
+        <RamadanCard />
         <ContinueReadingCard />
       </Section>
 

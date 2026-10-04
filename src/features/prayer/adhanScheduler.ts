@@ -3,11 +3,14 @@ import { Platform } from "react-native";
 
 import type { UserLocation } from "@/core/prayer/location";
 import { PRAYER_LABELS, getPrayerMonth, type PrayerMonthDay } from "@/core/prayer/prayerTimesApi";
+import { getHijriDate } from "@/core/calendar/hijriDate";
 import { toArabicDigits } from "@/core/text/arabic";
 
 import { readAdhanSettings, type AdhanPrayer } from "./adhanSettings";
 
 const CHANNEL_ID = "adhan";
+/** Minutes before Fajr that imsak is announced in Ramadan (as on Egyptian Ramadan calendars). */
+const IMSAK_MINUTES = 10;
 const ORDER: readonly AdhanPrayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 // iOS keeps at most 64 pending local notifications per app; leave room for adhkar reminders.
 const MAX_PENDING = 56;
@@ -79,8 +82,19 @@ export async function rescheduleAdhan(location: UserLocation): Promise<number> {
           });
         }
       }
+      // Ramadan: imsak before Fajr, and Maghrib announced as iftar.
+      const ramadan = getHijriDate(date).isRamadan;
+      if (ramadan && key === "fajr") {
+        const imsak = new Date(date.getTime() - IMSAK_MINUTES * 60_000);
+        if (imsak > now)
+          moments.push({ date: imsak, title: "حان وقت الإمساك", body: `الفجر بعد ${minutesLabel(IMSAK_MINUTES)} · تقبّل الله صيامك` });
+      }
       if (date > now)
-        moments.push({ date, title: `حان الآن وقت صلاة ${PRAYER_LABELS[key]}`, body: `حسب التوقيت المحلي لـ${location.label}` });
+        moments.push(
+          ramadan && key === "maghrib"
+            ? { date, title: "حان الآن وقت الإفطار وصلاة المغرب", body: "ذهب الظمأ وابتلت العروق وثبت الأجر إن شاء الله" }
+            : { date, title: `حان الآن وقت صلاة ${PRAYER_LABELS[key]}`, body: `حسب التوقيت المحلي لـ${location.label}` },
+        );
     }
   }
 
