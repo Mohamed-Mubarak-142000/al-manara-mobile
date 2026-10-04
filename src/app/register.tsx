@@ -33,7 +33,8 @@ export default function RegisterScreen() {
     const address = email.trim().toLowerCase();
     const result = await authFlows.register(fullName.trim(), address, password);
     setBusy(false);
-    if (result.ok) router.replace({ pathname: "/verify", params: { email: address, type: "signup" } });
+    // Signed in right away, like the website: back to wherever the user came from.
+    if (result.ok) router.dismissAll();
     else setError(result.error);
   }
 

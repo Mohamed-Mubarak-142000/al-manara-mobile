@@ -22,21 +22,15 @@ export default function LoginScreen() {
     }
     setBusy(true);
     setError(null);
-    const result = await account.signIn(email, password);
-    if (result.ok) {
-      setBusy(false);
-      router.back();
-      return;
-    }
-    if (result.needsVerification) {
-      // Like the website: an unconfirmed account gets a fresh code and goes to the code screen.
-      await authFlows.sendCode(email.trim().toLowerCase(), "signup");
-      setBusy(false);
-      router.replace({ pathname: "/verify", params: { email: email.trim().toLowerCase(), type: "signup" } });
-      return;
+    let result = await account.signIn(email, password);
+    // Like the website's login: an account from the old signup-code flow is confirmed, then signed in.
+    if (!result.ok && result.needsVerification) {
+      const confirmed = await authFlows.confirmLegacy(email.trim().toLowerCase(), password);
+      result = confirmed.ok ? await account.signIn(email, password) : { ok: false, message: confirmed.error };
     }
     setBusy(false);
-    setError(result.message);
+    if (result.ok) router.back();
+    else setError(result.message);
   }
 
   return (

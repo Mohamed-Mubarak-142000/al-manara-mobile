@@ -87,7 +87,7 @@ export type SignInResult = { ok: true } | { ok: false; message: string; needsVer
 /** Same messages as the website's authErrorMessage() for the cases a sign-in form can hit. */
 function signInMessage(code: string | undefined, message: string): string {
   if (code === "invalid_credentials" || /invalid login credentials/i.test(message)) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-  if (code === "email_not_confirmed") return "لم يتم تأكيد بريدك بعد. أدخل الكود الذي أرسلناه لك.";
+  if (code === "email_not_confirmed") return "لم يتم تأكيد بريدك بعد.";
   if (code === "over_request_rate_limit" || /rate limit/i.test(message)) return "محاولات كثيرة. انتظر قليلًا ثم حاول مجددًا.";
   return "تعذّر تسجيل الدخول الآن. تحقق من الاتصال وحاول مجددًا.";
 }

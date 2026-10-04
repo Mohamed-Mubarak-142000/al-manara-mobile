@@ -5,12 +5,22 @@ export type OtpType = "signup" | "recovery" | "email";
 export type FlowResult = { ok: true } | { ok: false; error: string };
 
 /**
- * Account creation, codes and password reset through the website's /api/v1/auth routes, which send
- * the same 6-digit emails as the website. Sign-in with a password goes straight to Supabase.
+ * Account creation and password reset through the website's /api/v1/auth routes. Like the website,
+ * sign-up needs no emailed code: the account is created confirmed and signed in right away. Codes are
+ * only for "forgot password". Sign-in with a password goes straight to Supabase.
  */
 export const authFlows = {
   async register(fullName: string, email: string, password: string): Promise<FlowResult> {
     const result = await api("/api/v1/auth/register", { fullName, email, password });
+    if (!result.ok) return { ok: false, error: result.error };
+    if (!supabase) return { ok: false, error: "الحسابات غير مفعّلة في هذه النسخة." };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? { ok: false, error: "أُنشئ حسابك، لكن تعذّر تسجيل الدخول الآن. سجّل الدخول من جديد." } : { ok: true };
+  },
+
+  /** An account left unconfirmed by the old signup-code flow: the server confirms it once the password checks out. */
+  async confirmLegacy(email: string, password: string): Promise<FlowResult> {
+    const result = await api("/api/v1/auth/confirm", { email, password });
     return result.ok ? { ok: true } : { ok: false, error: result.error };
   },
 
