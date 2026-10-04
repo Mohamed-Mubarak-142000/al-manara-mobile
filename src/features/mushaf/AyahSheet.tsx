@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Bookmark, BookmarkCheck, Headphones, ImageIcon, Share2, X } from "lucide-react-native";
+import { Bookmark, BookmarkCheck, Headphones, ImageIcon, Repeat, Share2, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -127,6 +127,20 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
               </Pressable>
             )}
           </View>
+
+          {!riwaya && (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                onClose();
+                router.push({ pathname: "/repeat", params: { surah: String(ayah.surah), from: String(ayah.ayah) } });
+              }}
+              className="mt-2 flex-row items-center justify-center gap-1.5 rounded-2xl border border-primary/40 py-2.5"
+            >
+              <Repeat size={16} color={primary} />
+              <Text className="font-sans-bold text-sm text-primary">كرّر للحفظ (من آية إلى آية)</Text>
+            </Pressable>
+          )}
 
           {riwaya ? (
             <Text className="mt-4 font-sans text-sm leading-6 text-fg-muted">

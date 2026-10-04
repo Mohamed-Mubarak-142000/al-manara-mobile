@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { amountLabel, nextPortion, pagesForDuration, sessionsLeft, toIndex, toRef, TOTAL_AYAHS } from "@/core/khatma/schedule";
 import { daysLabel, shiftDay, totalUnits, unitsLabel, unitsToSegments } from "@/core/plan/schedule";
 import { distanceToKaaba, qiblaBearing } from "@/core/prayer/qibla";
