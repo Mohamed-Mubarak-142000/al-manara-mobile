@@ -166,7 +166,7 @@ function AdhkarToastCard() {
       <View className="flex-1">
         <Text className="font-display-bold text-base text-fg">ذكّر قلبك</Text>
         <Text className="font-sans text-xs leading-5 text-fg-muted">
-          ذكر قصير كل دقيقتين وأنت تتصفح التطبيق، ولا يظهر أثناء القراءة أو التسميع.
+          ذكر قصير كل دقيقة وأنت تتصفح التطبيق. فعّل الظهور فوق التطبيقات من صفحة الأذكار.
         </Text>
       </View>
       <Switch value={enabled} onValueChange={setAdhkarToastEnabled} trackColor={{ false: border, true: primary }} thumbColor={surface} />

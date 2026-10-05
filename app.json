@@ -141,6 +141,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/withAlmanaraBackground",
       "expo-router",
       [
         "expo-splash-screen",
@@ -171,7 +172,8 @@
       [
         "expo-notifications",
         {
-          "color": "#003e32"
+          "color": "#003e32",
+          "sounds": ["./assets/audio/adhan_short.wav"]
         }
       ],
       "expo-sharing",

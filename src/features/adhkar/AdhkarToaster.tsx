@@ -7,10 +7,11 @@ import Animated, { Easing, FadeInUp, FadeOutUp, useAnimatedStyle, useSharedValue
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TOAST_ADHKAR, type ToastDhikr } from "@/core/adhkar/toastAdhkar";
+import { useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
 
-/** The website's AdhkarToaster: a short dhikr every two minutes while browsing, gone after nine seconds. */
-const INTERVAL_MS = 2 * 60_000;
-const VISIBLE_MS = 9_000;
+/** In-app fallback; Android's native overlay owns delivery when enabled. */
+const INTERVAL_MS = 60_000;
+const VISIBLE_MS = 5_000;
 const KEY = "al-manara:adhkar-toast:v1";
 
 /** Reading, reciting, exams and the player are never interrupted (the website skips its mushaf reader). */
@@ -61,9 +62,10 @@ export function AdhkarToaster() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const on = useAdhkarToastEnabled();
+  const { status } = useBackgroundStatus();
   const [current, setCurrent] = useState<ToastDhikr | null>(null);
   const index = useRef(-1);
-  const suppressed = SUPPRESSED.test(pathname);
+  const suppressed = SUPPRESSED.test(pathname) || status?.overlayEnabled === true;
 
   useEffect(() => {
     if (!on || suppressed) return;
@@ -72,6 +74,8 @@ export function AdhkarToaster() {
     const tick = setInterval(() => {
       // Only while the app is on screen, like the website's visibility check.
       if (AppState.currentState !== "active") return;
+      const hour = new Date().getHours();
+      if (hour < 7 || hour >= 22) return;
       index.current = (index.current + 1) % TOAST_ADHKAR.length;
       setCurrent(TOAST_ADHKAR[index.current] ?? null);
     }, INTERVAL_MS);

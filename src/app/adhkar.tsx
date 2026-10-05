@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Bell, BellRing, Check, ChevronRight, RotateCcw } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
@@ -12,6 +12,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { countDhikr, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
 import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { useThemeColor } from "@/theme/useThemeColor";
+import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
+import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
+import { reportReminderError } from "@/features/notifications/backgroundReminderStatus";
 
 const CATEGORIES = Object.keys(DUA_CATEGORY_LABELS) as DuaCategory[];
 
@@ -83,7 +86,13 @@ function ReminderChip({ kind, label }: { kind: ReminderKind; label: string }) {
     <Pressable
       accessibilityRole="switch"
       accessibilityState={{ checked: on }}
-      onPress={async () => setDenied(!(await setAdhkarReminder(kind, !on)))}
+      onPress={async () => {
+        try {
+          setDenied(!(await setAdhkarReminder(kind, !on)));
+        } catch (error) {
+          reportReminderError(error);
+        }
+      }}
       className={`flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 ${on ? "border-gold bg-gold/20" : "border-white/20 bg-white/5"}`}
     >
       {on ? <BellRing size={14} color={gold} /> : <Bell size={14} color="rgba(255,255,255,0.8)" />}
@@ -93,6 +102,8 @@ function ReminderChip({ kind, label }: { kind: ReminderKind; label: string }) {
 }
 
 export default function AdhkarScreen() {
+  const params = useLocalSearchParams<{ toast?: string }>();
+  const selectedToast = TOAST_ADHKAR.find((entry) => entry.id === params.toast);
   const insets = useSafeAreaInsets();
   const heroFg = useThemeColor("hero-fg");
   const [category, setCategory] = useState<DuaCategory>(defaultCategory);
@@ -136,6 +147,13 @@ export default function AdhkarScreen() {
               <ReminderChip kind="evening" label="تذكير المساء ٥:٠٠" />
             </View>
           </View>
+          <OutsideReminderCard />
+          {selectedToast && (
+            <View className="mx-4 mt-3 rounded-3xl border border-primary bg-surface p-4">
+              <Text className="font-quran-fallback text-xl leading-9 text-fg">{selectedToast.text}</Text>
+              <Text className="mt-2 font-sans text-xs text-fg-muted">{selectedToast.source}</Text>
+            </View>
+          )}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}

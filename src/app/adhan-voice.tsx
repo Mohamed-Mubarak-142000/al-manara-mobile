@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { Check, ChevronDown, Pause, Play } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getSoundLibrary } from "@/core/sounds/soundsApi";
@@ -12,6 +12,7 @@ import { RADIO_REF, audio, currentTrack, usePlayer, type Track } from "@/feature
 import { useAsync } from "@/features/hadith/useAsync";
 import { setAdhanVoice, useAdhanVoice } from "@/features/prayer/adhanSound";
 import { useThemeColor } from "@/theme/useThemeColor";
+import { reportReminderError } from "@/features/notifications/backgroundReminderStatus";
 
 /** Pick the muezzin whose adhan plays at prayer time: the app's adhan library, with a preview. */
 export default function AdhanVoiceScreen() {
@@ -22,6 +23,20 @@ export default function AdhanVoiceScreen() {
   const player = usePlayer();
   const playing = currentTrack(player);
   const [query, setQuery] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  async function choose(track: Track | null) {
+    setSaving(true);
+    setSaveError("");
+    try {
+      await setAdhanVoice(track);
+    } catch (error) {
+      setSaveError("تعذّر حفظ الصوت. الاختيار السابق لم يتغير. جرّب مرة أخرى.");
+      reportReminderError(error);
+    } finally {
+      setSaving(false);
+    }
+  }
   const { state, reload } = useAsync("adhan-library", async () => {
     const library = await getSoundLibrary("adhan");
     if (!library.tracks.length) return null;
@@ -63,12 +78,19 @@ export default function AdhanVoiceScreen() {
           </Pressable>
           <Text className="font-display-bold text-2xl text-fg">صوت الأذان</Text>
           <Text className="font-sans text-sm leading-6 text-fg-muted">
-            اختر المؤذن. يُرفع الأذان كاملًا بصوته عند دخول الوقت والتطبيق مفتوح، أو عند الضغط على الإشعار.
+            {Platform.OS === "android"
+              ? "اختر المؤذن لتنزيل الأذان كاملًا وتشغيله عند دخول الوقت حتى والتطبيق مغلق، دون إنترنت."
+              : "آيفون يستخدم مقطع أذان قصيرًا موحدًا في الإشعار. يمكنك الاستماع إلى تسجيل المؤذن كاملًا هنا."}
           </Text>
+          {saving && <Text className="font-sans text-sm text-primary">جارٍ تنزيل تسجيل الأذان وحفظه…</Text>}
+          {!!saveError && <Text className="font-sans text-sm text-accent-strong">{saveError}</Text>}
           <Pressable
             accessibilityRole="radio"
             accessibilityState={{ selected: chosen === null }}
-            onPress={() => setAdhanVoice(null)}
+            disabled={saving}
+            onPress={() => {
+              void choose(null);
+            }}
             className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 ${chosen === null ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
           >
             <Text className="font-display-bold text-base text-fg">صوت الإشعار فقط (بدون أذان)</Text>
@@ -104,7 +126,10 @@ export default function AdhanVoiceScreen() {
             <Pressable
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              onPress={() => setAdhanVoice(item)}
+              disabled={saving}
+              onPress={() => {
+                void choose(item);
+              }}
               className="flex-1 flex-row items-center gap-2"
             >
               <View className="flex-1">

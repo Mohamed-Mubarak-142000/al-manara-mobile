@@ -1,13 +1,17 @@
 import { router } from "expo-router";
 import { Bell, BellOff, ChevronLeft } from "lucide-react-native";
 import { useState } from "react";
-import { Linking, Pressable, Switch, Text, View } from "react-native";
+import { Linking, Platform, Pressable, Switch, Text, View } from "react-native";
+import Storage from "expo-sqlite/kv-store";
+
+import { background } from "../../../modules/almanara-background";
+import { reportReminderError, useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
 
 import { PRAYER_LABELS } from "@/core/prayer/prayerTimesApi";
 import { toArabicDigits } from "@/core/text/arabic";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-import { ensureAdhanPermission } from "./adhanScheduler";
+import { COVERAGE_KEY, ensureAdhanPermission } from "./adhanScheduler";
 import { useAdhanVoice } from "./adhanSound";
 import { useAdhanSettings, writeAdhanSettings, type AdhanPrayer, type AdhanSettings } from "./adhanSettings";
 
@@ -22,14 +26,24 @@ export function AdhanSettingsCard() {
   const border = useThemeColor("border");
   const surface = useThemeColor("surface");
   const [denied, setDenied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const { status, error } = useBackgroundStatus();
+  const through = status?.scheduleThrough || Number(Storage.getItemSync(COVERAGE_KEY) ?? 0);
 
   async function toggleEnabled(next: boolean) {
-    if (next && !(await ensureAdhanPermission())) {
-      setDenied(true);
-      return;
+    setBusy(true);
+    try {
+      if (next && !(await ensureAdhanPermission())) {
+        setDenied(true);
+        return;
+      }
+      setDenied(false);
+      writeAdhanSettings({ enabled: next });
+    } catch (cause) {
+      reportReminderError(cause);
+    } finally {
+      setBusy(false);
     }
-    setDenied(false);
-    writeAdhanSettings({ enabled: next });
   }
 
   const track = { false: border, true: primary };
@@ -44,17 +58,35 @@ export function AdhanSettingsCard() {
           <Text className="font-display-bold text-base text-fg">تنبيه الأذان</Text>
           <Text className="font-sans text-xs text-fg-muted">إشعار عند دخول وقت كل صلاة، حتى والتطبيق مغلق.</Text>
         </View>
-        <Switch value={settings.enabled} onValueChange={toggleEnabled} trackColor={track} thumbColor={surface} />
+        <Switch disabled={busy} value={settings.enabled} onValueChange={toggleEnabled} trackColor={track} thumbColor={surface} />
       </View>
 
       {denied && (
         <Pressable onPress={() => Linking.openSettings()} className="mt-3 rounded-2xl bg-accent-soft p-3">
-          <Text className="font-sans text-sm text-accent-strong">الإشعارات غير مسموح بها. اضغط هنا لتفعيلها من إعدادات الجهاز.</Text>
+          <Text className="font-sans text-sm text-accent-strong">
+            راجع إذن الإشعارات وإذن المنبهات والتذكيرات، ثم فعّل الأذان مرة أخرى.
+          </Text>
         </Pressable>
       )}
 
       {settings.enabled && (
         <>
+          {Platform.OS === "android" && status && !status.exactAllowed && (
+            <Pressable
+              onPress={() => {
+                void background?.openAlarmSettings().catch(reportReminderError);
+              }}
+              className="mt-3 rounded-2xl bg-accent-soft p-3"
+            >
+              <Text className="font-sans text-sm text-accent-strong">اضغط للسماح بالمنبهات والتذكيرات لضبط وقت الأذان.</Text>
+            </Pressable>
+          )}
+          {through > 0 && (
+            <Text className="mt-3 font-sans text-xs text-fg-muted">
+              المواقيت محفوظة حتى {new Date(through).toLocaleDateString("ar-EG")}. افتح التطبيق قبل هذا التاريخ لتجديدها.
+            </Text>
+          )}
+          {!!(error || status?.error) && <Text className="mt-2 font-sans text-sm text-accent-strong">{error || status?.error}</Text>}
           <View className="mt-4 border-t border-border pt-2">
             {PRAYERS.map((key) => (
               <View key={key} className="flex-row items-center justify-between py-2">

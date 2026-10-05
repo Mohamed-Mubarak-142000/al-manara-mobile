@@ -9,6 +9,7 @@ import { useColorScheme } from "react-native";
 
 import { useLastReadSync } from "@/features/account/useLastReadSync";
 import { AdhkarToaster } from "@/features/adhkar/AdhkarToaster";
+import { BackgroundReminders } from "@/features/notifications/BackgroundReminders";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
@@ -55,6 +56,7 @@ function RootLayout() {
   return (
     <ThemeProvider value={theme}>
       <StatusBar style="auto" />
+      <BackgroundReminders />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: "fade" }} />

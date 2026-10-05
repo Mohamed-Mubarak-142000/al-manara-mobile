@@ -3,6 +3,9 @@ import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 
+import { replaceLocalSchedule } from "@/features/notifications/replaceLocalSchedule";
+import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
+
 export interface AdhkarReminder {
   enabled: boolean;
   hour: number;
@@ -25,6 +28,19 @@ const COPY: Record<ReminderKind, { title: string; body: string }> = {
 
 let cached: Reminders | null = null;
 const listeners = new Set<() => void>();
+const OUTSIDE_KEY = "al-manara:outside-adhkar:v1";
+let outsideEnabled: boolean | undefined;
+let operation: Promise<unknown> = Promise.resolve();
+
+function readOutside(): boolean {
+  return (outsideEnabled ??= Storage.getItemSync(OUTSIDE_KEY) === "on");
+}
+
+function serialize<T>(work: () => Promise<T>): Promise<T> {
+  const result = operation.then(work);
+  operation = result.catch(() => {});
+  return result;
+}
 
 function read(): Reminders {
   if (cached) return cached;
@@ -37,16 +53,12 @@ function read(): Reminders {
 }
 
 async function apply(reminders: Reminders) {
-  const pending = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(
-    pending
-      .filter((request) => request.content.data?.kind === "adhkar")
-      .map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier)),
-  );
+  const desired: Notifications.NotificationRequestInput[] = [];
   for (const kind of Object.keys(reminders) as ReminderKind[]) {
     const reminder = reminders[kind];
     if (!reminder.enabled) continue;
-    await Notifications.scheduleNotificationAsync({
+    desired.push({
+      identifier: `adhkar-${kind}`,
       content: { ...COPY[kind], sound: "default", data: { kind: "adhkar", url: "/adhkar" } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -56,29 +68,83 @@ async function apply(reminders: Reminders) {
       },
     });
   }
+  if (Platform.OS === "ios" && readOutside()) {
+    for (let hour = 7; hour < 22; hour++) {
+      const dhikr = TOAST_ADHKAR[(hour - 7) % TOAST_ADHKAR.length];
+      desired.push({
+        identifier: `adhkar-hour-${hour}`,
+        content: {
+          title: "ذكّر قلبك",
+          body: `${dhikr.text}\n${dhikr.source}`,
+          sound: false,
+          data: { kind: "adhkar", url: `/adhkar?toast=${dhikr.id}` },
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute: 0 },
+      });
+    }
+  }
+  await replaceLocalSchedule("adhkar", desired);
+}
+
+async function channel() {
+  if (Platform.OS === "android")
+    await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+      name: "تذكير الأذكار",
+      importance: Notifications.AndroidImportance.DEFAULT,
+      sound: "default",
+    });
+}
+
+export function restoreAdhkarReminders() {
+  return serialize(async () => {
+    if (!(await Notifications.getPermissionsAsync()).granted) return;
+    await channel();
+    await apply(read());
+  });
 }
 
 /** Turns a daily reminder on or off. Returns false when notification permission was refused. */
 export async function setAdhkarReminder(kind: ReminderKind, enabled: boolean): Promise<boolean> {
-  if (enabled) {
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-        name: "تذكير الأذكار",
-        importance: Notifications.AndroidImportance.DEFAULT,
-      });
+  return serialize(async () => {
+    if (enabled) {
+      await channel();
+      const permission = await Notifications.requestPermissionsAsync();
+      if (!permission.granted) return false;
     }
-    const permission = await Notifications.requestPermissionsAsync();
-    if (!permission.granted) return false;
-  }
-  cached = { ...read(), [kind]: { ...read()[kind], enabled } };
-  try {
-    Storage.setItemSync(KEY, JSON.stringify(cached));
-  } catch {
-    // Keep the in-memory value.
-  }
-  listeners.forEach((notify) => notify());
-  await apply(cached);
-  return true;
+    const next = { ...read(), [kind]: { ...read()[kind], enabled } };
+    await apply(next);
+    cached = next;
+    try {
+      Storage.setItemSync(KEY, JSON.stringify(cached));
+    } catch {
+      // Keep the in-memory value.
+    }
+    listeners.forEach((notify) => notify());
+    return true;
+  });
+}
+
+export function setOutsideAdhkarNotifications(enabled: boolean) {
+  return serialize(async () => {
+    if (enabled && !(await Notifications.requestPermissionsAsync()).granted) throw new Error("اسمح بإشعارات الأذكار من إعدادات الجهاز.");
+    const previous = readOutside();
+    outsideEnabled = enabled;
+    try {
+      await apply(read());
+      Storage.setItemSync(OUTSIDE_KEY, enabled ? "on" : "off");
+      listeners.forEach((notify) => notify());
+    } catch (error) {
+      outsideEnabled = previous;
+      throw error;
+    }
+  });
+}
+
+export function useOutsideAdhkarNotifications() {
+  return useSyncExternalStore((listener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }, readOutside);
 }
 
 export function useAdhkarReminders(): Reminders {
