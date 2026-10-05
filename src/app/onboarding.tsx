@@ -6,7 +6,6 @@ import { FlatList, Pressable, ScrollView, Switch, Text, View } from "react-nativ
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CITY_CHOICES } from "@/core/prayer/location";
 import { amountLabel } from "@/core/khatma/schedule";
 import { ALL_DAYS } from "@/core/plan/schedule";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
@@ -15,6 +14,7 @@ import { SearchField } from "@/components/ui/SearchField";
 import { khatma } from "@/features/khatma/khatmaStore";
 import { useReciters } from "@/features/listen/useReciters";
 import { onboarding, useOnboarding } from "@/features/onboarding/onboardingStore";
+import { CityDropdown } from "@/features/prayer/CityDropdown";
 import { ensureAdhanPermission } from "@/features/prayer/adhanScheduler";
 import { writeAdhanSettings } from "@/features/prayer/adhanSettings";
 import { chooseCity, requestPreciseLocation, useUserLocation } from "@/features/prayer/locationStore";
@@ -103,23 +103,7 @@ export default function OnboardingScreen() {
               {locating ? "جارٍ التحديد…" : "استخدم موقعي الحالي"}
             </Button>
             <Text className="font-sans-bold text-sm text-white/70">أو اختر مدينتك</Text>
-            <View className="flex-row flex-wrap gap-2">
-              {CITY_CHOICES.map((city) => {
-                const active = location.source === "timezone" && location.city === city.city;
-                return (
-                  <Pressable
-                    key={city.city}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    onPress={() => chooseCity(city.city)}
-                    className={`rounded-full px-3.5 py-2 ${active ? "bg-gold" : "bg-white/10"}`}
-                  >
-                    <Text className={`font-sans-bold text-sm ${active ? "text-emerald-night" : "text-white/85"}`}>{city.label}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Text className="font-sans text-sm text-gold-soft">المختار: {location.label}</Text>
+            <CityDropdown value={location.source === "timezone" ? location.city : null} label={location.label} onChange={chooseCity} />
           </ScrollView>
         )}
 
