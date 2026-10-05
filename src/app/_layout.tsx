@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
 import { useLastReadSync } from "@/features/account/useLastReadSync";
+import { AdhkarToaster } from "@/features/adhkar/AdhkarToaster";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
@@ -67,6 +68,7 @@ function RootLayout() {
         <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
+      <AdhkarToaster />
     </ThemeProvider>
   );
 }

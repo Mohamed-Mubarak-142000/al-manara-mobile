@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { ALargeSmall, ChevronLeft, Download, HandHeart, LayoutGrid } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { ALargeSmall, ChevronLeft, Download, HandHeart, LayoutGrid, Sparkles } from "lucide-react-native";
+import { Pressable, Switch, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { AccountCard } from "@/features/account/AccountCard";
+import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
 import { useDownloads } from "@/features/downloads/downloadStore";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { TEXT_SCALES, setTextScale, useTextScale } from "@/theme/textScale";
@@ -91,6 +92,27 @@ function TextSizeCard() {
   );
 }
 
+function AdhkarToastCard() {
+  const primary = useThemeColor("primary");
+  const border = useThemeColor("border");
+  const surface = useThemeColor("surface");
+  const enabled = useAdhkarToastEnabled();
+  return (
+    <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4">
+      <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
+        <Sparkles size={22} color={primary} />
+      </View>
+      <View className="flex-1">
+        <Text className="font-display-bold text-base text-fg">ذكّر قلبك</Text>
+        <Text className="font-sans text-xs leading-5 text-fg-muted">
+          ذكر قصير كل دقيقتين وأنت تتصفح التطبيق، ولا يظهر أثناء القراءة أو التسميع.
+        </Text>
+      </View>
+      <Switch value={enabled} onValueChange={setAdhkarToastEnabled} trackColor={{ false: border, true: primary }} thumbColor={surface} />
+    </View>
+  );
+}
+
 export default function MoreScreen() {
   return (
     <Screen bleed>
@@ -104,6 +126,7 @@ export default function MoreScreen() {
         <AccountCard />
         <DownloadsLink />
         <SupportLink />
+        <AdhkarToastCard />
         <TextSizeCard />
       </Section>
       <Section className="mt-6">
