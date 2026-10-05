@@ -84,9 +84,10 @@ export default function OnboardingScreen() {
         </Pressable>
       </View>
 
-      <Animated.View key={step} entering={FadeIn.duration(300)} className="flex-1 px-5 pt-6">
+      {/* flex set in style: the step must stay inside its space so the buttons below are always on screen. */}
+      <Animated.View key={step} entering={FadeIn.duration(300)} style={{ flex: 1, minHeight: 0 }} className="px-5 pt-6">
         {step === 0 && (
-          <ScrollView contentContainerStyle={{ gap: 16 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 12 }}>
             <Text className="font-display-bold text-3xl leading-[48px] text-hero-fg">أهلًا بك في المنارة</Text>
             <Text className="font-sans text-base leading-8 text-white/75">لنضبط مواقيت الصلاة على مدينتك. موقعك يبقى على هاتفك فقط.</Text>
             <Button
@@ -156,7 +157,7 @@ export default function OnboardingScreen() {
         )}
 
         {step === 2 && (
-          <ScrollView contentContainerStyle={{ gap: 16 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 16, paddingBottom: 12 }}>
             <Text className="font-display-bold text-3xl leading-[48px] text-hero-fg">وردك اليومي</Text>
             <Text className="font-sans text-base leading-8 text-white/75">
               كم تقرأ كل يوم؟ نبدأ لك ختمة ونذكّرك بوردك، ويمكنك تغييرها لاحقًا.
@@ -195,7 +196,7 @@ export default function OnboardingScreen() {
         )}
       </Animated.View>
 
-      <View className="gap-4 px-5">
+      <View className="gap-4 px-5 pt-3">
         <Dots step={step} />
         <View className="flex-row gap-3">
           {step > 0 && (
