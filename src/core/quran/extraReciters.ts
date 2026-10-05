@@ -100,6 +100,7 @@ export const EXTRA_RECITERS: Reciter[] = [
   ),
   archiveReciter(900005, "حمزة بوديب", "HamzaBoudib", [16, 21, 44, 50, 53, 55, 56, 59, 67, 68, 70, 74, 77, 78, 83, 89]),
   archiveReciter(900006, "عبدالرحمن مسعد", "AbdulrahmanMassaad", [10, 19, 23, 29, 32, 49, 73, 78, 87, 88, 100, 107]),
+  archiveReciter(900008, "عمار ياسر المنصوري", "ammar-yasser-al-mansouri", range(1, 114)),
   {
     id: 900007,
     name: "أحمد عبدالرازق نصر",
