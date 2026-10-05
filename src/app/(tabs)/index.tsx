@@ -10,6 +10,7 @@ import { getHijriDate } from "@/core/calendar/hijriDate";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { Screen, Section } from "@/components/ui/Screen";
+import { GuestSignInCard } from "@/features/home/GuestSignInCard";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { SponsorCard } from "@/features/home/SponsorCard";
@@ -71,6 +72,7 @@ export default function HomeScreen() {
       </View>
 
       <Section className="mt-2 gap-3">
+        <GuestSignInCard />
         <RamadanCard />
         <ContinueReadingCard />
       </Section>

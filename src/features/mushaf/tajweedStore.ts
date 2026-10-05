@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 
+import { joinSegments } from "@/core/quran/joinSegments";
 import { getSurahTajweedAyahs, type TajweedSegment } from "@/core/quran/tajweedApi";
 
 /**
@@ -27,7 +28,7 @@ function load(surah: number) {
       entries.set(
         surah,
         ayahs.length
-          ? { status: "ready", byAyah: new Map(ayahs.map((ayah) => [ayah.numberInSurah, ayah.segments])) }
+          ? { status: "ready", byAyah: new Map(ayahs.map((ayah) => [ayah.numberInSurah, joinSegments(ayah.segments)])) }
           : { status: "failed" },
       );
       notify();

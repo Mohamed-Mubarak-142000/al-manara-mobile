@@ -70,3 +70,18 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "الاختبارات", icon: GraduationCap, description: "اختبر حفظك جزءًا جزءًا واحصل على شهادة", href: "/exams" },
   { label: "الأطفال", icon: Trees, description: "حديقة القرآن للأطفال" },
 ];
+
+export interface SectionGroup {
+  title: string;
+  /** Labels from APP_SECTIONS, up to four: one slide of the home slider. */
+  labels: readonly string[];
+}
+
+/** The home "أقسام المنارة" slider, one group per slide. */
+export const SECTION_GROUPS: readonly SectionGroup[] = [
+  { title: "القرآن", labels: ["المصحف", "الاستماع", "الإذاعة", "التسميع"] },
+  { title: "يومك", labels: ["المواقيت", "الأذكار", "الأحاديث", "التقويم"] },
+  { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
+  { title: "صوتيات", labels: ["ابتهالات", "تواشيح", "أدعية", "أذان"] },
+  { title: "للعائلة", labels: ["القصص", "الأطفال"] },
+];
