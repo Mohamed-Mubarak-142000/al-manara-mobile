@@ -28,6 +28,10 @@ interface ButtonProps extends Omit<PressableProps, "children" | "style"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: LucideIcon;
+  /**
+   * Placement in the parent (flex-1, mt-4, self-start...), applied to an outer wrapper. On the inner box,
+   * flex-1 sets a zero flex-basis inside the Pressable and the button collapsed to nothing.
+   */
   className?: string;
 }
 
@@ -38,20 +42,22 @@ export function Button({ children, variant = "primary", size = "md", icon: Icon,
   const iconColor = v.icon === "white" ? "#ffffff" : themed;
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={disabled}
-      onPress={(event) => {
-        Haptics.selectionAsync().catch(() => {});
-        onPress?.(event);
-      }}
-      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }], opacity: disabled ? 0.5 : 1 })}
-      {...rest}
-    >
-      <View className={`flex-row items-center justify-center rounded-full ${v.box} ${s.box} ${className ?? ""}`}>
-        {Icon && <Icon size={s.icon} color={iconColor} />}
-        <Text className={`font-sans-bold ${v.text} ${s.text}`}>{children}</Text>
-      </View>
-    </Pressable>
+    <View className={className}>
+      <Pressable
+        accessibilityRole="button"
+        disabled={disabled}
+        onPress={(event) => {
+          Haptics.selectionAsync().catch(() => {});
+          onPress?.(event);
+        }}
+        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }], opacity: disabled ? 0.5 : 1 })}
+        {...rest}
+      >
+        <View className={`flex-row items-center justify-center rounded-full ${v.box} ${s.box}`}>
+          {Icon && <Icon size={s.icon} color={iconColor} />}
+          <Text className={`font-sans-bold ${v.text} ${s.text}`}>{children}</Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }
