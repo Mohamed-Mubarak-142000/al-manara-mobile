@@ -15,6 +15,8 @@ export interface BackgroundStatus {
   overlayAllowed: boolean;
   overlayEnabled: boolean;
   overlayRunning: boolean;
+  /** Optional for compatibility with APKs built before persistent overlay diagnostics. */
+  overlayError?: string;
   exactAllowed: boolean;
   scheduleThrough: number;
   error: string;

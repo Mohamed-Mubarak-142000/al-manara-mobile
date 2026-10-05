@@ -32,6 +32,7 @@ module.exports = function withAlmanaraBackground(config) {
       $: {
         "android:name": "com.almanara.background.DhikrService",
         "android:exported": "false",
+        "android:stopWithTask": "false",
         "android:foregroundServiceType": "specialUse",
       },
       property: [

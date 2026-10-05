@@ -15,13 +15,14 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react-native";
-import { Pressable, Share, Switch, Text, View } from "react-native";
+import { Platform, Pressable, Share, Switch, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { AccountCard } from "@/features/account/AccountCard";
 import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
+import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
 import { useDownloads } from "@/features/downloads/downloadStore";
 import { TEXT_SCALES, setTextScale, useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -158,6 +159,7 @@ function AdhkarToastCard() {
   const border = useThemeColor("border");
   const surface = useThemeColor("surface");
   const enabled = useAdhkarToastEnabled();
+  if (Platform.OS === "android") return <OutsideReminderCard embedded />;
   return (
     <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4">
       <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">

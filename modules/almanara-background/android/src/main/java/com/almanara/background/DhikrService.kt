@@ -8,6 +8,7 @@ import android.os.*
 import android.provider.Settings
 import android.view.*
 import android.widget.*
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.json.JSONObject
 import java.util.Calendar
@@ -30,20 +31,27 @@ class DhikrService : Service() {
   private val tick = object : Runnable {
     override fun run() {
       if (!Settings.canDrawOverlays(this@DhikrService)) {
-        BackgroundState.prefs(this@DhikrService).edit().putBoolean("overlayEnabled", false).apply()
-        stopSelf()
+        fail("تم إلغاء إذن الظهور فوق التطبيقات. اسمح به ثم فعّل التذكير مرة أخرى.")
         return
       }
       val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
       if (power.isInteractive && !keyguard.isKeyguardLocked && hour in 7..21 &&
           !BackgroundState.adhanPlaying && System.currentTimeMillis() - BackgroundState.adhanFinishedAt >= 60_000) {
         runCatching { show() }.onFailure {
-          BackgroundState.prefs(this@DhikrService).edit().putBoolean("overlayEnabled", false).apply()
-          stopSelf()
+          Log.e("AlmanaraDhikr", "Unable to display dhikr overlay", it)
+          fail("تعذّر إظهار بطاقة الذكر فوق التطبيقات. راجع إذن الظهور فوق التطبيقات ثم فعّل التذكير مرة أخرى.")
         }
       }
-      handler.postDelayed(this, 60_000)
+      if (BackgroundState.prefs(this@DhikrService).getBoolean("overlayEnabled", false)) {
+        handler.postDelayed(this, 60_000)
+      }
     }
+  }
+
+  private fun fail(message: String) {
+    BackgroundState.prefs(this).edit().putBoolean("overlayEnabled", false).putString("overlayError", message).commit()
+    BackgroundState.overlayRunning = false
+    stopSelf()
   }
 
   override fun onCreate() {
@@ -70,10 +78,16 @@ class DhikrService : Service() {
     val notification = BackgroundState.notification(this, BackgroundState.DHIKR_CHANNEL, "ذكر كل دقيقة", "تذكير قصير من ٧ صباحًا إلى ١٠ مساءً أثناء فتح الشاشة", "adhkar")
       .setOngoing(true).setSilent(true)
       .addAction(NotificationCompat.Action.Builder(0, "إيقاف تذكير الأذكار", stop).build()).build()
-    startForeground(BackgroundState.DHIKR_NOTIFICATION, notification)
+    try {
+      startForeground(BackgroundState.DHIKR_NOTIFICATION, notification)
+    } catch (error: Exception) {
+      Log.e("AlmanaraDhikr", "Unable to start dhikr foreground service", error)
+      fail("تعذّر تشغيل خدمة التذكير. راجع أذونات الإشعارات والظهور فوق التطبيقات ثم فعّله مرة أخرى.")
+      return START_NOT_STICKY
+    }
+    // A repeated enable request must not postpone the next card indefinitely.
+    if (!BackgroundState.overlayRunning) handler.postDelayed(tick, 60_000)
     BackgroundState.overlayRunning = true
-    handler.removeCallbacks(tick)
-    handler.postDelayed(tick, 60_000)
     return START_STICKY
   }
 

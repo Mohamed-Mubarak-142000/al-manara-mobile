@@ -21,6 +21,7 @@ class AlmanaraBackgroundModule : Module() {
         "overlayAllowed" to Settings.canDrawOverlays(context),
         "overlayEnabled" to saved.getBoolean("overlayEnabled", false),
         "overlayRunning" to BackgroundState.overlayRunning,
+        "overlayError" to saved.getString("overlayError", ""),
         "exactAllowed" to BackgroundState.exactAllowed(context),
         "scheduleThrough" to (0 until moments.length()).maxOfOrNull { moments.getJSONObject(it).getLong("at") }.let { it ?: 0L },
         "error" to saved.getString("scheduleError", ""),
@@ -40,15 +41,16 @@ class AlmanaraBackgroundModule : Module() {
         check(Settings.canDrawOverlays(context)) { "اسمح بالظهور فوق التطبيقات أولًا" }
         org.json.JSONObject(config) // Validate before changing the active configuration.
         saved.edit().putString("overlayConfig", config).apply()
-        saved.edit().putBoolean("overlayEnabled", true).commit()
+        saved.edit().putBoolean("overlayEnabled", true).putString("overlayError", "").commit()
         try {
           ContextCompat.startForegroundService(context, Intent(context, DhikrService::class.java))
         } catch (error: Exception) {
-          saved.edit().putBoolean("overlayEnabled", false).commit()
+          saved.edit().putBoolean("overlayEnabled", false)
+            .putString("overlayError", "تعذّر تشغيل التذكير في الخلفية. راجع أذونات الإشعارات والظهور فوق التطبيقات ثم فعّله مرة أخرى.").commit()
           throw error
         }
       } else {
-        saved.edit().putBoolean("overlayEnabled", false).commit()
+        saved.edit().putBoolean("overlayEnabled", false).putString("overlayError", "").commit()
         context.stopService(Intent(context, DhikrService::class.java))
       }
     }.runOnQueue(Queues.MAIN)

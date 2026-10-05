@@ -17,6 +17,7 @@ type Reminders = Record<ReminderKind, AdhkarReminder>;
 
 const KEY = "al-manara:adhkar-reminders:v1";
 const CHANNEL_ID = "adhkar";
+const OUTSIDE_CHANNEL_ID = "adhkar-outside-v1";
 const DEFAULTS: Reminders = {
   morning: { enabled: false, hour: 7, minute: 0 },
   evening: { enabled: false, hour: 17, minute: 0 },
@@ -68,7 +69,7 @@ async function apply(reminders: Reminders) {
       },
     });
   }
-  if (Platform.OS === "ios" && readOutside()) {
+  if (Platform.OS !== "web" && readOutside()) {
     for (let hour = 7; hour < 22; hour++) {
       const dhikr = TOAST_ADHKAR[(hour - 7) % TOAST_ADHKAR.length];
       desired.push({
@@ -76,10 +77,10 @@ async function apply(reminders: Reminders) {
         content: {
           title: "ذكّر قلبك",
           body: `${dhikr.text}\n${dhikr.source}`,
-          sound: false,
+          sound: Platform.OS === "android" ? "default" : false,
           data: { kind: "adhkar", url: `/adhkar?toast=${dhikr.id}` },
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute: 0 },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute: 0, channelId: OUTSIDE_CHANNEL_ID },
       });
     }
   }
@@ -87,12 +88,18 @@ async function apply(reminders: Reminders) {
 }
 
 async function channel() {
-  if (Platform.OS === "android")
+  if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: "تذكير الأذكار",
       importance: Notifications.AndroidImportance.DEFAULT,
       sound: "default",
     });
+    await Notifications.setNotificationChannelAsync(OUTSIDE_CHANNEL_ID, {
+      name: "أذكار خارج التطبيق",
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: "default",
+    });
+  }
 }
 
 export function restoreAdhkarReminders() {
@@ -126,6 +133,8 @@ export async function setAdhkarReminder(kind: ReminderKind, enabled: boolean): P
 
 export function setOutsideAdhkarNotifications(enabled: boolean) {
   return serialize(async () => {
+    if (Platform.OS === "web") throw new Error("التذكيرات خارج التطبيق متاحة على الهاتف فقط.");
+    if (enabled) await channel();
     if (enabled && !(await Notifications.requestPermissionsAsync()).granted) throw new Error("اسمح بإشعارات الأذكار من إعدادات الجهاز.");
     const previous = readOutside();
     outsideEnabled = enabled;
