@@ -1,9 +1,12 @@
 import type { Track } from "@/features/audio/playerStore";
 
-/** The website's RADIO_STATION (features/audio/AudioProvider.tsx): the official stream, then a backup. */
+/**
+ * The website's RADIO_STATION (features/audio/AudioProvider.tsx), with the relay first: radiojar
+ * redirects to a plain-http server, which Android release builds refuse, so it is only the backup here.
+ */
 export const RADIO_STATION = {
   name: "إذاعة القرآن الكريم من القاهرة",
-  streams: ["https://stream.radiojar.com/8s5u5tpdtwzuv", "https://radio.xecod.com/station/quran-cairo"],
+  streams: ["https://radio.xecod.com/station/quran-cairo", "https://stream.radiojar.com/8s5u5tpdtwzuv"],
   providerName: "إذاعة القرآن الكريم المصرية",
   providerUrl: "https://misrquran.gov.eg/",
 } as const;

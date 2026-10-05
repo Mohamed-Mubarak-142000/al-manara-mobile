@@ -63,6 +63,8 @@ const STALL_MS = 12_000;
 /** Once every stream has failed, start over after this long (RETRY_MS). */
 const RETRY_MS = 20_000;
 let stallTimer: ReturnType<typeof setTimeout> | null = null;
+/** What the armed watchdog will do; also run at once when the stream reports an error. */
+let onStall: (() => void) | null = null;
 /** Bumped on every load, so a late resolve or timer from a previous track is ignored. */
 let generation = 0;
 
@@ -96,6 +98,7 @@ function getPlayer(): AudioPlayer {
 function clearStall() {
   if (stallTimer) clearTimeout(stallTimer);
   stallTimer = null;
+  onStall = null;
 }
 
 function onStatus(status: AudioStatus) {
@@ -104,6 +107,13 @@ function onStatus(status: AudioStatus) {
     return;
   }
   if (status.playing) clearStall();
+  // A stream that fails outright (404, blocked, gone) moves to the backup now, not after the full wait.
+  else if (status.error && onStall) {
+    const giveUp = onStall;
+    clearStall();
+    giveUp();
+    return;
+  }
   set({
     playing: status.playing,
     buffering: status.isBuffering,
@@ -127,7 +137,7 @@ function watchStall(index: number, streamIndex: number, current: number) {
   clearStall();
   const track = state.queue[index];
   if (!track?.fallbackUrls?.length) return;
-  stallTimer = setTimeout(() => {
+  const giveUp = () => {
     if (current !== generation || state.playing) return;
     const next = streamIndex + 1;
     if (next <= track.fallbackUrls!.length) void load(index, true, next);
@@ -136,7 +146,9 @@ function watchStall(index: number, streamIndex: number, current: number) {
       set({ error: true, buffering: false });
       stallTimer = setTimeout(() => current === generation && void load(index, true, 0), RETRY_MS);
     }
-  }, STALL_MS);
+  };
+  onStall = giveUp;
+  stallTimer = setTimeout(giveUp, STALL_MS);
 }
 
 async function load(index: number, autoplay = true, streamIndex = 0) {

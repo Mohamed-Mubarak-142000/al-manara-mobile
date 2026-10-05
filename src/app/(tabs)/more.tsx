@@ -1,6 +1,21 @@
+import Constants from "expo-constants";
 import { router } from "expo-router";
-import { ALargeSmall, ChevronLeft, Download, HandHeart, LayoutGrid, Sparkles } from "lucide-react-native";
-import { Pressable, Switch, Text, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import {
+  ALargeSmall,
+  ChevronLeft,
+  Download,
+  FileText,
+  Globe,
+  HandHeart,
+  Landmark,
+  Settings2,
+  Share2,
+  ShieldCheck,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react-native";
+import { Pressable, Share, Switch, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -8,9 +23,55 @@ import { Screen, Section } from "@/components/ui/Screen";
 import { AccountCard } from "@/features/account/AccountCard";
 import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
 import { useDownloads } from "@/features/downloads/downloadStore";
-import { SectionGrid } from "@/features/home/SectionGrid";
 import { TEXT_SCALES, setTextScale, useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
+
+const SITE_URL = (process.env.EXPO_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+
+/** The website's own pages (privacy, terms) open in an in-app browser, so the wording is always the site's. */
+function openSitePage(path: string) {
+  if (SITE_URL) void WebBrowser.openBrowserAsync(`${SITE_URL}${path}`, { toolbarColor: "#012a22" });
+}
+
+function GroupTitle({ children }: { children: string }) {
+  return <Text className="mb-1 mt-4 px-1 font-sans-bold text-sm text-accent-strong">{children}</Text>;
+}
+
+/** One row of a grouped list: icon, title, optional hint, and a chevron. */
+function LinkRow({
+  icon: Icon,
+  title,
+  hint,
+  onPress,
+  last,
+}: {
+  icon: LucideIcon;
+  title: string;
+  hint?: string;
+  onPress: () => void;
+  last?: boolean;
+}) {
+  const primary = useThemeColor("primary");
+  const muted = useThemeColor("fg-muted");
+  return (
+    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+      <View className={`flex-row items-center gap-3 px-4 py-3.5 ${last ? "" : "border-b border-border"}`}>
+        <View className="size-9 items-center justify-center rounded-xl bg-primary-soft">
+          <Icon size={18} color={primary} />
+        </View>
+        <View className="flex-1">
+          <Text className="font-display-bold text-[15px] text-fg">{title}</Text>
+          {hint && <Text className="font-sans text-xs text-fg-muted">{hint}</Text>}
+        </View>
+        <ChevronLeft size={18} color={muted} />
+      </View>
+    </Pressable>
+  );
+}
+
+function Group({ children }: { children: React.ReactNode }) {
+  return <View className="overflow-hidden rounded-3xl border border-border bg-surface">{children}</View>;
+}
 
 function DownloadsLink() {
   const primary = useThemeColor("primary");
@@ -113,24 +174,48 @@ function AdhkarToastCard() {
   );
 }
 
+/** Account, settings and the website's fixed pages; the sections themselves live on the home screen. */
 export default function MoreScreen() {
+  const version = Constants.expoConfig?.version;
   return (
     <Screen bleed>
       <PageHeader
         kicker="المزيد"
-        icon={LayoutGrid}
-        title="أقسام المنارة"
-        description="الإذاعة والأحاديث والابتهالات والأذكار والأطفال، وكل ما في الموقع."
+        icon={Settings2}
+        title="حسابك والإعدادات"
+        description="حسابك، وتفضيلات التطبيق، وسياسة الخصوصية والشروط."
       />
       <Section className="mt-5 gap-3">
         <AccountCard />
         <DownloadsLink />
         <SupportLink />
+
+        <GroupTitle>الإعدادات</GroupTitle>
         <AdhkarToastCard />
+        <Group>
+          <LinkRow icon={Landmark} title="صوت الأذان" hint="اختر المؤذن لتنبيهات الصلاة" onPress={() => router.push("/adhan-voice")} last />
+        </Group>
         <TextSizeCard />
-      </Section>
-      <Section className="mt-6">
-        <SectionGrid />
+
+        <GroupTitle>عن المنارة</GroupTitle>
+        <Group>
+          <LinkRow icon={ShieldCheck} title="سياسة الخصوصية" onPress={() => openSitePage("/privacy")} />
+          <LinkRow icon={FileText} title="الشروط والأحكام" onPress={() => openSitePage("/terms")} />
+          <LinkRow icon={Globe} title="موقع المنارة" hint="كل الأقسام على الويب" onPress={() => openSitePage("/")} />
+          <LinkRow
+            icon={Share2}
+            title="شارك التطبيق"
+            hint="الدال على الخير كفاعله"
+            onPress={() =>
+              void Share.share({
+                message: `المنارة: القرآن والأذكار ومواقيت الصلاة في تطبيق واحد
+${SITE_URL}`,
+              })
+            }
+            last
+          />
+        </Group>
+        {version && <Text className="mt-2 text-center font-sans text-xs text-fg-muted">المنارة · الإصدار {version}</Text>}
       </Section>
     </Screen>
   );
