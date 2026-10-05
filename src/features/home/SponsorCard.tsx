@@ -16,7 +16,7 @@ function SponsorRow({ sponsor }: { sponsor: Sponsor }) {
   const card = (
     <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4">
       {sponsor.logo_url ? (
-        <Image source={{ uri: sponsor.logo_url }} style={{ width: 44, height: 44, borderRadius: 12 }} contentFit="contain" />
+        <Image source={{ uri: sponsor.logo_url }} style={{ width: 88, height: 88, borderRadius: 18 }} contentFit="cover" />
       ) : null}
       <View className="flex-1">
         <Text className="font-display-bold text-base text-fg">{sponsor.name}</Text>
