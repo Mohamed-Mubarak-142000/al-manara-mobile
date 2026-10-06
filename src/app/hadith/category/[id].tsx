@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getCategoryHadiths, type HadithSummary } from "@/core/hadith/api";
+import type { HadithSummary } from "@/core/hadith/api";
 import { toArabicDigits } from "@/core/text/arabic";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
+import { getCategoryHadithsOffline } from "@/features/hadith/offlineHadith";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 type Pages = { id: string; items: HadithSummary[]; page: number; lastPage: number; total: number; failed: boolean };
@@ -30,7 +31,7 @@ export default function HadithCategoryScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    getCategoryHadiths(id, 1)
+    getCategoryHadithsOffline(id, 1)
       // The API reads a failed request as an empty page; a topic is never empty, so empty means failed.
       .catch(() => ({ items: [], page: 1, lastPage: 0, total: 0 }))
       .then((first) => {
@@ -61,7 +62,7 @@ export default function HadithCategoryScreen() {
   async function loadMore() {
     if (!current || loadingMore || current.page >= current.lastPage) return;
     setLoadingMore(true);
-    const next = await getCategoryHadiths(id, current.page + 1).catch(() => null);
+    const next = await getCategoryHadithsOffline(id, current.page + 1).catch(() => null);
     setLoadingMore(false);
     if (next?.items.length) setPages({ ...current, items: [...current.items, ...next.items], page: next.page });
   }

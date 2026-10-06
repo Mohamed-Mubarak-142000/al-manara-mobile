@@ -3,12 +3,13 @@ import { ChevronLeft, ChevronRight, ScrollText } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getCategories, getHadithOfTheDay } from "@/core/hadith/api";
 import { planDay } from "@/core/plan/schedule";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { HadithDownloadAllCard, HadithPackButton } from "@/features/hadith/HadithPackControls";
+import { getCategoriesOffline, getHadithOfTheDayOffline } from "@/features/hadith/offlineHadith";
 import { useAsync } from "@/features/hadith/useAsync";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -22,9 +23,9 @@ export default function HadithIndexScreen() {
   const muted = useThemeColor("fg-muted");
   const accent = useThemeColor("accent");
   const today = planDay();
-  const daily = useAsync(today, () => getHadithOfTheDay(today));
+  const daily = useAsync(today, () => getHadithOfTheDayOffline(today));
   const categories = useAsync("categories", async () => {
-    const list = await getCategories();
+    const list = await getCategoriesOffline();
     return list.length ? list : null;
   });
 
@@ -95,38 +96,44 @@ export default function HadithIndexScreen() {
         ) : categories.state.status === "error" ? (
           <StateMessage message="تعذّر تحميل الأحاديث الآن، حاول بعد قليل." onRetry={categories.reload} />
         ) : (
-          topLevel.map((category) => {
-            const children = childrenOf(category.id);
-            return (
-              <View key={category.id} className="rounded-3xl border border-border bg-surface p-4 shadow-soft">
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: category.id, title: category.title } })}
-                  className="flex-row items-center justify-between"
-                >
-                  <View className="flex-1">
-                    <Text className="font-display-bold text-base text-fg">{category.title}</Text>
-                    <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(category.count)} حديث</Text>
+          <>
+            <HadithDownloadAllCard roots={topLevel} />
+            {topLevel.map((category) => {
+              const children = childrenOf(category.id);
+              return (
+                <View key={category.id} className="rounded-3xl border border-border bg-surface p-4 shadow-soft">
+                  <View className="flex-row items-center gap-2">
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: category.id, title: category.title } })}
+                      className="flex-1 flex-row items-center justify-between"
+                    >
+                      <View className="flex-1">
+                        <Text className="font-display-bold text-base text-fg">{category.title}</Text>
+                        <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(category.count)} حديث</Text>
+                      </View>
+                      <ChevronLeft size={18} color={muted} />
+                    </Pressable>
+                    <HadithPackButton category={category} />
                   </View>
-                  <ChevronLeft size={18} color={muted} />
-                </Pressable>
-                {children.length > 0 && (
-                  <View className="mt-3 flex-row flex-wrap gap-2">
-                    {children.map((child) => (
-                      <Pressable
-                        key={child.id}
-                        accessibilityRole="button"
-                        onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: child.id, title: child.title } })}
-                        className="rounded-full border border-border bg-bg px-3 py-1.5"
-                      >
-                        <Text className="font-sans-bold text-xs text-fg">{child.title}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-              </View>
-            );
-          })
+                  {children.length > 0 && (
+                    <View className="mt-3 flex-row flex-wrap gap-2">
+                      {children.map((child) => (
+                        <Pressable
+                          key={child.id}
+                          accessibilityRole="button"
+                          onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: child.id, title: child.title } })}
+                          className="rounded-full border border-border bg-bg px-3 py-1.5"
+                        >
+                          <Text className="font-sans-bold text-xs text-fg">{child.title}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </>
         )}
 
         <View className="mt-2 items-center gap-3">

@@ -4,9 +4,11 @@ import { cachedFetch } from "@/core/http";
 /**
  * موسوعة الأحاديث النبوية (HadeethEnc.com): hadiths with grade, explanation, benefits and word
  * meanings, through its public API. Cached for a week; every call falls back to empty on failure.
+ * The URL builders and parsers are exported so the offline hadith packs (src/features/hadith) can
+ * download straight into their own files without duplicating thousands of entries in the http cache.
  */
 
-const BASE_URL = "https://hadeethenc.com/api/v1";
+export const HADEETHENC_API = "https://hadeethenc.com/api/v1";
 const REVALIDATE = 60 * 60 * 24 * 7;
 export const HADEETHENC_URL = "https://hadeethenc.com/ar/home";
 
@@ -44,9 +46,28 @@ export interface Hadith {
   categoryIds: string[];
 }
 
+export interface RawHadithPage {
+  data: { id: string; title: string }[];
+  meta: { current_page: string; last_page: number; total_items: number };
+}
+
+export interface RawHadith {
+  id: string;
+  title: string;
+  hadeeth: string;
+  hadeeth_intro?: string;
+  attribution: string;
+  grade: string;
+  explanation: string;
+  hints?: string[];
+  words_meanings?: { word: string; meaning: string }[];
+  reference?: string;
+  categories?: string[];
+}
+
 async function get<T>(path: string): Promise<T | null> {
   try {
-    const response = await cachedFetch(`${BASE_URL}${path}`, REVALIDATE);
+    const response = await cachedFetch(`${HADEETHENC_API}${path}`, REVALIDATE);
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
@@ -76,11 +97,15 @@ export async function getCategories(): Promise<HadithCategory[]> {
 
 export const HADITHS_PER_PAGE = 20;
 
-export async function getCategoryHadiths(categoryId: string, page: number): Promise<HadithPage> {
-  const data = await get<{
-    data: { id: string; title: string }[];
-    meta: { current_page: string; last_page: number; total_items: number };
-  }>(`/hadeeths/list/?language=ar&category_id=${encodeURIComponent(categoryId)}&page=${page}&per_page=${HADITHS_PER_PAGE}`);
+export function hadithListPath(categoryId: string, page: number, perPage = HADITHS_PER_PAGE): string {
+  return `/hadeeths/list/?language=ar&category_id=${encodeURIComponent(categoryId)}&page=${page}&per_page=${perPage}`;
+}
+
+export function hadithPath(id: string): string {
+  return `/hadeeths/one/?language=ar&id=${id}`;
+}
+
+export function parseHadithPage(data: RawHadithPage | null, page: number): HadithPage {
   if (!data) return { items: [], page, lastPage: 0, total: 0 };
   return {
     items: data.data.map((item) => ({ id: String(item.id), title: clean(item.title) })),
@@ -90,21 +115,7 @@ export async function getCategoryHadiths(categoryId: string, page: number): Prom
   };
 }
 
-export async function getHadith(id: string): Promise<Hadith | null> {
-  if (!/^\d+$/.test(id)) return null;
-  const data = await get<{
-    id: string;
-    title: string;
-    hadeeth: string;
-    hadeeth_intro?: string;
-    attribution: string;
-    grade: string;
-    explanation: string;
-    hints?: string[];
-    words_meanings?: { word: string; meaning: string }[];
-    reference?: string;
-    categories?: string[];
-  }>(`/hadeeths/one/?language=ar&id=${id}`);
+export function parseHadith(data: RawHadith | null): Hadith | null {
   if (!data?.hadeeth) return null;
   return {
     id: String(data.id),
@@ -126,15 +137,29 @@ export async function getHadith(id: string): Promise<Hadith | null> {
   };
 }
 
+export async function getCategoryHadiths(categoryId: string, page: number): Promise<HadithPage> {
+  return parseHadithPage(await get<RawHadithPage>(hadithListPath(categoryId, page)), page);
+}
+
+export async function getHadith(id: string): Promise<Hadith | null> {
+  if (!/^\d+$/.test(id)) return null;
+  return parseHadith(await get<RawHadith>(hadithPath(id)));
+}
+
 /** فضائل والآداب: gentle, everyday hadiths for "حديث اليوم". */
-const DAILY_CATEGORY = "5";
+export const DAILY_CATEGORY = "5";
+
+/** Which hadith of the daily category (0-based, by list order) is the hadith of `day`. */
+export function dailyHadithIndex(day: string, total: number): number {
+  const dayNumber = Math.floor(new Date(`${day}T12:00:00Z`).getTime() / 86_400_000);
+  return dayNumber % total;
+}
 
 /** One hadith per calendar day, the same for everyone that day. */
 export async function getHadithOfTheDay(day: string): Promise<Hadith | null> {
   const first = await getCategoryHadiths(DAILY_CATEGORY, 1);
   if (first.total === 0) return null;
-  const dayNumber = Math.floor(new Date(`${day}T12:00:00Z`).getTime() / 86_400_000);
-  const index = dayNumber % first.total;
+  const index = dailyHadithIndex(day, first.total);
   const page = await getCategoryHadiths(DAILY_CATEGORY, Math.floor(index / HADITHS_PER_PAGE) + 1);
   const item = page.items[index % HADITHS_PER_PAGE] ?? first.items[0];
   return item ? getHadith(item.id) : null;

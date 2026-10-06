@@ -5,9 +5,9 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DUAS } from "@/core/adhkar/duasData";
-import { getHadith } from "@/core/hadith/api";
 import { Button } from "@/components/ui/Button";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { getHadithOffline } from "@/features/hadith/offlineHadith";
 import { useAsync } from "@/features/hadith/useAsync";
 import { CARD_STYLES, ShareCard, useShareImage, type CardStyle, type ShareCardContent } from "@/features/share/ShareCard";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -22,7 +22,7 @@ export default function ShareCardScreen() {
   const fg = useThemeColor("fg");
   const [style, setStyle] = useState<CardStyle>("night");
   const { cardRef, busy, error, share } = useShareImage(kind === "hadith" ? "مشاركة الحديث" : "مشاركة الذكر");
-  const hadith = useAsync(kind === "hadith" ? id : "", () => (kind === "hadith" ? getHadith(id) : Promise.resolve(null)));
+  const hadith = useAsync(kind === "hadith" ? id : "", () => (kind === "hadith" ? getHadithOffline(id) : Promise.resolve(null)));
 
   let content: ShareCardContent | null = null;
   if (kind === "dhikr") {

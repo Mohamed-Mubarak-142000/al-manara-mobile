@@ -4,8 +4,8 @@ import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getHadith } from "@/core/hadith/api";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { getHadithOffline } from "@/features/hadith/offlineHadith";
 import { useAsync } from "@/features/hadith/useAsync";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -45,7 +45,7 @@ export default function HadithScreen() {
   const miniPlayer = useMiniPlayerInset();
   const fg = useThemeColor("fg");
   const muted = useThemeColor("fg-muted");
-  const { state, reload } = useAsync(id, () => getHadith(id));
+  const { state, reload } = useAsync(id, () => getHadithOffline(id));
   const [showReferences, setShowReferences] = useState(false);
 
   async function share() {
