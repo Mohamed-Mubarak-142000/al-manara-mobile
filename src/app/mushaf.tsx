@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useKeepAwake } from "expo-keep-awake";
-import { ALargeSmall, Bookmark, BookmarkCheck, ChevronRight, Download, Lock, Minus, Plus } from "lucide-react-native";
+import { ALargeSmall, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, Lock, Minus, Plus } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -10,7 +10,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TAJWEED_RULES } from "@/core/quran/tajweedApi";
 import { toArabicDigits } from "@/core/text/arabic";
 import { currentTrack, usePlayer } from "@/features/audio/playerStore";
+import { AYAH_PILL_HEIGHT, AyahAudioPill } from "@/features/mushaf/AyahAudioPill";
 import { AyahSheet } from "@/features/mushaf/AyahSheet";
+import { JumpSheet } from "@/features/mushaf/JumpSheet";
+import { ayahIdFromTrackId, hafsPages, pageOfAyahId, type PageSource } from "@/features/mushaf/jump";
 import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
@@ -24,6 +27,7 @@ import {
   useReaderState,
   type ReaderTheme,
 } from "@/features/mushaf/readerPrefs";
+import { recordReading } from "@/features/streak/streakStore";
 import { useSupporter } from "@/features/support/supportStore";
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, index) => index + 1);
@@ -39,8 +43,14 @@ export default function MushafScreen() {
   const supporter = useSupporter();
   const player = usePlayer();
   const [page, setPage] = useState(initialPage);
+  // Counts today for the streak even when the reader reopens on yesterday's page.
+  useEffect(() => {
+    recordReading(page);
+  }, [page]);
   const [chrome, setChrome] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const listRef = useRef<FlatList<number>>(null);
   const [selected, setSelected] = useState<MushafAyah | null>(null);
   const theme = READER_THEMES[state.prefs.theme];
   const fontSize = FONT_SIZES[state.prefs.fontStep] ?? FONT_SIZES[1];
@@ -61,10 +71,14 @@ export default function MushafScreen() {
     isHafs.current = riwayaKey === "hafs";
   }, [riwayaKey]);
 
-  const playingTrack = currentTrack(player);
-  const playingId = playingTrack?.id.startsWith("ayah-") ? Number(playingTrack.id.split("-").pop()) : null;
+  const source: PageSource = useMemo(() => (riwaya ? (target: number) => riwaya.mushaf.pages[target - 1] ?? [] : hafsPages), [riwaya]);
+  // Ayah-by-ayah audio is Hafs-numbered, so it is only highlighted on the Hafs pages.
+  const ayahAudioId = ayahIdFromTrackId(currentTrack(player)?.id);
+  const playingId = riwayaKey === "hafs" ? ayahAudioId : null;
+  // Room under the pages for the recitation pill, so it never covers the last line or the page number.
+  const footerSpace = currentTrack(player) ? AYAH_PILL_HEIGHT + 12 : 0;
 
-  const first = riwaya ? riwaya.mushaf.pages[page - 1]?.[0] : getPage(page)[0];
+  const first = source(page)[0];
   const pageBookmarked = first ? isBookmarked(state, first.surah, first.ayah) : false;
 
   // Viewability is direction-agnostic, so the current page is right in RTL and LTR alike.
@@ -81,8 +95,29 @@ export default function MushafScreen() {
   const openAyah = useCallback((ayah: MushafAyah) => setSelected(ayah), []);
   const getItemLayout = useMemo(() => (_: unknown, index: number) => ({ length: width, offset: width * index, index }), [width]);
 
+  const jumpTo = useCallback((target: number, animated = false) => {
+    const clamped = Math.min(TOTAL_PAGES, Math.max(1, target));
+    listRef.current?.scrollToIndex({ index: clamped - 1, animated });
+    setPage(clamped);
+  }, []);
+
+  // Follow the recitation: when the next ayah is on another page and the reader was on the page of the
+  // ayah before it, turn the page. A reader who has browsed elsewhere is left where they are.
+  const pageRef = useRef(page);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  const lastPlaying = useRef<number | null>(null);
+  useEffect(() => {
+    const previous = lastPlaying.current;
+    lastPlaying.current = playingId;
+    if (playingId === null || previous === null || playingId === previous) return;
+    const target = pageOfAyahId(playingId);
+    if (target !== null && target !== pageRef.current && pageOfAyahId(previous) === pageRef.current) jumpTo(target, true);
+  }, [playingId, jumpTo]);
+
   return (
-    <View className="flex-1" style={{ backgroundColor: theme.shell, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+    <View className="flex-1" style={{ backgroundColor: theme.shell, paddingTop: insets.top, paddingBottom: insets.bottom + footerSpace }}>
       <StatusBar style={state.prefs.theme === "night" || state.prefs.theme === "dusk" ? "light" : "dark"} hidden={!chrome} />
       {riwayaKey !== "hafs" && !riwaya ? (
         <View className="flex-1 items-center justify-center gap-4 px-8">
@@ -107,6 +142,7 @@ export default function MushafScreen() {
         </View>
       ) : (
         <FlatList
+          ref={listRef}
           key={riwayaKey}
           data={PAGES}
           extraData={riwaya}
@@ -149,15 +185,25 @@ export default function MushafScreen() {
           <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
             <ChevronRight size={26} color={theme.ink} />
           </Pressable>
-          <View className="flex-1">
-            <Text className="font-display-bold text-base" style={{ color: theme.ink }}>
-              {first ? `سورة ${getSurah(first.surah)?.name ?? ""}` : ""}
-            </Text>
-            <Text className="font-sans text-xs" style={{ color: theme.accent }}>
-              {riwayaKey === "hafs" ? "" : `${RIWAYAT.find((entry) => entry.key === riwayaKey)?.short} · `}صفحة {toArabicDigits(page)} من{" "}
-              {toArabicDigits(TOTAL_PAGES)}
-            </Text>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="الانتقال إلى سورة أو جزء أو صفحة"
+            disabled={riwayaKey !== "hafs" && !riwaya}
+            onPress={() => setJumpOpen(true)}
+            hitSlop={6}
+            className="flex-1 flex-row items-center gap-1.5"
+          >
+            <View className="shrink">
+              <Text className="font-display-bold text-base" style={{ color: theme.ink }} numberOfLines={1}>
+                {first ? `سورة ${getSurah(first.surah)?.name ?? ""} · الجزء ${toArabicDigits(first.juz)}` : ""}
+              </Text>
+              <Text className="font-sans text-xs" style={{ color: theme.accent }}>
+                {riwayaKey === "hafs" ? "" : `${RIWAYAT.find((entry) => entry.key === riwayaKey)?.short} · `}صفحة {toArabicDigits(page)} من{" "}
+                {toArabicDigits(TOTAL_PAGES)}
+              </Text>
+            </View>
+            {(riwayaKey === "hafs" || riwaya) && <ChevronDown size={18} color={theme.accent} />}
+          </Pressable>
           {riwayaKey === "hafs" && (
             <Pressable
               accessibilityRole="button"
@@ -180,6 +226,10 @@ export default function MushafScreen() {
           </Pressable>
         </Animated.View>
       )}
+
+      <AyahAudioPill theme={state.prefs.theme} bottom={insets.bottom + 4} />
+
+      <JumpSheet visible={jumpOpen} page={page} source={source} onJump={jumpTo} onClose={() => setJumpOpen(false)} />
 
       <AyahSheet ayah={selected} riwaya={riwayaKey === "hafs" ? null : riwayaLabel} onClose={() => setSelected(null)} />
 

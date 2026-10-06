@@ -144,6 +144,18 @@ export const reader = {
         : [{ ...bookmark, savedAt: Date.now() }, ...bookmarks],
     });
   },
+  removeBookmark(surah: number, ayah: number) {
+    write({ bookmarks: read().bookmarks.filter((entry) => !(entry.surah === surah && entry.ayah === ayah)) });
+  },
+  /** Undo of a removal: puts the bookmark back where its savedAt places it (newest first). */
+  restoreBookmark(bookmark: Bookmark) {
+    const others = read().bookmarks.filter((entry) => !(entry.surah === bookmark.surah && entry.ayah === bookmark.ayah));
+    write({ bookmarks: [...others, bookmark].sort((a, b) => b.savedAt - a.savedAt) });
+  },
+  /** Undo of a deleted note, keeping its original date. */
+  restoreNote(note: AyahNote) {
+    write({ notes: { ...read().notes, [`${note.surah}:${note.ayah}`]: note } });
+  },
 };
 
 export function noteFor(state: ReaderState, surah: number, ayah: number): AyahNote | undefined {
