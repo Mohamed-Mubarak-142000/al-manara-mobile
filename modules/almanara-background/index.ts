@@ -39,6 +39,9 @@ interface BackgroundModule {
   stopAdhan(): Promise<void>;
   /** Optional for APKs built before it: wakes the NextPrayer widget at `at` (epoch ms) to redraw. */
   scheduleWidgetRefresh?(at: number): Promise<boolean>;
+  /** Optional for APKs built before crash diagnostics: JSON { native: [...], exits: [...] } (see CrashRecorder.kt). */
+  getCrashReports?(): string;
+  clearCrashReports?(): void;
 }
 
 export const background = Platform.OS === "android" ? requireOptionalNativeModule<BackgroundModule>("AlmanaraBackground") : null;

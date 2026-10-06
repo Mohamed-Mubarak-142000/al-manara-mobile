@@ -136,6 +136,16 @@
               "scheme": "https",
               "host": "eslami-platform.vercel.app",
               "pathPrefix": "/tasmee"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/privacy"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/terms"
             }
           ],
           "category": [
@@ -253,8 +263,8 @@
         "expo-build-properties",
         {
           "android": {
-            "enableMinifyInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableMinifyInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
           }
         }
       ]

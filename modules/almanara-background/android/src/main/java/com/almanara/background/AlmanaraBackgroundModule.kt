@@ -14,6 +14,10 @@ class AlmanaraBackgroundModule : Module() {
 
   override fun definition() = ModuleDefinition {
     Name("AlmanaraBackground")
+    // Normally already installed from Application.onCreate (AlmanaraBackgroundPackage); harmless twice.
+    OnCreate { appContext.reactContext?.let { CrashRecorder.install(it) } }
+    Function("getCrashReports") { CrashRecorder.report(context) }
+    Function("clearCrashReports") { CrashRecorder.clear(context) }
     Function("getStatus") {
       val saved = BackgroundState.prefs(context)
       val moments = JSONArray(saved.getString("moments", "[]"))

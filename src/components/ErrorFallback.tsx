@@ -5,11 +5,13 @@ import { useEffect } from "react";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
+import { recordError } from "@/lib/crashLog";
 import { sentryEnabled } from "@/lib/telemetry";
 
 /** Shown instead of a white screen when a screen throws while rendering. */
 export function ErrorFallback({ error, retry }: ErrorBoundaryProps) {
   useEffect(() => {
+    recordError(error, "boundary");
     if (sentryEnabled) Sentry.captureException(error);
   }, [error]);
   return (
