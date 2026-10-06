@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { ChevronRight, KeyRound, Pencil, Plus, Trash2, UserRound } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
@@ -144,7 +144,7 @@ export default function AccountScreen() {
         {state.status === "loading" ? (
           <StateMessage loading />
         ) : (
-          <StateMessage message="سجّل الدخول لإدارة حسابك." onRetry={() => router.replace("/login")} />
+          <StateMessage message="سجّل الدخول لإدارة حسابك." actionLabel="تسجيل الدخول" onAction={() => router.replace("/login")} />
         )}
       </View>
     );
@@ -152,8 +152,11 @@ export default function AccountScreen() {
 
   const track = { false: border, true: primary };
 
+  // Android too: edge-to-edge (forced on RN 0.86 / Android 15+) means the window is no longer resized for the
+  // keyboard, so without padding it covers the lower fields. KeyboardAvoidingView measures the overlap
+  // itself, so it adds nothing where the system already made room.
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-bg" behavior="padding">
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
         <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
           <Pressable

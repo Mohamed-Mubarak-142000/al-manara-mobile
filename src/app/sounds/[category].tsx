@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { ChevronRight, Pause, Play } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SOUND_CATEGORIES, getSoundLibrary, type SoundCategoryKey, type SoundLibrary, type SoundTrack } from "@/core/sounds/soundsApi";
@@ -12,6 +12,7 @@ import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { RADIO_REF, audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
 import { DownloadButton } from "@/features/downloads/DownloadButton";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const ARTIST_ROW_LABEL: Record<SoundCategoryKey, string> = {
@@ -36,25 +37,42 @@ export default function SoundsScreen() {
     : "ibtihalat";
   const info = SOUND_CATEGORIES[category];
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
   const primary = useThemeColor("primary");
+  const onPrimary = useThemeColor("on-primary");
   const player = usePlayer();
   const playing = currentTrack(player);
   const [result, setResult] = useState<{ category: SoundCategoryKey; library: SoundLibrary | null } | null>(null);
   const [artist, setArtist] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const accent = useThemeColor("accent");
 
   useEffect(() => {
     let cancelled = false;
     getSoundLibrary(category)
       .then((library) => !cancelled && setResult({ category, library: library.tracks.length ? library : null }))
-      .catch(() => !cancelled && setResult({ category, library: null }));
+      .catch(() => !cancelled && setResult({ category, library: null }))
+      .finally(() => !cancelled && setRefreshing(false));
     return () => {
       cancelled = true;
     };
-  }, [category]);
+  }, [category, attempt]);
 
   const library = result?.category === category ? result.library : undefined;
+
+  function retry() {
+    setResult(null);
+    setAttempt((value) => value + 1);
+  }
+
+  /** Pull-to-refresh keeps the current list on screen while the new one loads. */
+  function refresh() {
+    setRefreshing(true);
+    setAttempt((value) => value + 1);
+  }
   const names = useMemo(() => new Map(library?.artists.map((entry) => [entry.id, entry.name])), [library]);
   const tracks = useMemo(() => {
     if (!library) return [];
@@ -74,7 +92,8 @@ export default function SoundsScreen() {
       keyExtractor={(entry) => entry.track.id}
       initialNumToRender={16}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={accent} colors={[accent]} />}
+      contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
       ListHeaderComponent={
         <View className="mb-3">
           <View className="rounded-b-[32px] bg-hero px-5 pb-10" style={{ paddingTop: insets.top + 8 }}>
@@ -160,7 +179,7 @@ export default function SoundsScreen() {
         library === undefined ? (
           <StateMessage loading />
         ) : library === null ? (
-          <StateMessage message="تعذّر تحميل هذا القسم الآن، حاول مرة أخرى بعد قليل." />
+          <StateMessage message="تعذّر تحميل هذا القسم الآن، حاول مرة أخرى بعد قليل." onRetry={retry} />
         ) : (
           <StateMessage message="لا توجد نتائج مطابقة." />
         )
@@ -185,9 +204,9 @@ export default function SoundsScreen() {
             >
               <View className={`size-10 items-center justify-center rounded-full ${isCurrent ? "bg-primary" : "bg-primary-soft"}`}>
                 {isCurrent && player.playing ? (
-                  <Pause size={16} color="#fbf8f1" fill="#fbf8f1" />
+                  <Pause size={16} color={onPrimary} fill={onPrimary} />
                 ) : (
-                  <Play size={16} color={isCurrent ? "#fbf8f1" : primary} fill={isCurrent ? "#fbf8f1" : primary} />
+                  <Play size={16} color={isCurrent ? onPrimary : primary} fill={isCurrent ? onPrimary : primary} />
                 )}
               </View>
               <View className="flex-1">

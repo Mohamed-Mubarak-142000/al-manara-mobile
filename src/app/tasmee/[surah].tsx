@@ -18,6 +18,7 @@ import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mush
 import { useSpeech, type SpeechError } from "@/features/tasmee/useSpeech";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/telemetry";
+import { useScaledText } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 type Mode = "voice" | "manual";
@@ -47,6 +48,9 @@ export default function TasmeeSessionScreen() {
   const primary = useThemeColor("primary");
   const surface = useThemeColor("surface");
   const border = useThemeColor("border");
+  const danger = useThemeColor("danger");
+  const ayahText = useScaledText(22, 48);
+  const mistakeText = useScaledText(20, 44);
   const learnerId = activeLearnerId(useAccount());
 
   const all = useMemo(() => {
@@ -247,7 +251,7 @@ export default function TasmeeSessionScreen() {
                       : "border-border bg-surface"
               } ${upcoming ? "opacity-60" : ""}`}
             >
-              <Text className="font-quran text-[22px] leading-[48px] text-fg">
+              <Text className="font-quran text-fg" style={ayahText}>
                 {item.words.map((word, wordIndex) => (
                   <Text key={wordIndex}>
                     {/* A hidden word keeps its width: same text, painted in the placeholder colour. */}
@@ -342,7 +346,7 @@ export default function TasmeeSessionScreen() {
           {mistake && mistakeAyah && mistakeWord && (
             <View className="rounded-[28px] bg-surface p-5">
               <View className="flex-row items-center gap-2">
-                <TriangleAlert size={20} color="#e0526b" />
+                <TriangleAlert size={20} color={danger} />
                 <Text className="font-display-bold text-lg text-fg">
                   {mistake.kind === "wrong"
                     ? `خطأ في الآية ${toArabicDigits(mistakeAyah.ayah)}`
@@ -356,7 +360,9 @@ export default function TasmeeSessionScreen() {
                   سمعنا «{mistake.heard}»، والصحيح «{mistakeWord.text}».
                 </Text>
               )}
-              <Text className="mt-3 font-quran text-xl leading-[44px] text-fg">{mistakeAyah.text}</Text>
+              <Text className="mt-3 font-quran text-fg" style={mistakeText}>
+                {mistakeAyah.text}
+              </Text>
               <View className="mt-4 gap-2">
                 <Button icon={RotateCcw} onPress={() => closeMistake(false)}>
                   أعد القراءة من هنا

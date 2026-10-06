@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { ChevronLeft, ChevronRight, ScrollText } from "lucide-react-native";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getCategories, getHadithOfTheDay } from "@/core/hadith/api";
@@ -10,14 +10,17 @@ import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAsync } from "@/features/hadith/useAsync";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 /** The website's /hadith: hadith of the day, then the topics with their sub-topics. */
 export default function HadithIndexScreen() {
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
   const gold = useThemeColor("gold-soft");
   const muted = useThemeColor("fg-muted");
+  const accent = useThemeColor("accent");
   const today = planDay();
   const daily = useAsync(today, () => getHadithOfTheDay(today));
   const categories = useAsync("categories", async () => {
@@ -30,7 +33,22 @@ export default function HadithIndexScreen() {
     categories.state.status === "ready" ? categories.state.data.filter((category) => category.parentId === id) : [];
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
+      refreshControl={
+        <RefreshControl
+          // Each section shows its own loading state, so the pull spinner only acknowledges the gesture.
+          refreshing={false}
+          onRefresh={() => {
+            daily.reload();
+            categories.reload();
+          }}
+          tintColor={accent}
+          colors={[accent]}
+        />
+      }
+    >
       <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
         <Pressable
           accessibilityRole="button"

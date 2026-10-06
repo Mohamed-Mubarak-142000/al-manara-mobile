@@ -10,12 +10,14 @@ import { Button } from "@/components/ui/Button";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { CertificateCard, type CertificateData } from "@/features/exams/CertificateCard";
 import { supabase } from "@/lib/supabase";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 /** One of the user's certificates, ready to share as an image. */
 export default function CertificateScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const fg = useThemeColor("fg");
   const card = useRef<View>(null);
   // Without Supabase there is nothing to look up: start at "not found" instead of loading.
@@ -46,7 +48,7 @@ export default function CertificateScreen() {
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32, paddingHorizontal: 16 }}
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 32, paddingHorizontal: 16 }}
     >
       <Pressable
         accessibilityRole="button"

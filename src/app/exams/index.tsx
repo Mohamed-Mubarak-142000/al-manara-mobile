@@ -10,6 +10,7 @@ import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { getExamOverview, getExamSettings, type JuzExamStatus } from "@/features/exams/examData";
 import { juzOrdinal } from "@/features/exams/juzNames";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const JUZ = Array.from({ length: 30 }, (_, index) => index + 1);
@@ -28,6 +29,7 @@ function statusLine(status: JuzExamStatus | undefined): { text: string; tone: "d
 
 export default function ExamsScreen() {
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
   const gold = useThemeColor("gold-soft");
   const primary = useThemeColor("primary");
@@ -56,7 +58,7 @@ export default function ExamsScreen() {
       keyExtractor={(juz) => String(juz)}
       numColumns={2}
       columnWrapperStyle={{ gap: 10, paddingHorizontal: 16 }}
-      contentContainerStyle={{ gap: 10, paddingBottom: insets.bottom + 32 }}
+      contentContainerStyle={{ gap: 10, paddingBottom: insets.bottom + miniPlayer + 32 }}
       ListHeaderComponent={
         <View className="mb-3 rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
           <Pressable

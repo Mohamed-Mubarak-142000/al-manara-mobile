@@ -3,6 +3,7 @@ import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 
+import { getSurah } from "@/features/mushaf/mushaf";
 import { requestBackgroundAccess } from "@/features/notifications/backgroundAccess";
 import { replaceLocalSchedule } from "@/features/notifications/replaceLocalSchedule";
 import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
@@ -13,7 +14,7 @@ export interface AdhkarReminder {
   minute: number;
 }
 
-export type ReminderKind = "morning" | "evening";
+export type ReminderKind = "morning" | "evening" | "friday";
 type Reminders = Record<ReminderKind, AdhkarReminder>;
 
 const KEY = "al-manara:adhkar-reminders:v1";
@@ -22,11 +23,34 @@ const OUTSIDE_CHANNEL_ID = "adhkar-outside-v1";
 const DEFAULTS: Reminders = {
   morning: { enabled: false, hour: 7, minute: 0 },
   evening: { enabled: false, hour: 17, minute: 0 },
+  friday: { enabled: false, hour: 10, minute: 0 },
 };
+/** expo-notifications numbers weekdays 1–7 from Sunday, so Friday is 6. */
+export const FRIDAY_WEEKDAY = 6;
+const AL_KAHF = 18;
 const COPY: Record<ReminderKind, { title: string; body: string }> = {
   morning: { title: "أذكار الصباح", body: "ابدأ يومك بذكر الله، أذكار الصباح بانتظارك." },
   evening: { title: "أذكار المساء", body: "حان وقت أذكار المساء." },
+  friday: { title: "يوم الجمعة", body: "لا تنسَ قراءة سورة الكهف، وأكثِر من الصلاة على النبي ﷺ." },
 };
+
+/** Where tapping the reminder leads: the Friday one opens the mushaf at Surah Al-Kahf. */
+function reminderUrl(kind: ReminderKind): string {
+  if (kind !== "friday") return "/adhkar";
+  return `/mushaf?page=${getSurah(AL_KAHF)?.startPage ?? 293}`;
+}
+
+function reminderTrigger(kind: ReminderKind, reminder: AdhkarReminder): Notifications.NotificationTriggerInput {
+  if (kind === "friday")
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      weekday: FRIDAY_WEEKDAY,
+      hour: reminder.hour,
+      minute: reminder.minute,
+      channelId: CHANNEL_ID,
+    };
+  return { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: reminder.hour, minute: reminder.minute, channelId: CHANNEL_ID };
+}
 
 let cached: Reminders | null = null;
 const listeners = new Set<() => void>();
@@ -61,13 +85,8 @@ async function apply(reminders: Reminders) {
     if (!reminder.enabled) continue;
     desired.push({
       identifier: `adhkar-${kind}`,
-      content: { ...COPY[kind], sound: "default", data: { kind: "adhkar", url: "/adhkar" } },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: reminder.hour,
-        minute: reminder.minute,
-        channelId: CHANNEL_ID,
-      },
+      content: { ...COPY[kind], sound: "default", data: { kind: "adhkar", url: reminderUrl(kind) } },
+      trigger: reminderTrigger(kind, reminder),
     });
   }
   if (Platform.OS !== "web" && readOutside()) {
@@ -111,7 +130,7 @@ export function restoreAdhkarReminders() {
   });
 }
 
-/** Turns a daily reminder on or off. Returns false when notification permission was refused. */
+/** Turns a daily (or the weekly Friday) reminder on or off. Returns false when notification permission was refused. */
 export async function setAdhkarReminder(kind: ReminderKind, enabled: boolean): Promise<boolean> {
   return serialize(async () => {
     if (enabled) {

@@ -1,7 +1,7 @@
 ﻿import * as Notifications from "expo-notifications";
 import Storage from "expo-sqlite/kv-store";
 import { Platform } from "react-native";
-import { setOutsideAdhkarNotifications, restoreAdhkarReminders } from "@/features/adhkar/adhkarReminders";
+import { setAdhkarReminder, setOutsideAdhkarNotifications, restoreAdhkarReminders } from "@/features/adhkar/adhkarReminders";
 import { replaceLocalSchedule } from "@/features/notifications/replaceLocalSchedule";
 
 jest.mock("expo-notifications", () => ({
@@ -9,11 +9,15 @@ jest.mock("expo-notifications", () => ({
   requestPermissionsAsync: jest.fn(),
   getPermissionsAsync: jest.fn(),
   AndroidImportance: { DEFAULT: 3, HIGH: 4 },
-  SchedulableTriggerInputTypes: { DAILY: "daily" },
+  SchedulableTriggerInputTypes: { DAILY: "daily", WEEKLY: "weekly" },
 }));
-jest.mock("expo-sqlite/kv-store", () => ({ __esModule: true, default: {
-  getItemSync: jest.fn(), setItemSync: jest.fn(),
-} }));
+jest.mock("expo-sqlite/kv-store", () => ({
+  __esModule: true,
+  default: {
+    getItemSync: jest.fn(),
+    setItemSync: jest.fn(),
+  },
+}));
 jest.mock("@/features/notifications/replaceLocalSchedule", () => ({ replaceLocalSchedule: jest.fn() }));
 
 describe("outside adhkar system notifications", () => {
@@ -54,6 +58,19 @@ describe("outside adhkar system notifications", () => {
     await expect(setOutsideAdhkarNotifications(true)).rejects.toThrow("schedule failed");
     expect(Storage.setItemSync).not.toHaveBeenCalled();
     await restoreAdhkarReminders();
+    expect(replaceLocalSchedule).toHaveBeenLastCalledWith("adhkar", []);
+  });
+
+  it("schedules the Friday reminder weekly at 10:00 and opens Surah Al-Kahf", async () => {
+    await expect(setAdhkarReminder("friday", true)).resolves.toBe(true);
+    const desired = jest.mocked(replaceLocalSchedule).mock.calls[0][1];
+    expect(desired).toHaveLength(1);
+    expect(desired[0].identifier).toBe("adhkar-friday");
+    // expo-notifications counts weekdays from Sunday = 1, so Friday is 6.
+    expect(desired[0].trigger).toEqual({ type: "weekly", weekday: 6, hour: 10, minute: 0, channelId: "adhkar" });
+    expect(desired[0].content.title).toBe("يوم الجمعة");
+    expect(desired[0].content.data).toEqual({ kind: "adhkar", url: "/mushaf?page=293" });
+    await setAdhkarReminder("friday", false);
     expect(replaceLocalSchedule).toHaveBeenLastCalledWith("adhkar", []);
   });
 });

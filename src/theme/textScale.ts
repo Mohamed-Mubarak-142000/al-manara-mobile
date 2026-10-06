@@ -72,3 +72,17 @@ export function useTextScale(): number {
     return () => listeners.delete(listener);
   }, read);
 }
+
+/** A size and line height in px, grown by the app text scale. */
+export function scaledText(fontSize: number, lineHeight: number, scale: number): { fontSize: number; lineHeight: number } {
+  return { fontSize: Math.round(fontSize * scale), lineHeight: Math.round(lineHeight * scale) };
+}
+
+/**
+ * For text set in px instead of a text-* utility (Quran and dhikr lines, display titles). Arbitrary
+ * classes like text-[22px] leading-[44px] are fixed, so they ignore the text size setting and a fixed
+ * line height clips the taller glyphs once the font grows. Pass the result as `style`.
+ */
+export function useScaledText(fontSize: number, lineHeight: number): { fontSize: number; lineHeight: number } {
+  return scaledText(fontSize, lineHeight, useTextScale());
+}

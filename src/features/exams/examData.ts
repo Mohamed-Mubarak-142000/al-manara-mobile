@@ -108,13 +108,19 @@ export const exams = {
   },
 };
 
+/** The account's certificates; `null` when they could not be loaded (offline, server error), [] when there are none. */
 export async function getMyCertificates(learnerIds: string[]) {
-  if (!supabase || learnerIds.length === 0) return [];
-  const { data } = await supabase
-    .from("certificates")
-    .select("juz, verification_code, holder_name, score, total, issued_at, revoked_at, learner_id")
-    .in("learner_id", learnerIds)
-    .is("revoked_at", null)
-    .order("issued_at", { ascending: false });
-  return data ?? [];
+  if (!supabase) return null;
+  if (learnerIds.length === 0) return [];
+  try {
+    const { data, error } = await supabase
+      .from("certificates")
+      .select("juz, verification_code, holder_name, score, total, issued_at, revoked_at, learner_id")
+      .in("learner_id", learnerIds)
+      .is("revoked_at", null)
+      .order("issued_at", { ascending: false });
+    return error ? null : (data ?? []);
+  } catch {
+    return null;
+  }
 }

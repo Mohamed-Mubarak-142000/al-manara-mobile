@@ -13,6 +13,8 @@ import { exams, getAttempt, getExamSettings, type ActiveAttempt, type ExamSettin
 import { QUESTION_TITLES, juzOrdinal } from "@/features/exams/juzNames";
 import { getSurah } from "@/features/mushaf/mushaf";
 import { useNow } from "@/features/time/useNow";
+import { useScaledText } from "@/theme/textScale";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function Header({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -39,10 +41,11 @@ function Result({ result }: { result: SubmitResult }) {
   const passed = result.status === "passed";
   const percent = result.total ? Math.round((result.score / result.total) * 100) : 0;
   const gold = useThemeColor("gold");
+  const danger = useThemeColor("danger");
   return (
     <View className={`items-center rounded-[32px] p-6 ${passed ? "bg-hero" : "border border-border bg-surface"}`}>
       <View className={`size-20 items-center justify-center rounded-full ${passed ? "bg-gold" : "bg-danger/15"}`}>
-        {passed ? <Award size={40} color="#012a22" /> : <X size={40} color="#e0526b" />}
+        {passed ? <Award size={40} color="#012a22" /> : <X size={40} color={danger} />}
       </View>
       <Text className={`mt-5 text-center font-display-bold text-2xl ${passed ? "text-hero-fg" : "text-fg"}`}>
         {passed ? "مبارك! اجتزت اختبار الجزء" : result.status === "expired" ? "انتهى وقت الاختبار" : "لم تبلغ درجة النجاح هذه المرة"}
@@ -79,8 +82,11 @@ function Result({ result }: { result: SubmitResult }) {
 
 function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: SubmitResult) => void }) {
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const now = useNow(1000);
   const primary = useThemeColor("primary");
+  const danger = useThemeColor("danger");
+  const promptText = useScaledText(22, 46);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>(() => attempt.questions.map(() => -1));
   const [busy, setBusy] = useState(false);
@@ -117,13 +123,13 @@ function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: 
   }, [attempt.expiresAt]);
 
   return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 12 }}>
+    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 12 }}>
       <View className="flex-row items-center justify-between px-4">
         <Text className="font-sans-bold text-sm text-fg-muted">
           السؤال {toArabicDigits(index + 1)} من {toArabicDigits(attempt.questions.length)}
         </Text>
         <View className={`flex-row items-center gap-1.5 rounded-full px-3 py-1 ${left < 60 ? "bg-danger/15" : "bg-primary-soft"}`}>
-          <Clock size={14} color={left < 60 ? "#e0526b" : primary} />
+          <Clock size={14} color={left < 60 ? danger : primary} />
           <Text className={`font-display-bold text-sm ${left < 60 ? "text-danger" : "text-primary"}`}>{formatDuration(left)}</Text>
         </View>
       </View>
@@ -134,7 +140,9 @@ function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text className="font-sans-bold text-base text-accent-strong">{QUESTION_TITLES[question.type]}</Text>
         <View className="rounded-3xl border border-gold/30 bg-surface p-5">
-          <Text className="font-quran text-[22px] leading-[46px] text-fg">{question.prompt}</Text>
+          <Text className="font-quran text-fg" style={promptText}>
+            {question.prompt}
+          </Text>
           {question.type !== "surah" && <Text className="mt-2 font-sans text-xs text-fg-muted">سورة {getSurah(question.surah)?.name}</Text>}
         </View>
         {question.options.map((option, optionIndex) => {
@@ -191,6 +199,7 @@ export default function JuzExamScreen() {
   const { juz: param } = useLocalSearchParams<{ juz: string }>();
   const juz = Number(param);
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const learnerId = activeLearnerId(useAccount());
   const [settings, setSettings] = useState<ExamSettings | null>(null);
   const [attempt, setAttempt] = useState<ActiveAttempt | null>(null);
@@ -220,7 +229,7 @@ export default function JuzExamScreen() {
   if (attempt && !result) return <Runner attempt={attempt} onDone={setResult} />;
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
       <Header title={`اختبار الجزء ${juzOrdinal(juz)}`} subtitle="اختبار حفظ من آيات الجزء، وشهادة موثّقة باسمك عند النجاح." />
       <View className="gap-4 px-4 pt-5">
         {result ? (

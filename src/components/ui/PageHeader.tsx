@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { Divider } from "./Ornament";
@@ -20,6 +21,7 @@ interface PageHeaderProps {
 export function PageHeader({ kicker, title, description, icon: Icon, actions }: PageHeaderProps) {
   const insets = useSafeAreaInsets();
   const goldSoft = useThemeColor("gold-soft");
+  const textScale = useTextScale();
   const enter = (index: number) => FadeInDown.duration(600).delay(index * 90);
 
   return (
@@ -31,7 +33,12 @@ export function PageHeader({ kicker, title, description, icon: Icon, actions }: 
           <Text className="font-sans-bold text-sm text-gold-soft">{kicker}</Text>
         </View>
       </Animated.View>
-      <Animated.Text entering={enter(1)} className="mt-4 font-display-bold text-3xl leading-[46px] text-hero-fg">
+      {/* text-3xl follows the text size setting; the roomy line height has to grow with it or the display font clips. */}
+      <Animated.Text
+        entering={enter(1)}
+        className="mt-4 font-display-bold text-3xl text-hero-fg"
+        style={{ lineHeight: Math.round(46 * textScale) }}
+      >
         {title}
       </Animated.Text>
       {description && (

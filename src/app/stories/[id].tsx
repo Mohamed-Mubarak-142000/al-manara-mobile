@@ -10,6 +10,7 @@ import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { useAsync } from "@/features/hadith/useAsync";
 import { loadStories, markWatched } from "@/features/stories/storiesData";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 /**
@@ -23,10 +24,11 @@ function playerHtml(youtubeId: string): string {
 export default function StoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const { width } = useWindowDimensions();
   const fg = useThemeColor("fg");
   const learnerId = activeLearnerId(useAccount());
-  const { state } = useAsync(learnerId ?? "guest", () => (learnerId ? loadStories(learnerId) : Promise.resolve(null)));
+  const { state, reload } = useAsync(learnerId ?? "guest", () => (learnerId ? loadStories(learnerId) : Promise.resolve(null)));
   const [justWatched, setJustWatched] = useState(false);
 
   const stories = state.status === "ready" ? state.data.stories : [];
@@ -45,9 +47,13 @@ export default function StoryScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }}>
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 32 }}
+    >
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel="رجوع إلى كل القصص"
         onPress={() => router.back()}
         hitSlop={12}
         className="mx-3 mb-2 flex-row items-center gap-1 self-start p-1"
@@ -58,6 +64,14 @@ export default function StoryScreen() {
 
       {state.status === "loading" ? (
         <StateMessage loading />
+      ) : !learnerId ? (
+        <StateMessage
+          message="القصص متاحة بعد تسجيل الدخول، لنحفظ ما شاهدته."
+          actionLabel="تسجيل الدخول"
+          onAction={() => router.push("/login")}
+        />
+      ) : state.status === "error" ? (
+        <StateMessage message="تعذّر تحميل القصة الآن، حاول بعد قليل." onRetry={reload} />
       ) : !story ? (
         <StateMessage message="لم نجد هذه القصة." />
       ) : (

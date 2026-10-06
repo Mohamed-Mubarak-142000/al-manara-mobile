@@ -9,6 +9,9 @@ import { useColorScheme } from "react-native";
 
 import { useLastReadSync } from "@/features/account/useLastReadSync";
 import { AdhkarToaster } from "@/features/adhkar/AdhkarToaster";
+import { GlobalMiniPlayer } from "@/features/audio/MiniPlayer";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { ReadingStreakTracker } from "@/features/streak/streakStore";
 import { BackgroundReminders } from "@/features/notifications/BackgroundReminders";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
 import { onboarding } from "@/features/onboarding/onboardingStore";
@@ -77,7 +80,11 @@ function RootLayout() {
         <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="share-card" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
       </Stack>
+      <ReadingStreakTracker />
+      <GlobalMiniPlayer />
+      <OfflineBanner />
       <AdhkarToaster />
     </ThemeProvider>
   );

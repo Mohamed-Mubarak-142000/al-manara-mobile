@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { ChevronRight } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Divider } from "@/components/ui/Ornament";
@@ -13,8 +13,11 @@ import { signInWithGoogle } from "./authFlows";
 export function AuthLayout({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   const insets = useSafeAreaInsets();
   const heroFg = useThemeColor("hero-fg");
+  // Android too: edge-to-edge (forced on RN 0.86 / Android 15+) means the window is no longer resized for the
+  // keyboard, so without padding it covers the lower fields. KeyboardAvoidingView measures the overlap
+  // itself, so it adds nothing where the system already made room.
   return (
-    <KeyboardAvoidingView className="flex-1 bg-bg" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-bg" behavior="padding">
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <View className="rounded-b-[32px] bg-hero px-5 pb-8" style={{ paddingTop: insets.top + 8 }}>
           <Pressable

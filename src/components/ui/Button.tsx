@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, Text, View, type PressableProps } from "react-native";
 
+import { useTextScale } from "@/theme/textScale";
 import { useThemeColor, type ThemeColor } from "@/theme/useThemeColor";
 
 /** The website's buttonClass() variants (src/components/ui/button.ts), as a native component. */
@@ -17,9 +18,10 @@ const VARIANTS: Record<ButtonVariant, { box: string; text: string; icon: ThemeCo
   light: { box: "border border-white/30 bg-white/10", text: "text-white", icon: "white" },
 };
 
-const SIZES: Record<ButtonSize, { box: string; text: string; icon: number }> = {
+/** `px` sets the label in pixels where Tailwind has no step; it is grown by the text size setting. */
+const SIZES: Record<ButtonSize, { box: string; text: string; icon: number; px?: number }> = {
   sm: { box: "h-9 px-3.5 gap-1.5", text: "text-sm", icon: 16 },
-  md: { box: "h-11 px-5 gap-2", text: "text-[15px]", icon: 18 },
+  md: { box: "h-11 px-5 gap-2", text: "", icon: 18, px: 15 },
   lg: { box: "h-13 px-7 gap-2.5", text: "text-base", icon: 20 },
 };
 
@@ -40,6 +42,7 @@ export function Button({ children, variant = "primary", size = "md", icon: Icon,
   const s = SIZES[size];
   const themed = useThemeColor(v.icon === "white" ? "hero-fg" : v.icon);
   const iconColor = v.icon === "white" ? "#ffffff" : themed;
+  const textScale = useTextScale();
 
   return (
     <View className={className}>
@@ -55,7 +58,9 @@ export function Button({ children, variant = "primary", size = "md", icon: Icon,
       >
         <View className={`flex-row items-center justify-center rounded-full ${v.box} ${s.box}`}>
           {Icon && <Icon size={s.icon} color={iconColor} />}
-          <Text className={`font-sans-bold ${v.text} ${s.text}`}>{children}</Text>
+          <Text className={`font-sans-bold ${v.text} ${s.text}`} style={s.px ? { fontSize: Math.round(s.px * textScale) } : undefined}>
+            {children}
+          </Text>
         </View>
       </Pressable>
     </View>

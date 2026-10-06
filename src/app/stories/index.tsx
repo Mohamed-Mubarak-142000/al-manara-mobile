@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Check, ChevronRight, Clapperboard, Lock, Play } from "lucide-react-native";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
@@ -10,14 +10,17 @@ import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { useAsync } from "@/features/hadith/useAsync";
 import { loadStories, thumbnail } from "@/features/stories/storiesData";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 /** The website's /stories: illustrated prophets' stories for signed-in learners, with what was watched. */
 export default function StoriesScreen() {
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
   const gold = useThemeColor("gold-soft");
   const primary = useThemeColor("primary");
+  const accent = useThemeColor("accent");
   const learnerId = activeLearnerId(useAccount());
   const { state, reload } = useAsync(learnerId ?? "guest", () => (learnerId ? loadStories(learnerId) : Promise.resolve(null)));
   const data = state.status === "ready" ? state.data : null;
@@ -28,7 +31,8 @@ export default function StoriesScreen() {
       className="flex-1 bg-bg"
       data={data?.stories ?? []}
       keyExtractor={(story) => story.id}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 32, gap: 12 }}
+      refreshControl={learnerId ? <RefreshControl refreshing={false} onRefresh={reload} tintColor={accent} colors={[accent]} /> : undefined}
+      contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32, gap: 12 }}
       ListHeaderComponent={
         <View className="mb-2 rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
           <Pressable
@@ -83,7 +87,7 @@ export default function StoriesScreen() {
                 <Image source={{ uri: thumbnail(item.youtube_id) }} style={{ width: "100%", aspectRatio: 16 / 9 }} contentFit="cover" />
                 <View className="absolute inset-0 items-center justify-center">
                   <View className="size-14 items-center justify-center rounded-full bg-black/45">
-                    <Play size={26} color="#fff" fill="#fff" />
+                    <Play size={26} color={heroFg} fill={heroFg} />
                   </View>
                 </View>
                 {watched && (

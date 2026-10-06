@@ -12,9 +12,12 @@ import { Button } from "@/components/ui/Button";
 import { Screen, Section } from "@/components/ui/Screen";
 import { GuestSignInCard } from "@/features/home/GuestSignInCard";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
+import { QuickActions, openReading } from "@/features/home/QuickActions";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { SponsorCard } from "@/features/home/SponsorCard";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
+import { StreakCard } from "@/features/streak/StreakCard";
+import { useReaderState } from "@/features/mushaf/readerPrefs";
 import { RamadanCard } from "@/features/ramadan/RamadanCard";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -32,11 +35,12 @@ export default function HomeScreen() {
   const bg = useThemeColor("bg");
   const enter = (index: number) => FadeInDown.duration(700).delay(150 + index * 120);
   const hijri = hijriLine();
+  const { lastRead } = useReaderState();
 
   return (
     <Screen bleed>
       <View className="overflow-hidden bg-emerald-night" style={{ paddingTop: insets.top + 24 }}>
-        <Image source={require("@/assets/images/scenes/quran-terrace.png")} contentFit="cover" style={{ position: "absolute", inset: 0 }} />
+        <Image source={require("@/assets/images/scenes/quran-terrace.webp")} contentFit="cover" style={{ position: "absolute", inset: 0 }} />
         <LinearGradient
           colors={["rgba(1,42,34,0.35)", "rgba(1,42,34,0.85)", "#012a22"]}
           locations={[0, 0.45, 1]}
@@ -58,7 +62,7 @@ export default function HomeScreen() {
             اقرأ القرآن الكريم، واستمع لأجمل التلاوات، واجعل للذكر مكانًا ثابتًا في يومك.
           </Animated.Text>
           <Animated.View entering={enter(3)} className="mt-6 flex-row flex-wrap gap-3">
-            <Button variant="gold" icon={BookOpen} onPress={() => router.push("/quran")}>
+            <Button variant="gold" icon={BookOpen} onPress={() => openReading(lastRead)}>
               اقرأ القرآن
             </Button>
             <Button variant="light" icon={Headphones} onPress={() => router.push("/listen")}>
@@ -71,10 +75,12 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <Section className="mt-2 gap-3">
+      <Section className="-mt-6 gap-3">
+        <QuickActions />
+        <ContinueReadingCard />
+        <StreakCard />
         <GuestSignInCard />
         <RamadanCard />
-        <ContinueReadingCard />
       </Section>
 
       <Section className="mt-6">

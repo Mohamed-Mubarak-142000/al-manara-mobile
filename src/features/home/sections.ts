@@ -17,7 +17,6 @@ import {
   Radio,
   ScrollText,
   Sparkles,
-  Trees,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -25,7 +24,7 @@ export interface AppSection {
   label: string;
   description: string;
   icon: LucideIcon;
-  /** Unset while the screen has not been built yet; the card then shows "قريبًا". */
+  /** Unset while the screen has not been built yet; the home grid then leaves the section out. */
   href?: Href;
 }
 
@@ -68,20 +67,20 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "الختمة", icon: BookMarked, description: "اختم القرآن بوِرد يومي تختاره", href: "/khatma" },
   { label: "التسميع", icon: Mic, description: "سمّع من حفظك بصوتك ونوقفك عند الخطأ", href: "/tasmee" },
   { label: "الاختبارات", icon: GraduationCap, description: "اختبر حفظك جزءًا جزءًا واحصل على شهادة", href: "/exams" },
-  { label: "الأطفال", icon: Trees, description: "حديقة القرآن للأطفال" },
+  // The website's "الأطفال" (حديقة القرآن للأطفال) comes back here, with its href, once the screen exists.
 ];
 
 export interface SectionGroup {
   title: string;
-  /** Labels from APP_SECTIONS, up to four: one slide of the home slider. */
+  /** Labels from APP_SECTIONS: one row of the home grid. */
   labels: readonly string[];
 }
 
-/** The home "أقسام المنارة" slider, one group per slide. */
+/** The home "أقسام المنارة" grid, one titled group per row. Every built section appears exactly once. */
 export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "القرآن", labels: ["المصحف", "الاستماع", "الإذاعة", "التسميع"] },
   { title: "يومك", labels: ["المواقيت", "الأذكار", "الأحاديث", "التقويم"] },
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "صوتيات", labels: ["ابتهالات", "تواشيح", "أدعية", "أذان"] },
-  { title: "للعائلة", labels: ["القصص", "الأطفال"] },
+  { title: "للعائلة", labels: ["القصص"] },
 ];

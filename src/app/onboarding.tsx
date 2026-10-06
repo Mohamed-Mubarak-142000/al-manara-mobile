@@ -47,7 +47,8 @@ export default function OnboardingScreen() {
   const { reciters } = useReciters();
   const [query, setQuery] = useState("");
   const [locating, setLocating] = useState(false);
-  const [wird, setWird] = useState<number | null>(2);
+  // Nothing preselected: a khatma is only created when the user picks a daily amount.
+  const [wird, setWird] = useState<number | null>(null);
   const [adhan, setAdhan] = useState(true);
   const [busy, setBusy] = useState(false);
 

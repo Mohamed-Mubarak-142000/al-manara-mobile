@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronDown, ChevronRight, ChevronUp, Share2 } from "lucide-react-native";
+import { ChevronDown, ChevronRight, ChevronUp, ImageIcon, Share2 } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getHadith } from "@/core/hadith/api";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAsync } from "@/features/hadith/useAsync";
+import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const SITE_URL = (process.env.EXPO_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
@@ -41,6 +42,7 @@ function HadithText({ text }: { text: string }) {
 export default function HadithScreen() {
   const { id, category } = useLocalSearchParams<{ id: string; category?: string }>();
   const insets = useSafeAreaInsets();
+  const miniPlayer = useMiniPlayerInset();
   const fg = useThemeColor("fg");
   const muted = useThemeColor("fg-muted");
   const { state, reload } = useAsync(id, () => getHadith(id));
@@ -54,16 +56,30 @@ export default function HadithScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }}>
+    <ScrollView
+      className="flex-1 bg-bg"
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 32 }}
+    >
       <View className="flex-row items-center justify-between px-3">
         <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12} className="flex-row items-center gap-1 p-1">
           <ChevronRight size={24} color={fg} />
           <Text className="font-sans-bold text-sm text-fg">{category ? `أحاديث ${category}` : "كل الأحاديث"}</Text>
         </Pressable>
         {state.status === "ready" && (
-          <Pressable accessibilityRole="button" accessibilityLabel="مشاركة" onPress={share} hitSlop={10} className="p-2">
-            <Share2 size={20} color={muted} />
-          </Pressable>
+          <View className="flex-row items-center">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="مشاركة الحديث كصورة"
+              onPress={() => router.push({ pathname: "/share-card", params: { kind: "hadith", id } })}
+              hitSlop={10}
+              className="p-2"
+            >
+              <ImageIcon size={20} color={muted} />
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="مشاركة نص الحديث" onPress={share} hitSlop={10} className="p-2">
+              <Share2 size={20} color={muted} />
+            </Pressable>
+          </View>
         )}
       </View>
 

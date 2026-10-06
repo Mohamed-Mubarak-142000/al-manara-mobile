@@ -106,7 +106,9 @@ export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }
         <Text className="mt-2 font-sans text-xs text-fg-muted">التذكير متوقف حاليًا. راجع إذن الظهور فوق التطبيقات.</Text>
       )}
       {android && enabled && status?.overlayRunning && (
-        <Text className="mt-2 font-sans text-xs text-primary">خدمة التذكير تعمل. افتح تطبيقًا آخر وانتظر دقيقة بين ٧ صباحًا و١٠ مساءً.</Text>
+        <Text className="mt-2 font-sans text-xs text-primary">
+          خدمة التذكير تعمل. افتح تطبيقًا آخر وانتظر دقيقة بين ٧ صباحًا و١٠ مساءً.
+        </Text>
       )}
       {android && (enabled || notificationsEnabled || reminders.morning.enabled || reminders.evening.enabled) && (
         <BackgroundAccessHint exact />
@@ -120,7 +122,9 @@ export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }
         </Pressable>
       )}
       {!!overlayError && (
-        <Text accessibilityRole="alert" className="mt-2 font-sans text-sm text-accent-strong">{overlayError}</Text>
+        <Text accessibilityRole="alert" className="mt-2 font-sans text-sm text-accent-strong">
+          {overlayError}
+        </Text>
       )}
       {!!error && (
         <Pressable onPress={() => Linking.openSettings()}>
