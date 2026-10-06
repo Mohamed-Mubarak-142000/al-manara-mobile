@@ -1,6 +1,6 @@
 import { normalizeWord, skeleton } from "@/core/tasmee/recitation";
 
-import { getSurahs, getSurahAyahs, type MushafAyah } from "./mushaf";
+import { getAllAyahs, type MushafAyah } from "./mushaf";
 
 /**
  * Offline search over the bundled Hafs text. Uthmani spelling differs from everyday writing
@@ -20,12 +20,47 @@ function toKey(text: string): string {
     .join(" ");
 }
 
-let index: { ayah: MushafAyah; key: string }[] | null = null;
+type Entry = { ayah: MushafAyah; key: string };
 
-function buildIndex() {
-  if (index) return index;
-  index = getSurahs().flatMap((surah) => getSurahAyahs(surah.number).map((ayah) => ({ ayah, key: ` ${toKey(ayah.text)} ` })));
+let index: Entry[] | null = null;
+let building: Promise<void> | null = null;
+
+const toEntry = (ayah: MushafAyah): Entry => ({ ayah, key: ` ${toKey(ayah.text)} ` });
+
+/** One pass over the ayahs, already in mushaf order. */
+function buildIndex(): Entry[] {
+  if (!index) index = getAllAyahs().map(toEntry);
   return index;
+}
+
+const CHUNK = 400;
+
+/**
+ * Builds the index in slices, yielding to the JS thread between them, so the search screen stays
+ * responsive while ~6,000 ayahs are normalised. Safe to call more than once.
+ */
+export function prepareSearchIndex(): Promise<void> {
+  if (index) return Promise.resolve();
+  building ??= new Promise<void>((resolve) => {
+    const ayahs = getAllAyahs();
+    const entries: Entry[] = [];
+    const step = (from: number) => {
+      if (index) return resolve();
+      for (let i = from; i < Math.min(from + CHUNK, ayahs.length); i++) entries.push(toEntry(ayahs[i]!));
+      if (entries.length < ayahs.length) {
+        setTimeout(() => step(from + CHUNK), 0);
+        return;
+      }
+      index = entries;
+      resolve();
+    };
+    step(0);
+  });
+  return building;
+}
+
+export function isSearchIndexReady(): boolean {
+  return index !== null;
 }
 
 export const MAX_RESULTS = 200;

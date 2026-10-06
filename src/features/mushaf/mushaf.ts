@@ -7,7 +7,8 @@ import type { AyahRef } from "@/core/quran/textApi";
  */
 
 type RawAyah = [surah: number, ayah: number, page: number, juz: number, hizbQuarter: number, sajda: 0 | 1, text: string];
-type RawSurah = [number: number, name: string, meccan: 0 | 1, ayahCount: number];
+/** A row of src/data/surah-names.json (built by scripts/build-surah-names.mjs). */
+type RawSurahName = [number: number, name: string, meccan: 0 | 1, ayahCount: number, startPage: number, juzStart: number];
 
 export interface MushafAyah {
   /** Global ayah number, 1…6236 (the numbering ayah-by-ayah audio uses). */
@@ -32,12 +33,12 @@ export interface SurahInfo {
 
 export const TOTAL_PAGES = 604;
 
-let cache: { ayahs: MushafAyah[]; pages: MushafAyah[][]; surahs: SurahInfo[]; basmala: string } | null = null;
+let cache: { ayahs: MushafAyah[]; pages: MushafAyah[][]; basmala: string } | null = null;
 
 function load() {
   if (cache) return cache;
   // Required lazily: the 1.4 MB module is only evaluated the first time the Quran is opened.
-  const data = require("@/data/mushaf-hafs.json") as { basmala: string; surahs: RawSurah[]; ayahs: RawAyah[] };
+  const data = require("@/data/mushaf-hafs.json") as { basmala: string; ayahs: RawAyah[] };
   const ayahs = data.ayahs.map(([surah, ayah, page, juz, hizbQuarter, sajda, text], index): MushafAyah => ({
     id: index + 1,
     surah,
@@ -50,26 +51,37 @@ function load() {
   }));
   const pages: MushafAyah[][] = Array.from({ length: TOTAL_PAGES }, () => []);
   for (const ayah of ayahs) pages[ayah.page - 1]!.push(ayah);
-  const firstAyah = new Map<number, MushafAyah>();
-  for (const ayah of ayahs) if (ayah.ayah === 1) firstAyah.set(ayah.surah, ayah);
-  const surahs = data.surahs.map(([number, name, meccan, ayahCount]): SurahInfo => ({
+  cache = { ayahs, pages, basmala: data.basmala };
+  return cache;
+}
+
+let surahs: SurahInfo[] | null = null;
+
+/**
+ * The surah index comes from the small surah-names.json (4 KB), not the mushaf, so Home, the widgets and
+ * the surah lists can name a surah without paying for the full text.
+ */
+export function getSurahs(): SurahInfo[] {
+  if (surahs) return surahs;
+  const rows = require("@/data/surah-names.json") as RawSurahName[];
+  surahs = rows.map(([number, name, meccan, ayahCount, startPage, juzStart]): SurahInfo => ({
     number,
     name,
     meccan: meccan === 1,
     ayahCount,
-    startPage: firstAyah.get(number)?.page ?? 1,
-    juzStart: firstAyah.get(number)?.juz ?? 1,
+    startPage,
+    juzStart,
   }));
-  cache = { ayahs, pages, surahs, basmala: data.basmala };
-  return cache;
-}
-
-export function getSurahs(): SurahInfo[] {
-  return load().surahs;
+  return surahs;
 }
 
 export function getSurah(number: number): SurahInfo | undefined {
-  return load().surahs[number - 1];
+  return getSurahs()[number - 1];
+}
+
+/** Every ayah in mushaf order (loads the full text). */
+export function getAllAyahs(): readonly MushafAyah[] {
+  return load().ayahs;
 }
 
 export function getPage(page: number): MushafAyah[] {

@@ -82,7 +82,8 @@
     "doctor": "expo-doctor",
     "build:mushaf": "node scripts/build-mushaf.mjs",
     "test": "jest",
-    "build:tafsir": "node scripts/build-tafsir.mjs"
+    "build:tafsir": "node scripts/build-tafsir.mjs",
+    "build:surah-names": "node scripts/build-surah-names.mjs"
   },
   "private": true,
   "jest": {
