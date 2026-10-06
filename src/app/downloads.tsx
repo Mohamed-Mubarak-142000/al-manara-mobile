@@ -5,16 +5,18 @@ import { FlatList, Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AYAH_VOICES } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { audio, type Track } from "@/features/audio/playerStore";
+import { megabytes } from "@/features/downloads/AyahPackButton";
+import { removeSurah, useAyahPacks, type AyahPackSummary } from "@/features/downloads/ayahPacks";
 import { downloads, useDownloads, type DownloadMeta } from "@/features/downloads/downloadStore";
+import { HadithDownloadsSection } from "@/features/hadith/HadithDownloadsSection";
+import { readyPacks, useHadithPacks } from "@/features/hadith/hadithPacks";
+import { getSurah } from "@/features/mushaf/mushaf";
 import { useThemeColor } from "@/theme/useThemeColor";
-
-function megabytes(bytes: number): string {
-  return `${toArabicDigits((bytes / (1024 * 1024)).toFixed(1))} م.ب`;
-}
 
 /** How long a deleted recitation can still be brought back before its file is removed. */
 const UNDO_MS = 5000;
@@ -55,6 +57,42 @@ function useUndoableRemove() {
   };
 }
 
+/** Saved ayah-by-ayah packs, one card per surah with a row per voice. */
+function AyahPacksSection({ packs }: { packs: AyahPackSummary[] }) {
+  const muted = useThemeColor("fg-muted");
+  if (!packs.length) return null;
+  const bySurah = new Map<number, AyahPackSummary[]>();
+  for (const pack of packs) bySurah.set(pack.surah, [...(bySurah.get(pack.surah) ?? []), pack]);
+
+  return (
+    <View className="mt-4">
+      <Text className="mx-5 mb-2 font-sans-bold text-sm text-accent-strong">آيات للتكرار والحفظ</Text>
+      {[...bySurah].map(([surah, voices]) => (
+        <View key={surah} className="mx-4 mb-2 rounded-2xl border border-border bg-surface px-3 py-2.5">
+          <Text className="font-display-bold text-base text-fg">سورة {getSurah(surah)?.name ?? toArabicDigits(surah)}</Text>
+          {voices.map(({ voice, entry }) => (
+            <View key={voice} className="mt-1 flex-row items-center gap-2">
+              <Text className="flex-1 font-sans text-xs text-fg-muted">
+                {AYAH_VOICES[voice].label} · {entry.complete ? "كاملة" : `${toArabicDigits(entry.count)} من ${toArabicDigits(entry.total)} آية`} ·{" "}
+                {megabytes(entry.bytes)}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`حذف آيات سورة ${getSurah(surah)?.name ?? ""} بصوت ${AYAH_VOICES[voice].label}`}
+                onPress={() => removeSurah(voice, surah)}
+                hitSlop={8}
+                className="p-1.5"
+              >
+                <Trash2 size={16} color={muted} />
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** Everything saved for offline listening. */
 export default function DownloadsScreen() {
   const insets = useSafeAreaInsets();
@@ -69,6 +107,10 @@ export default function DownloadsScreen() {
     .sort((a, b) => b.savedAt - a.savedAt);
   const total = saved.reduce((sum, meta) => sum + meta.bytes, 0);
   const queue: Track[] = saved.map(({ id, title, artist, url }) => ({ id, title, artist, url }));
+  const packs = useAyahPacks();
+  const packBytes = packs.reduce((sum, pack) => sum + pack.entry.bytes, 0);
+  useHadithPacks();
+  const empty = !saved.length && !packs.length && !readyPacks().length;
 
   return (
     <View className="flex-1 bg-bg">
@@ -90,11 +132,19 @@ export default function DownloadsScreen() {
             </Pressable>
             <Text className="font-display-bold text-3xl text-hero-fg">المحفوظات</Text>
             <Text className="mt-1 font-sans text-sm text-white/70">
-              {saved.length ? `${toArabicDigits(saved.length)} تلاوة · ${megabytes(total)} على الجهاز` : "تلاوات للاستماع دون إنترنت"}
+              {empty
+                ? "تلاوات للاستماع دون إنترنت"
+                : `${saved.length ? `${toArabicDigits(saved.length)} تلاوة · ` : ""}${packs.length ? `${toArabicDigits(packs.length)} حزمة آيات · ` : ""}${megabytes(total + packBytes)} على الجهاز`}
             </Text>
           </View>
         }
-        ListEmptyComponent={<StateMessage message="لم تحفظ أي تلاوة بعد. اضغط زر التنزيل بجوار أي سورة." />}
+        ListEmptyComponent={empty ? <StateMessage message="لم تحفظ أي تلاوة بعد. اضغط زر التنزيل بجوار أي سورة." /> : null}
+        ListFooterComponent={
+          <>
+            <AyahPacksSection packs={packs} />
+            <HadithDownloadsSection />
+          </>
+        }
         renderItem={({ item, index }) => (
           <View className="mx-4 mb-2 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-2.5">
             <Pressable

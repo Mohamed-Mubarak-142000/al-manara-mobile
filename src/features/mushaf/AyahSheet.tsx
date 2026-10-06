@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Modal, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { alafasyAyahUrl, husaryAyahUrl } from "@/core/quran/ayahAudio";
+import { AYAH_VOICES } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
 import { audio, type Track } from "@/features/audio/playerStore";
+import { AyahPackButton } from "@/features/downloads/AyahPackButton";
+import { ayahSource } from "@/features/downloads/ayahPacks";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { getSurah, getSurahAyahs, type MushafAyah } from "./mushaf";
@@ -14,10 +16,11 @@ import { isBookmarked, noteFor, reader, useReaderState } from "./readerPrefs";
 import { tafsirFor } from "./tafsir";
 
 type Voice = "husary" | "alafasy";
-const VOICES: Record<Voice, { label: string; url: (id: number) => string }> = {
-  husary: { label: "الحصري", url: husaryAyahUrl },
-  alafasy: { label: "العفاسي", url: alafasyAyahUrl },
+const VOICES: Record<Voice, { label: string }> = {
+  husary: AYAH_VOICES.husary,
+  alafasy: AYAH_VOICES.alafasy,
 };
+const PACK_VOICES: readonly Voice[] = ["husary", "alafasy"];
 
 /** Ayah tracks from `ayah` to the end of its surah, so "listen" keeps reciting the way the reader reads. */
 function tracksFrom(ayah: MushafAyah, voice: Voice): Track[] {
@@ -28,7 +31,8 @@ function tracksFrom(ayah: MushafAyah, voice: Voice): Track[] {
       id: `ayah-${voice}-${entry.id}`,
       title: `${surahName} · الآية ${toArabicDigits(entry.ayah)}`,
       artist: `الشيخ ${VOICES[voice].label}`,
-      url: VOICES[voice].url(entry.id),
+      // A saved ayah plays from the device (the stream stays as backup).
+      ...ayahSource(voice, entry.surah, entry.ayah),
     }));
 }
 
@@ -171,6 +175,12 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
               <Repeat size={16} color={primary} />
               <Text className="font-sans-bold text-sm text-primary">كرّر للحفظ (من آية إلى آية)</Text>
             </Pressable>
+          )}
+
+          {!riwaya && (
+            <View className="mt-2">
+              <AyahPackButton surah={ayah.surah} voices={PACK_VOICES} />
+            </View>
           )}
 
           {riwaya ? (

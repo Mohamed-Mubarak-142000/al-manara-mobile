@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { TrackDownloadButton } from "@/features/downloads/TrackDownloadButton";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { miniPlayerLayout, miniPlayerPlacement, useMiniPlayerLayout, type MiniPlayerPlacement } from "./miniPlayerLayout";
@@ -59,6 +60,7 @@ function MiniPlayerBar({ state }: { state: PlayerState }) {
             </Text>
           )}
         </View>
+        <TrackDownloadButton track={track} tone="light" />
         {!track.live && (
           <Pressable accessibilityRole="button" accessibilityLabel="السابق" hitSlop={8} onPress={audio.previous} className="p-1.5">
             <SkipBack size={20} color={heroFg} />

@@ -9,6 +9,7 @@ import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { RADIO_REF, audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
+import { TrackDownloadButton } from "@/features/downloads/TrackDownloadButton";
 import { useAsync } from "@/features/hadith/useAsync";
 import { setAdhanVoice, useAdhanVoice } from "@/features/prayer/adhanSound";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -139,9 +140,16 @@ export default function AdhanVoiceScreen() {
                 <Text numberOfLines={1} className="font-sans text-xs text-fg-muted">
                   {item.title}
                 </Text>
+                {selected && chosen?.offlineKey && (
+                  <Text numberOfLines={1} className="font-sans-bold text-xs text-primary">
+                    محفوظ على الجهاز للأذان دون إنترنت
+                  </Text>
+                )}
               </View>
               {selected && <Check size={18} color={primary} />}
             </Pressable>
+            {/* The preview: save it for listening offline (the alarm keeps its own copy). */}
+            <TrackDownloadButton track={item} />
           </View>
         );
       }}

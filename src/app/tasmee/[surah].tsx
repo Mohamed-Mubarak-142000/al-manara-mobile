@@ -5,7 +5,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { husaryAyahUrl } from "@/core/quran/ayahAudio";
 import { splitAyahWords } from "@/core/quran/words";
 import { buildExpected, matchChunk, matchPreview, type Mistake } from "@/core/tasmee/recitation";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -13,6 +12,8 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { audio } from "@/features/audio/playerStore";
+import { ayahSource } from "@/features/downloads/ayahPacks";
+import { AyahPackIconButton } from "@/features/downloads/TrackDownloadButton";
 import { recordActivity } from "@/features/journey/progress";
 import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mushaf";
 import { useSpeech, type SpeechError } from "@/features/tasmee/useSpeech";
@@ -367,20 +368,26 @@ export default function TasmeeSessionScreen() {
                 <Button icon={RotateCcw} onPress={() => closeMistake(false)}>
                   أعد القراءة من هنا
                 </Button>
-                <Button
-                  variant="outline"
-                  icon={Headphones}
-                  onPress={() =>
-                    audio.playTrack({
-                      id: `tasmee-fix-${mistakeAyah.id}`,
-                      title: `سورة ${surah?.name ?? ""} · الآية ${toArabicDigits(mistakeAyah.ayah)}`,
-                      artist: "الشيخ الحصري",
-                      url: husaryAyahUrl(mistakeAyah.id),
-                    })
-                  }
-                >
-                  استمع للآية
-                </Button>
+                <View className="flex-row items-center gap-2">
+                  <View className="flex-1">
+                    <Button
+                      variant="outline"
+                      icon={Headphones}
+                      onPress={() =>
+                        audio.playTrack({
+                          id: `tasmee-fix-${mistakeAyah.id}`,
+                          title: `سورة ${surah?.name ?? ""} · الآية ${toArabicDigits(mistakeAyah.ayah)}`,
+                          artist: "الشيخ الحصري",
+                          ...ayahSource("husary", mistakeAyah.surah, mistakeAyah.ayah),
+                        })
+                      }
+                    >
+                      استمع للآية
+                    </Button>
+                  </View>
+                  {/* Save the surah's ayahs in the same voice, to listen again offline. */}
+                  <AyahPackIconButton voice="husary" surah={mistakeAyah.surah} />
+                </View>
                 <Button variant="ghost" size="sm" onPress={() => closeMistake(true)}>
                   كنت صحيحًا (أخطأ التعرّف)
                 </Button>

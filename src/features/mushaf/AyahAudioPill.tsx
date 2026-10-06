@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
 import { audio, currentTrack, usePlayer } from "@/features/audio/playerStore";
+import { TrackDownloadButton } from "@/features/downloads/TrackDownloadButton";
 
 import { READER_THEMES, type ReaderTheme } from "./readerPrefs";
 
@@ -50,6 +51,8 @@ export function AyahAudioPill({ theme, bottom }: { theme: ReaderTheme; bottom: n
         <Text numberOfLines={1} className="shrink font-sans-bold text-xs" style={{ color: colors.ink }}>
           {track.title}
         </Text>
+        {/* A full surah saves as one file, ayah-by-ayah audio as its surah's pack. */}
+        <TrackDownloadButton track={track} tint={colors.ink} />
         <Pressable accessibilityRole="button" accessibilityLabel="إيقاف التلاوة" onPress={audio.stop} hitSlop={10} className="p-1">
           <X size={16} color={colors.ink} />
         </Pressable>

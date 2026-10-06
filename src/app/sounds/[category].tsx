@@ -11,7 +11,7 @@ import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { RADIO_REF, audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
-import { DownloadButton } from "@/features/downloads/DownloadButton";
+import { TrackDownloadButton, isTrackDownloadable } from "@/features/downloads/TrackDownloadButton";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -83,6 +83,11 @@ export default function SoundsScreen() {
       .map((track) => ({ source: track, track: toTrack(track, names.get(track.artistId) ?? info.label) }));
   }, [library, artist, query, names, info.label]);
   const queue = tracks.map((entry) => entry.track);
+  // Radio-library clips are encrypted at the source: when nothing in this view can be saved, say so once.
+  const streamOnly = useMemo(() => {
+    const shown = library?.tracks.filter((track) => !artist || track.artistId === artist) ?? [];
+    return shown.length > 0 && shown.every((track) => !isTrackDownloadable(toTrack(track, "")));
+  }, [library, artist]);
   const artistName = artist ? names.get(artist) : null;
 
   return (
@@ -172,6 +177,9 @@ export default function SoundsScreen() {
                 </ScrollView>
               </>
             )}
+            {streamOnly && (
+              <Text className="font-sans text-xs leading-5 text-fg-muted">هذه التسجيلات تُبث من مصدرها ولا يمكن حفظها</Text>
+            )}
           </View>
         </View>
       }
@@ -218,8 +226,8 @@ export default function SoundsScreen() {
                   {item.source.duration ? ` · ${formatDuration(item.source.duration)}` : ""}
                 </Text>
               </View>
-              {/* Radio clips are HLS streams, which can't be saved as a single file. */}
-              {!item.source.hls && <DownloadButton track={item.track} />}
+              {/* Radio clips are encrypted HLS: no icon while they can't be saved (see canDownloadHls). */}
+              <TrackDownloadButton track={item.track} />
             </View>
           </Pressable>
         );

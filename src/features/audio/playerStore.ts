@@ -3,6 +3,7 @@ import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 
 import { getRadioMediaUrl } from "@/core/sounds/soundsApi";
+import { localAyahFor } from "@/features/downloads/ayahPacks";
 import { localUriFor } from "@/features/downloads/downloadStore";
 
 export interface Track {
@@ -220,7 +221,8 @@ async function resolveUrl(track: Track, streamIndex: number): Promise<string | n
   const url = streamIndex === 0 ? track.url : track.fallbackUrls?.[streamIndex - 1];
   if (!url) return null;
   if (streamIndex === 0) {
-    const local = localUriFor(track.id);
+    // A saved recording (by id) or a saved ayah pack (by the ayah's stream) plays from the device.
+    const local = localUriFor(track.id) ?? localAyahFor(track);
     if (local) return local;
   }
   return url.startsWith(RADIO_REF) ? getRadioMediaUrl(url.slice(RADIO_REF.length)) : url;

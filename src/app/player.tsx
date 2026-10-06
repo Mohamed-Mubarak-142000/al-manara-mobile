@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatDuration, toArabicDigits } from "@/core/text/arabic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { audio, currentTrack, nextRate, usePlayer } from "@/features/audio/playerStore";
-import { DownloadButton } from "@/features/downloads/DownloadButton";
+import { TrackDownloadButton, isTrackDownloadable } from "@/features/downloads/TrackDownloadButton";
 import { useNow } from "@/features/time/useNow";
 
 const LOGO = require("@/assets/images/brand/logo.png");
@@ -63,7 +63,7 @@ export default function PlayerScreen() {
         <Text className="font-sans-bold text-sm text-gold-soft">
           {state.queue.length > 1 ? `${toArabicDigits(state.index + 1)} من ${toArabicDigits(state.queue.length)}` : "يُشغَّل الآن"}
         </Text>
-        {track.live ? <View className="size-9" /> : <DownloadButton track={track} tone="light" />}
+        {isTrackDownloadable(track) ? <TrackDownloadButton track={track} tone="light" /> : <View className="size-9" />}
       </View>
 
       <View className="flex-1 items-center justify-center px-8">

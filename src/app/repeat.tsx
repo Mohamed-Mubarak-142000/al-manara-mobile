@@ -4,18 +4,20 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { alafasyAyahUrl, husaryAyahUrl, husaryMuallimAyahUrl } from "@/core/quran/ayahAudio";
+import { AYAH_VOICES, type AyahVoice } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { audio, type Track } from "@/features/audio/playerStore";
+import { AyahPackButton } from "@/features/downloads/AyahPackButton";
+import { ayahSource } from "@/features/downloads/ayahPacks";
 import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mushaf";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-type Voice = "husary" | "muallim" | "alafasy";
-const VOICES: Record<Voice, { label: string; note: string; url: (ayah: MushafAyah) => string }> = {
-  husary: { label: "الحصري", note: "مرتّل", url: (ayah) => husaryAyahUrl(ayah.id) },
-  muallim: { label: "الحصري المعلّم", note: "يقرأ ثم يترك لك وقتًا للترديد", url: (ayah) => husaryMuallimAyahUrl(ayah.surah, ayah.ayah) },
-  alafasy: { label: "العفاسي", note: "مرتّل", url: (ayah) => alafasyAyahUrl(ayah.id) },
+type Voice = AyahVoice;
+const VOICES: Record<Voice, { label: string; note: string }> = {
+  husary: { label: AYAH_VOICES.husary.label, note: "مرتّل" },
+  muallim: { label: AYAH_VOICES.muallim.label, note: "يقرأ ثم يترك لك وقتًا للترديد" },
+  alafasy: { label: AYAH_VOICES.alafasy.label, note: "مرتّل" },
 };
 const MAX_TRACKS = 2000;
 
@@ -65,6 +67,8 @@ function Stepper({
 export function repeatQueue(ayahs: MushafAyah[], voice: Voice, eachTimes: number, rangeTimes: number): Track[] {
   const surahName = ayahs[0] ? (getSurah(ayahs[0].surah)?.name ?? "") : "";
   const tracks: Track[] = [];
+  // Resolved once per ayah, not per repetition: a saved ayah plays from the device.
+  const sources = new Map(ayahs.map((ayah) => [ayah.id, ayahSource(voice, ayah.surah, ayah.ayah)]));
   for (let round = 1; round <= rangeTimes; round += 1) {
     for (const ayah of ayahs) {
       for (let time = 1; time <= eachTimes; time += 1) {
@@ -73,7 +77,7 @@ export function repeatQueue(ayahs: MushafAyah[], voice: Voice, eachTimes: number
           id: `repeat-${voice}-${ayah.id}-${round}-${time}`,
           title: `${surahName} · الآية ${toArabicDigits(ayah.ayah)}`,
           artist: `${VOICES[voice].label} · تكرار ${toArabicDigits(time)}/${toArabicDigits(eachTimes)} · الدورة ${toArabicDigits(round)}/${toArabicDigits(rangeTimes)}`,
-          url: VOICES[voice].url(ayah),
+          ...sources.get(ayah.id)!,
         });
       }
     }
@@ -152,6 +156,8 @@ export default function RepeatScreen() {
           );
         })}
       </View>
+
+      <AyahPackButton surah={surahNumber} voices={[voice]} />
 
       <Text className="text-center font-sans text-sm text-fg-muted">
         {toArabicDigits(Math.min(total, MAX_TRACKS))} مقطعًا صوتيًا

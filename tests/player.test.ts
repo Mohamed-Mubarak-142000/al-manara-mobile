@@ -24,6 +24,7 @@ jest.mock("expo-sqlite/kv-store", () => ({
 }));
 jest.mock("@/core/sounds/soundsApi", () => ({ getRadioMediaUrl: jest.fn() }));
 jest.mock("@/features/downloads/downloadStore", () => ({ localUriFor: () => null }));
+jest.mock("@/features/downloads/ayahPacks", () => ({ localAyahFor: () => null }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const player = require("@/features/audio/playerStore") as typeof import("@/features/audio/playerStore");
