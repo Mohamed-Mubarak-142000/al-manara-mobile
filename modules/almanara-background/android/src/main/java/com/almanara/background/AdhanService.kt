@@ -22,10 +22,6 @@ class AdhanService : Service() {
       stopSelf()
       return START_NOT_STICKY
     }
-    if (intent.getLongExtra("scheduleVersion", -1) != BackgroundState.prefs(this).getLong("scheduleVersion", 0)) {
-      stopSelf()
-      return START_NOT_STICKY
-    }
     // Receiver deduplicates alarms; ignore a repeated delivery to the running service too.
     if (BackgroundState.adhanPlaying) return START_NOT_STICKY
     val stop = PendingIntent.getService(this, 7105, Intent(this, AdhanService::class.java).setAction("stop"), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -33,7 +29,13 @@ class AdhanService : Service() {
     val notification = BackgroundState.notification(this, BackgroundState.AUDIO_CHANNEL, title, "الأذان جارٍ", "prayer")
       .setOngoing(true).setSilent(true)
       .addAction(NotificationCompat.Action.Builder(0, "إيقاف الأذان", stop).build()).build()
+    // startForegroundService() must be answered with startForeground() even when we bail out,
+    // or the system kills the process.
     startForeground(BackgroundState.AUDIO_NOTIFICATION, notification)
+    if (intent.getLongExtra("scheduleVersion", -1) != BackgroundState.prefs(this).getLong("scheduleVersion", 0)) {
+      stopSelf()
+      return START_NOT_STICKY
+    }
     val voice = intent.getStringExtra("voiceKey")?.let { VoiceCache.request(this, it) }
     val audioManager = getSystemService(AudioManager::class.java)
     val notificationManager = getSystemService(NotificationManager::class.java)

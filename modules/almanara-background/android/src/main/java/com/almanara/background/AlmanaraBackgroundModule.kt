@@ -23,6 +23,8 @@ class AlmanaraBackgroundModule : Module() {
         "overlayRunning" to BackgroundState.overlayRunning,
         "overlayError" to saved.getString("overlayError", ""),
         "exactAllowed" to BackgroundState.exactAllowed(context),
+        "batteryOptimized" to DeviceAccess.batteryOptimized(context),
+        "autostartHint" to DeviceAccess.autostartHint(),
         "scheduleThrough" to (0 until moments.length()).maxOfOrNull { moments.getJSONObject(it).getLong("at") }.let { it ?: 0L },
         "error" to saved.getString("scheduleError", ""),
       )
@@ -35,6 +37,8 @@ class AlmanaraBackgroundModule : Module() {
         context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
       }
     }.runOnQueue(Queues.MAIN)
+    AsyncFunction("openBatterySettings") { DeviceAccess.openBatterySettings(context) }.runOnQueue(Queues.MAIN)
+    AsyncFunction("openAutostartSettings") { DeviceAccess.openAutostartSettings(context) }.runOnQueue(Queues.MAIN)
     AsyncFunction("setOverlay") { enabled: Boolean, config: String ->
       val saved = BackgroundState.prefs(context)
       if (enabled) {

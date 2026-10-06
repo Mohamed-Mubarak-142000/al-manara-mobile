@@ -2,16 +2,18 @@ import { useState } from "react";
 import { Linking, Platform, Pressable, Switch, Text, View } from "react-native";
 
 import { background } from "../../../modules/almanara-background";
+import { BackgroundAccessHint } from "@/features/notifications/BackgroundAccessHint";
 import { enableOverlay, disableOverlay, useOverlayConfig } from "@/features/notifications/BackgroundReminders";
 import { clearReminderError, reportReminderError, useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-import { setOutsideAdhkarNotifications, useOutsideAdhkarNotifications } from "./adhkarReminders";
+import { setOutsideAdhkarNotifications, useAdhkarReminders, useOutsideAdhkarNotifications } from "./adhkarReminders";
 
 export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }) {
   const { status, error } = useBackgroundStatus();
   const config = useOverlayConfig();
   const notificationsEnabled = useOutsideAdhkarNotifications();
+  const reminders = useAdhkarReminders();
   const [notificationsBusy, setNotificationsBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false);
@@ -106,7 +108,10 @@ export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }
       {android && enabled && status?.overlayRunning && (
         <Text className="mt-2 font-sans text-xs text-primary">خدمة التذكير تعمل. افتح تطبيقًا آخر وانتظر دقيقة بين ٧ صباحًا و١٠ مساءً.</Text>
       )}
-      {android && enabled && (
+      {android && (enabled || notificationsEnabled || reminders.morning.enabled || reminders.evening.enabled) && (
+        <BackgroundAccessHint exact />
+      )}
+      {android && enabled && !background?.openBatterySettings && (
         <Pressable accessibilityRole="button" onPress={() => Linking.openSettings().catch(reportReminderError)}>
           <Text className="mt-2 font-sans text-xs leading-5 text-fg-muted">
             لو التذكير بيتوقف بعد قفل التطبيق، افتح إعداداته واختر البطارية ← غير مقيّد، واسمح بالتشغيل التلقائي لو موجود.

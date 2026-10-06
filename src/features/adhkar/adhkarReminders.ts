@@ -3,6 +3,7 @@ import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 
+import { requestBackgroundAccess } from "@/features/notifications/backgroundAccess";
 import { replaceLocalSchedule } from "@/features/notifications/replaceLocalSchedule";
 import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
 
@@ -127,6 +128,7 @@ export async function setAdhkarReminder(kind: ReminderKind, enabled: boolean): P
       // Keep the in-memory value.
     }
     listeners.forEach((notify) => notify());
+    if (enabled) await requestBackgroundAccess();
     return true;
   });
 }
@@ -146,6 +148,7 @@ export function setOutsideAdhkarNotifications(enabled: boolean) {
       outsideEnabled = previous;
       throw error;
     }
+    if (enabled) await requestBackgroundAccess();
   });
 }
 

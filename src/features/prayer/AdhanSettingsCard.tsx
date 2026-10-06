@@ -5,6 +5,7 @@ import { Linking, Platform, Pressable, Switch, Text, View } from "react-native";
 import Storage from "expo-sqlite/kv-store";
 
 import { background } from "../../../modules/almanara-background";
+import { BackgroundAccessHint } from "@/features/notifications/BackgroundAccessHint";
 import { reportReminderError, useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
 
 import { PRAYER_LABELS } from "@/core/prayer/prayerTimesApi";
@@ -81,6 +82,7 @@ export function AdhanSettingsCard() {
               <Text className="font-sans text-sm text-accent-strong">اضغط للسماح بالمنبهات والتذكيرات لضبط وقت الأذان.</Text>
             </Pressable>
           )}
+          <BackgroundAccessHint />
           {through > 0 && (
             <Text className="mt-3 font-sans text-xs text-fg-muted">
               المواقيت محفوظة حتى {new Date(through).toLocaleDateString("ar-EG")}. افتح التطبيق قبل هذا التاريخ لتجديدها.

@@ -95,7 +95,7 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
     getPrayerMonth(location, now.getFullYear(), now.getMonth() + 1),
     getPrayerMonth(location, next.getFullYear(), next.getMonth() + 1),
   ]);
-  if (!thisMonth.length || !nextMonth.length) throw new Error("????? ????? ?????? ?????? ???????? ????????? ??????? ??????.");
+  if (!thisMonth.length || !nextMonth.length) throw new Error("تعذّر تحميل مواقيت الصلاة؛ التنبيهات السابقة محفوظة.");
   const days = [
     ...thisMonth.map((day) => ({ day, year: now.getFullYear(), month: now.getMonth() + 1 })),
     ...nextMonth.map((day) => ({ day, year: next.getFullYear(), month: next.getMonth() + 1 })),

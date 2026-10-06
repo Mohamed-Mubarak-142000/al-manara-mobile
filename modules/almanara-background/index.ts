@@ -18,6 +18,10 @@ export interface BackgroundStatus {
   /** Optional for compatibility with APKs built before persistent overlay diagnostics. */
   overlayError?: string;
   exactAllowed: boolean;
+  /** Optional for APKs built before battery diagnostics. True while Android may freeze the app. */
+  batteryOptimized?: boolean;
+  /** The manufacturer has its own autostart/background list that can block alarms. */
+  autostartHint?: boolean;
   scheduleThrough: number;
   error: string;
 }
@@ -26,6 +30,8 @@ interface BackgroundModule {
   getStatus(): BackgroundStatus;
   openOverlaySettings(): Promise<void>;
   openAlarmSettings(): Promise<void>;
+  openBatterySettings?(): Promise<void>;
+  openAutostartSettings?(): Promise<boolean>;
   setOverlay(enabled: boolean, config: string): Promise<void>;
   updateOverlay(config: string): Promise<void>;
   downloadVoice(id: string, url: string): Promise<string>;

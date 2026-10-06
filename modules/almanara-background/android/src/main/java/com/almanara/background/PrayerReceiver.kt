@@ -1,6 +1,7 @@
 package com.almanara.background
 
 import android.content.*
+import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
@@ -37,5 +38,15 @@ class RestoreReceiver : BroadcastReceiver() {
     // Restore alarms only. Never launch a media foreground service from BOOT_COMPLETED.
     runCatching { BackgroundState.restore(context, intent.action == Intent.ACTION_TIMEZONE_CHANGED) }
       .onFailure { BackgroundState.prefs(context).edit().putString("scheduleError", "راجع إذن المنبهات والتذكيرات لتجديد مواقيت الصلاة").apply() }
+    // The minute-dhikr overlay (specialUse, not media) may restart from boot/update without opening the app.
+    if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
+      if (BackgroundState.prefs(context).getBoolean("overlayEnabled", false) && Settings.canDrawOverlays(context)) {
+        runCatching { ContextCompat.startForegroundService(context, Intent(context, DhikrService::class.java)) }
+          .onFailure {
+            BackgroundState.prefs(context).edit()
+              .putString("overlayError", "توقف ذكر كل دقيقة بعد إعادة تشغيل الهاتف. افتح التطبيق لتشغيله مرة أخرى.").apply()
+          }
+      }
+    }
   }
 }

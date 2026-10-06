@@ -18,13 +18,17 @@ Expo Go and an OTA-only update cannot provide these native services.
 - `BackgroundState`: saves the whole current/next-month schedule but arms only
   the next alarm. A receiver consumes it, persists the remaining schedule and
   arms the following alarm. Stale deliveries are ignored. Boot/time/permission
-  receivers restore alarms without starting a media service at boot.
+  receivers restore alarms without starting a media service at boot. Boot and
+  app update also restart `DhikrService` when it was enabled.
 
 Exact alarm access is required. The system may show the next prayer/reminder as an
 upcoming alarm. Overlay service uses `specialUse`, with its purpose declared in
 the manifest; this foreground service type must also be declared for a Play release.
 Force-stop, revoked permissions and manufacturer process restrictions can stop
-delivery. Reopen the app to recover. No background network refresh is promised:
+delivery. Reopen the app to recover. `DeviceAccess` reports battery optimization
+(opens the system list; the restricted direct request is not used) and the manufacturer autostart screen
+(Xiaomi, Oppo/Realme/OnePlus, Vivo, Huawei/Honor, Samsung…); without both, swiping
+the app away on those phones drops its alarms. No background network refresh is promised:
 the prayer settings show when the saved schedule expires.
 
 iOS uses at most 40 pending prayer notices, 15 optional hourly text notices and
