@@ -7,11 +7,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatDuration, toArabicDigits } from "@/core/text/arabic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { audio, currentTrack, usePlayer } from "@/features/audio/playerStore";
+import { audio, currentTrack, nextRate, usePlayer } from "@/features/audio/playerStore";
 import { DownloadButton } from "@/features/downloads/DownloadButton";
 import { useNow } from "@/features/time/useNow";
 
-const RATES = [0.75, 1, 1.25, 1.5];
+const LOGO = require("@/assets/images/brand/logo.png");
 const SLEEP_CHOICES: (number | null)[] = [null, 15, 30, 60];
 const WHITE = "#fbf8f1";
 const NIGHT = "#012a22";
@@ -44,14 +44,13 @@ export default function PlayerScreen() {
     );
   }
 
-  const nextRate = RATES[(RATES.indexOf(state.rate) + 1) % RATES.length] ?? 1;
   const sleepLeft = state.sleepAt ? Math.max(0, Math.ceil((state.sleepAt - now.getTime()) / 60000)) : null;
   const RepeatIcon = state.repeat === "one" ? Repeat1 : Repeat;
 
   return (
     <View className="flex-1 bg-emerald-night" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}>
       <Image
-        source={require("@/assets/images/scenes/quran-terrace.png")}
+        source={require("@/assets/images/scenes/quran-terrace.webp")}
         contentFit="cover"
         style={{ position: "absolute", inset: 0, opacity: 0.35 }}
       />
@@ -70,7 +69,19 @@ export default function PlayerScreen() {
       <View className="flex-1 items-center justify-center px-8">
         <View className="size-64 items-center justify-center rounded-[48px] border border-gold/30 bg-white/5">
           <View className="absolute size-52 rotate-45 rounded-[40px] border border-gold/20" />
-          <Image source={require("@/assets/images/brand/logo.png")} contentFit="contain" style={{ width: 120, height: 120 }} />
+          {track.artworkUrl ? (
+            <Image
+              source={{ uri: track.artworkUrl }}
+              placeholder={LOGO}
+              placeholderContentFit="contain"
+              contentFit="cover"
+              transition={200}
+              accessibilityIgnoresInvertColors
+              style={{ width: 232, height: 232, borderRadius: 40 }}
+            />
+          ) : (
+            <Image source={LOGO} contentFit="contain" style={{ width: 120, height: 120 }} />
+          )}
         </View>
         <Text numberOfLines={2} className="mt-10 text-center font-display-bold text-3xl leading-[46px] text-white">
           {track.title}
@@ -78,6 +89,17 @@ export default function PlayerScreen() {
         <Text numberOfLines={1} className="mt-1 text-center font-sans text-base text-white/70">
           {track.artist}
         </Text>
+        {state.error && (
+          <View
+            accessibilityRole="alert"
+            className="mt-5 flex-row items-center gap-3 rounded-2xl border border-gold/30 bg-white/5 px-4 py-2.5"
+          >
+            <Text className="flex-1 font-sans-bold text-sm text-gold-soft">تعذّر التشغيل. تحقق من الاتصال أو نزّل التلاوة.</Text>
+            <Pressable accessibilityRole="button" onPress={audio.resume} hitSlop={8} className="rounded-full bg-gold px-3 py-1.5">
+              <Text className="font-sans-bold text-xs text-emerald-night">إعادة المحاولة</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <View className="px-6">
@@ -121,11 +143,13 @@ export default function PlayerScreen() {
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={state.playing ? "إيقاف مؤقت" : "تشغيل"}
+            accessibilityLabel={state.error ? "إعادة المحاولة" : state.playing ? "إيقاف مؤقت" : "تشغيل"}
             onPress={audio.toggle}
             className="size-20 items-center justify-center rounded-full bg-gold shadow-gold"
           >
-            {state.buffering && !state.playing ? (
+            {state.error ? (
+              <RotateCcw size={32} color={NIGHT} />
+            ) : state.buffering && !state.playing ? (
               <ActivityIndicator color={NIGHT} />
             ) : state.playing ? (
               <Pause size={34} color={NIGHT} fill={NIGHT} />
@@ -149,7 +173,11 @@ export default function PlayerScreen() {
 
         {!track.live && (
           <View className="mt-7 flex-row flex-wrap justify-center gap-2">
-            <Chip label={`السرعة ×${toArabicDigits(state.rate)}`} active={state.rate !== 1} onPress={() => audio.setRate(nextRate)} />
+            <Chip
+              label={`السرعة ×${toArabicDigits(state.rate)}`}
+              active={state.rate !== 1}
+              onPress={() => audio.setRate(nextRate(state.rate))}
+            />
             <Chip
               label={state.repeat === "one" ? "تكرار المقطع" : state.repeat === "all" ? "تكرار الكل" : "بلا تكرار"}
               active={state.repeat !== "off"}

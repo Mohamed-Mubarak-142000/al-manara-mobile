@@ -1,7 +1,8 @@
+import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { ChevronLeft, Headphones } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import type { Reciter } from "@/core/quran/api";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -54,36 +55,36 @@ export default function ListenScreen() {
   }, [reciters, query, favoriteReciterId]);
 
   return (
-    <FlatList
-      className="flex-1 bg-bg"
-      data={visible}
-      keyExtractor={(reciter) => String(reciter.id)}
-      renderItem={({ item }) => <ReciterRow reciter={item} riwayaCount={item.moshaf.length} />}
-      keyboardShouldPersistTaps="handled"
-      initialNumToRender={14}
-      contentContainerStyle={{ paddingBottom: 32 }}
-      ListHeaderComponent={
-        <View className="mb-4">
-          <PageHeader
-            kicker="الاستماع"
-            icon={Headphones}
-            title="تلاوات القرّاء"
-            description={reciters ? `${toArabicDigits(reciters.length)} قارئًا بمختلف الروايات.` : "تلاوات لأكثر من مئتي قارئ."}
-          />
-          <View className="-mt-6 px-4">
-            <SearchField value={query} onChangeText={setQuery} placeholder="ابحث عن قارئ" />
+    <View className="flex-1 bg-bg">
+      <FlashList
+        data={visible}
+        keyExtractor={(reciter) => String(reciter.id)}
+        renderItem={({ item }) => <ReciterRow reciter={item} riwayaCount={item.moshaf.length} />}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        ListHeaderComponent={
+          <View className="mb-4">
+            <PageHeader
+              kicker="الاستماع"
+              icon={Headphones}
+              title="تلاوات القرّاء"
+              description={reciters ? `${toArabicDigits(reciters.length)} قارئًا بمختلف الروايات.` : "تلاوات لأكثر من مئتي قارئ."}
+            />
+            <View className="-mt-6 px-4">
+              <SearchField value={query} onChangeText={setQuery} placeholder="ابحث عن قارئ" />
+            </View>
           </View>
-        </View>
-      }
-      ListEmptyComponent={
-        failed ? (
-          <StateMessage message="تعذّر تحميل قائمة القرّاء." onRetry={reload} />
-        ) : reciters ? (
-          <StateMessage message="لا يوجد قارئ بهذا الاسم." />
-        ) : (
-          <StateMessage loading />
-        )
-      }
-    />
+        }
+        ListEmptyComponent={
+          failed ? (
+            <StateMessage message="تعذّر تحميل قائمة القرّاء." onRetry={reload} />
+          ) : reciters ? (
+            <StateMessage message="لا يوجد قارئ بهذا الاسم." />
+          ) : (
+            <StateMessage loading />
+          )
+        }
+      />
+    </View>
   );
 }
