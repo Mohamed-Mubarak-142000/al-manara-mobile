@@ -14,7 +14,7 @@ import { GuestSignInCard } from "@/features/home/GuestSignInCard";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { QuickActions, openReading } from "@/features/home/QuickActions";
 import { SectionGrid } from "@/features/home/SectionGrid";
-import { SponsorCard } from "@/features/home/SponsorCard";
+import { SponsorCarousel } from "@/features/home/SponsorCard";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
 import { StreakCard } from "@/features/streak/StreakCard";
 import { useReaderState } from "@/features/mushaf/readerPrefs";
@@ -83,14 +83,13 @@ export default function HomeScreen() {
         <RamadanCard />
       </Section>
 
+      {/* Renders nothing (and no gap) when there are no running sponsors. */}
+      <SponsorCarousel className="mt-6 px-4" />
+
       <Section className="mt-6">
         <Text className="font-sans-bold text-sm text-accent-strong">أقسام المنارة</Text>
         <Text className="mb-4 mt-1 font-display-bold text-2xl text-fg">كل ما تحتاجه في يومك</Text>
         <SectionGrid />
-      </Section>
-
-      <Section className="mt-6">
-        <SponsorCard />
       </Section>
     </Screen>
   );

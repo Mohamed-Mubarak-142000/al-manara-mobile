@@ -1,6 +1,5 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import {
   ALargeSmall,
   ChevronLeft,
@@ -8,6 +7,7 @@ import {
   FileText,
   Globe,
   HandHeart,
+  Info,
   Landmark,
   Settings2,
   Share2,
@@ -15,7 +15,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react-native";
-import { Platform, Pressable, Share, Switch, Text, View } from "react-native";
+import { Platform, Pressable, Switch, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -24,15 +24,9 @@ import { AccountCard } from "@/features/account/AccountCard";
 import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
 import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
 import { useDownloads } from "@/features/downloads/downloadStore";
+import { openSitePage, shareApp } from "@/features/legal/site";
 import { TEXT_SCALES, setTextScale, useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
-
-const SITE_URL = (process.env.EXPO_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
-
-/** The website's own pages (privacy, terms) open in an in-app browser, so the wording is always the site's. */
-function openSitePage(path: string) {
-  if (SITE_URL) void WebBrowser.openBrowserAsync(`${SITE_URL}${path}`, { toolbarColor: "#012a22" });
-}
 
 function GroupTitle({ children }: { children: string }) {
   return <Text className="mb-1 mt-4 px-1 font-sans-bold text-sm text-accent-strong">{children}</Text>;
@@ -201,21 +195,11 @@ export default function MoreScreen() {
 
         <GroupTitle>عن المنارة</GroupTitle>
         <Group>
-          <LinkRow icon={ShieldCheck} title="سياسة الخصوصية" onPress={() => openSitePage("/privacy")} />
-          <LinkRow icon={FileText} title="الشروط والأحكام" onPress={() => openSitePage("/terms")} />
+          <LinkRow icon={Info} title="عن المنارة" hint="رسالتنا، والإصدار، والتواصل" onPress={() => router.push("/about")} />
+          <LinkRow icon={ShieldCheck} title="سياسة الخصوصية" onPress={() => router.push("/privacy")} />
+          <LinkRow icon={FileText} title="الشروط والأحكام" onPress={() => router.push("/terms")} />
           <LinkRow icon={Globe} title="موقع المنارة" hint="كل الأقسام على الويب" onPress={() => openSitePage("/")} />
-          <LinkRow
-            icon={Share2}
-            title="شارك التطبيق"
-            hint="الدال على الخير كفاعله"
-            onPress={() =>
-              void Share.share({
-                message: `المنارة: القرآن والأذكار ومواقيت الصلاة في تطبيق واحد
-${SITE_URL}`,
-              })
-            }
-            last
-          />
+          <LinkRow icon={Share2} title="شارك التطبيق" hint="الدال على الخير كفاعله" onPress={shareApp} last />
         </Group>
         {version && <Text className="mt-2 text-center font-sans text-xs text-fg-muted">المنارة · الإصدار {version}</Text>}
       </Section>
