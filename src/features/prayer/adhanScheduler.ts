@@ -9,15 +9,15 @@ import { clearReminderError, refreshBackgroundStatus } from "@/features/notifica
 import type { UserLocation } from "@/core/prayer/location";
 import { PRAYER_LABELS, getPrayerMonth, type PrayerMonthDay } from "@/core/prayer/prayerTimesApi";
 import { getHijriDate } from "@/core/calendar/hijriDate";
+import { IMSAK_MINUTES } from "@/core/prayer/calculation";
 import { toArabicDigits } from "@/core/text/arabic";
 
 import { readAdhanSettings, type AdhanPrayer } from "./adhanSettings";
 import { readAdhanVoice, setAdhanVoice } from "./adhanSound";
+import { readPrayerCalcSettings } from "./prayerCalcSettings";
 import { prayerMomentDate } from "./prayerMomentDate";
 
 const CHANNEL_ID = "adhan";
-/** Minutes before Fajr that imsak is announced in Ramadan (as on Egyptian Ramadan calendars). */
-const IMSAK_MINUTES = 10;
 const ORDER: readonly AdhanPrayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 // iOS keeps at most 64 pending local notifications per app; leave room for adhkar reminders.
 const MAX_PENDING = 40; // 15 hourly adhkar + 2 daily reminders + room for other notifications.
@@ -91,9 +91,10 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
 
   const now = new Date();
   const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const calc = readPrayerCalcSettings();
   const [thisMonth, nextMonth] = await Promise.all([
-    getPrayerMonth(location, now.getFullYear(), now.getMonth() + 1),
-    getPrayerMonth(location, next.getFullYear(), next.getMonth() + 1),
+    getPrayerMonth(location, now.getFullYear(), now.getMonth() + 1, calc),
+    getPrayerMonth(location, next.getFullYear(), next.getMonth() + 1, calc),
   ]);
   if (!thisMonth.length || !nextMonth.length) throw new Error("تعذّر تحميل مواقيت الصلاة؛ التنبيهات السابقة محفوظة.");
   const days = [

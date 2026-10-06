@@ -1,5 +1,7 @@
 // Ported from eslam-platform/src/features/prayer/prayerTimesApi.ts — keep in sync by hand; Next-only caching swapped for cachedFetch.
 import { cachedFetch } from "@/core/http";
+import { DEFAULT_CALC_SETTINGS, aladhanParams, type PrayerCalcSettings } from "./calculation";
+import { calculatePrayerDay, calculatePrayerMonth } from "./localPrayerTimes";
 import type { UserLocation } from "./location";
 
 export type PrayerKey = "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha";
@@ -23,6 +25,8 @@ export interface PrayerDay {
   latitude: number;
   longitude: number;
   timezone: string;
+  /** App-only: "device" when calculated locally because the API was unreachable; absent for API data. */
+  source?: "device";
 }
 
 interface RawTimings {
@@ -41,8 +45,7 @@ interface RawDay {
 }
 
 const BASE_URL = "https://api.aladhan.com/v1";
-// Method 5 = Egyptian General Authority of Survey — a common default for Arabic-speaking users.
-const METHOD = 5;
+// The method defaults to 5 = Egyptian General Authority of Survey (calculation.ts) — a common default for Arabic-speaking users.
 
 function clean(value: string): string {
   return value.split(" ")[0] ?? value;
@@ -69,20 +72,38 @@ function dateSegment(date: Date): string {
   return `${String(date.getDate()).padStart(2, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${date.getFullYear()}`;
 }
 
-function locationQuery(location: UserLocation): string {
+function locationQuery(location: UserLocation, settings: PrayerCalcSettings): string {
   if (location.latitude !== undefined && location.longitude !== undefined) {
-    return `latitude=${location.latitude}&longitude=${location.longitude}&method=${METHOD}`;
+    return `latitude=${location.latitude}&longitude=${location.longitude}&${aladhanParams(settings)}`;
   }
-  return `city=${encodeURIComponent(location.city)}&country=${encodeURIComponent(location.country)}&method=${METHOD}`;
+  return `city=${encodeURIComponent(location.city)}&country=${encodeURIComponent(location.country)}&${aladhanParams(settings)}`;
 }
 
-export async function getPrayerDay(location: UserLocation, date: Date = new Date()): Promise<PrayerDay | null> {
+async function fetchPrayerDay(location: UserLocation, date: Date, settings: PrayerCalcSettings): Promise<PrayerDay | null> {
   const endpoint = location.latitude !== undefined ? "timings" : "timingsByCity";
   try {
-    const response = await cachedFetch(`${BASE_URL}/${endpoint}/${dateSegment(date)}?${locationQuery(location)}`, 60 * 60 * 24);
+    const response = await cachedFetch(`${BASE_URL}/${endpoint}/${dateSegment(date)}?${locationQuery(location, settings)}`, 60 * 60 * 24);
     if (!response.ok) return null;
     const payload = (await response.json()) as { code: number; data: RawDay };
     return payload.code === 200 ? toDay(payload.data) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The aladhan API stays the primary source (it is what the website shows). When it can't be reached and
+ * nothing is cached, the same times are calculated on the device, so a new day offline still has them.
+ */
+export async function getPrayerDay(
+  location: UserLocation,
+  date: Date = new Date(),
+  settings: PrayerCalcSettings = DEFAULT_CALC_SETTINGS,
+): Promise<PrayerDay | null> {
+  const day = await fetchPrayerDay(location, date, settings);
+  if (day) return day;
+  try {
+    return calculatePrayerDay(location, date, settings);
   } catch {
     return null;
   }
@@ -92,14 +113,35 @@ export interface PrayerMonthDay extends PrayerDay {
   day: number;
 }
 
-export async function getPrayerMonth(location: UserLocation, year: number, month: number): Promise<PrayerMonthDay[]> {
+async function fetchPrayerMonth(
+  location: UserLocation,
+  year: number,
+  month: number,
+  settings: PrayerCalcSettings,
+): Promise<PrayerMonthDay[]> {
   const endpoint = location.latitude !== undefined ? "calendar" : "calendarByCity";
   try {
-    const response = await cachedFetch(`${BASE_URL}/${endpoint}/${year}/${month}?${locationQuery(location)}`, 60 * 60 * 24);
+    const response = await cachedFetch(`${BASE_URL}/${endpoint}/${year}/${month}?${locationQuery(location, settings)}`, 60 * 60 * 24);
     if (!response.ok) return [];
     const payload = (await response.json()) as { code: number; data: RawDay[] };
-    if (payload.code !== 200) return [];
+    if (payload.code !== 200 || !Array.isArray(payload.data)) return [];
     return payload.data.map((raw) => ({ ...toDay(raw), day: Number(raw.date.gregorian.day) }));
+  } catch {
+    return [];
+  }
+}
+
+/** A month (1-based) of times: the API, else (offline with nothing cached) the on-device calculation. */
+export async function getPrayerMonth(
+  location: UserLocation,
+  year: number,
+  month: number,
+  settings: PrayerCalcSettings = DEFAULT_CALC_SETTINGS,
+): Promise<PrayerMonthDay[]> {
+  const days = await fetchPrayerMonth(location, year, month, settings);
+  if (days.length) return days;
+  try {
+    return calculatePrayerMonth(location, year, month, settings);
   } catch {
     return [];
   }

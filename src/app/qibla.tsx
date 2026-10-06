@@ -1,9 +1,9 @@
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { ChevronRight, Compass, MapPin } from "lucide-react-native";
+import { ChevronRight, Compass, MapPin, Settings } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { AppState, Linking, Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
@@ -33,9 +33,14 @@ export default function QiblaScreen() {
   const muted = useThemeColor("fg-muted");
   const { location, state } = usePrayerDay();
   const [heading, setHeading] = useState<number | null>(null);
-  const [denied, setDenied] = useState(false);
+  /** "blocked": denied with "don't ask again", so only the system settings can grant it. */
+  const [permission, setPermission] = useState<"pending" | "granted" | "denied" | "blocked">("pending");
+  /** Bumped to check the permission again (no prompt) and, once granted, start the compass. */
+  const [attempt, setAttempt] = useState(0);
+  const [asking, setAsking] = useState(false);
   const rotation = useSharedValue(0);
   const wasAligned = useRef(false);
+  const denied = permission === "denied" || permission === "blocked";
 
   // Precise coordinates when the user shared them, else the city centre the prayer-times API resolved.
   const coords =
@@ -52,11 +57,15 @@ export default function QiblaScreen() {
     let subscription: Location.LocationSubscription | null = null;
     let cancelled = false;
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      // Ask once on open; later checks (after the button or a trip to settings) never prompt again.
+      const { status, canAskAgain } =
+        attempt === 0 ? await Location.requestForegroundPermissionsAsync() : await Location.getForegroundPermissionsAsync();
+      if (cancelled) return;
       if (status !== "granted") {
-        if (!cancelled) setDenied(true);
+        setPermission(canAskAgain ? "denied" : "blocked");
         return;
       }
+      setPermission("granted");
       subscription = await Location.watchHeadingAsync((value) => {
         const next = value.trueHeading >= 0 ? value.trueHeading : value.magHeading;
         setHeading(next);
@@ -69,7 +78,28 @@ export default function QiblaScreen() {
       cancelled = true;
       subscription?.remove();
     };
-  }, [rotation]);
+  }, [rotation, attempt]);
+
+  // Back from the system settings: look again, so a permission granted there starts the compass.
+  useEffect(() => {
+    if (!denied) return;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") setAttempt((value) => value + 1);
+    });
+    return () => subscription.remove();
+  }, [denied]);
+
+  async function allowLocation() {
+    if (permission === "blocked") {
+      await Linking.openSettings().catch(() => {});
+      return;
+    }
+    setAsking(true);
+    // Prompts, and on success saves the precise coordinates for the qibla and prayer times.
+    await requestPreciseLocation();
+    setAsking(false);
+    setAttempt((value) => value + 1);
+  }
 
   useEffect(() => {
     if (aligned && !wasAligned.current) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -163,10 +193,12 @@ export default function QiblaScreen() {
         {denied ? (
           <View className="items-center gap-3">
             <Text className="text-center font-sans text-sm text-fg-muted">
-              نحتاج الإذن بالموقع لتشغيل البوصلة وتحديد اتجاه القبلة بدقة.
+              {permission === "blocked"
+                ? "إذن الموقع مرفوض من إعدادات الجهاز. افتح الإعدادات واسمح بالموقع لتشغيل البوصلة."
+                : "نحتاج الإذن بالموقع لتشغيل البوصلة وتحديد اتجاه القبلة بدقة."}
             </Text>
-            <Button icon={Compass} onPress={() => requestPreciseLocation()}>
-              السماح بالموقع
+            <Button icon={permission === "blocked" ? Settings : Compass} onPress={allowLocation} disabled={asking}>
+              {permission === "blocked" ? "فتح الإعدادات" : "السماح بالموقع"}
             </Button>
           </View>
         ) : bearing === null ? (

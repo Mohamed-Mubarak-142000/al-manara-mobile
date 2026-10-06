@@ -53,6 +53,65 @@ export function locationFromTimezone(): UserLocation {
 
 export const CITY_CHOICES: readonly Omit<UserLocation, "source">[] = Object.values(TIMEZONE_CITIES);
 
+// App-only: city centres, so prayer times can be calculated on the device (offline) for a chosen city.
+const CITY_COORDINATES: Record<string, readonly [latitude: number, longitude: number]> = {
+  Cairo: [30.0444, 31.2357],
+  Riyadh: [24.7136, 46.6753],
+  Dubai: [25.2048, 55.2708],
+  "Kuwait City": [29.3759, 47.9774],
+  Doha: [25.2854, 51.531],
+  Manama: [26.2285, 50.586],
+  Muscat: [23.588, 58.3829],
+  Amman: [31.9454, 35.9284],
+  Baghdad: [33.3152, 44.3661],
+  Beirut: [33.8938, 35.5018],
+  Damascus: [33.5138, 36.2765],
+  Gaza: [31.5017, 34.4668],
+  Hebron: [31.5326, 35.0998],
+  Aden: [12.7855, 45.0187],
+  Khartoum: [15.5007, 32.5599],
+  Tripoli: [32.8872, 13.1913],
+  Tunis: [36.8065, 10.1815],
+  Algiers: [36.7538, 3.0588],
+  Casablanca: [33.5731, -7.5898],
+  Nouakchott: [18.0735, -15.9582],
+  Istanbul: [41.0082, 28.9784],
+  London: [51.5074, -0.1278],
+  Paris: [48.8566, 2.3522],
+  Berlin: [52.52, 13.405],
+  "New York": [40.7128, -74.006],
+};
+
+function deviceTimezone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+export interface ResolvedPlace {
+  latitude: number;
+  longitude: number;
+  /** IANA zone the prayer clock times are written in. */
+  timezone: string;
+}
+
+/**
+ * Coordinates and timezone for an on-device calculation: the shared GPS position in the phone's zone,
+ * or a known city's centre in that city's zone. Null when the city isn't one we know.
+ */
+export function resolvePlace(location: UserLocation): ResolvedPlace | null {
+  const cityZone = Object.entries(TIMEZONE_CITIES).find(([, entry]) => entry.city === location.city)?.[0] ?? null;
+  if (location.latitude !== undefined && location.longitude !== undefined) {
+    const timezone = deviceTimezone() ?? cityZone;
+    return timezone ? { latitude: location.latitude, longitude: location.longitude, timezone } : null;
+  }
+  const coordinates = CITY_COORDINATES[location.city];
+  if (!coordinates || !cityZone) return null;
+  return { latitude: coordinates[0], longitude: coordinates[1], timezone: cityZone };
+}
+
 export function locationKey(location: UserLocation): string {
   return location.latitude !== undefined ? `${location.latitude},${location.longitude}` : `${location.city},${location.country}`;
 }
