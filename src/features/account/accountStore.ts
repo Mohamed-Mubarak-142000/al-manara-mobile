@@ -3,6 +3,7 @@ import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 
 import type { Database } from "@/lib/database.types";
+import { flushOutbox, pendingCount, setOutboxUser, waitForSync } from "@/lib/outbox";
 import { supabase } from "@/lib/supabase";
 
 type Tables = Database["public"]["Tables"];
@@ -28,10 +29,13 @@ function set(next: AccountState) {
 /** Mirrors the website's getSession(): profile, learners, and the active learner (own learner by default). */
 async function loadSession(session: Session | null) {
   if (!supabase || !session) {
+    // The signed-out account's unsynced steps wait for it; another account signing in drops them.
+    setOutboxUser(null);
     set({ status: "guest", configured: !!supabase });
     return;
   }
   const userId = session.user.id;
+  setOutboxUser(userId);
   const [{ data: profile }, { data: learners }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase.from("learners").select("*").eq("owner_id", userId).order("created_at"),
@@ -57,8 +61,12 @@ async function loadSession(session: Session | null) {
 if (supabase) {
   supabase.auth.getSession().then(({ data }) => loadSession(data.session));
   supabase.auth.onAuthStateChange((event, session) => {
-    // Token refreshes don't change who is signed in; skip the extra round trip.
-    if (event === "TOKEN_REFRESHED") return;
+    // Token refreshes don't change who is signed in; skip the extra round trip, but a fresh token may
+    // be what the waiting steps needed.
+    if (event === "TOKEN_REFRESHED") {
+      void flushOutbox({ force: true });
+      return;
+    }
     loadSession(session);
   });
 }
@@ -81,6 +89,18 @@ export function activeLearnerId(account: AccountState): string | null {
 export function activeLearnerIdNow(): string | null {
   return activeLearnerId(state);
 }
+
+/** The signed-in account's id (the owner of the steps waiting to sync), or null. */
+export function currentUserIdNow(): string | null {
+  return state.status === "signed-in" ? state.userId : null;
+}
+
+/** Steps (khatma, plan, activity…) saved on this device that haven't reached the account yet. */
+export function pendingSyncCount(): number {
+  return pendingCount();
+}
+
+const SIGN_OUT_SYNC_MS = 5000;
 
 export type SignInResult = { ok: true } | { ok: false; message: string; needsVerification?: boolean };
 
@@ -105,7 +125,17 @@ export const account = {
     if (!error) return { ok: true };
     return { ok: false, message: signInMessage(error.code, error.message), needsVerification: error.code === "email_not_confirmed" };
   },
-  async signOut() {
+  /**
+   * Tries to send what's waiting (up to 5 seconds) and resolves with how many steps are still unsynced,
+   * so the account screen can warn before signing out.
+   */
+  async syncBeforeSignOut(): Promise<number> {
+    return waitForSync(SIGN_OUT_SYNC_MS);
+  },
+  /** `synced`: the caller already waited with syncBeforeSignOut(), so don't wait a second time. */
+  async signOut(options?: { synced?: boolean }) {
+    // Last chance to send what's waiting; whatever is left syncs the next time this account signs in.
+    if (!options?.synced && pendingCount() > 0) await waitForSync(SIGN_OUT_SYNC_MS);
     await supabase?.auth.signOut();
   },
   chooseLearner(id: string) {

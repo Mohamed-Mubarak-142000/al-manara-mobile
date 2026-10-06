@@ -1,12 +1,23 @@
 import { router } from "expo-router";
 import { BookOpenCheck, LogOut, Settings, UserRound } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { account, useAccount } from "./accountStore";
+
+/** Tries to send waiting offline progress first; asks before leaving with some still unsent. */
+async function signOut() {
+  const left = await account.syncBeforeSignOut();
+  const leave = () => unregisterPushToken().finally(() => account.signOut({ synced: true }));
+  if (left === 0) return leave();
+  Alert.alert("لديك تقدّم لم يُزامن بعد", "إذا خرجت الآن فسيُزامن عند تسجيل دخولك مرة أخرى بنفس الحساب.", [
+    { text: "إلغاء", style: "cancel" },
+    { text: "خروج على أي حال", style: "destructive", onPress: () => void leave() },
+  ]);
+}
 
 /** Guest → a sign-in invitation; signed in → who, which learner, and sign-out. */
 export function AccountCard() {
@@ -49,7 +60,7 @@ export function AccountCard() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="تسجيل الخروج"
-          onPress={() => unregisterPushToken().finally(account.signOut)}
+          onPress={() => void signOut()}
           hitSlop={10}
           className="p-2"
         >

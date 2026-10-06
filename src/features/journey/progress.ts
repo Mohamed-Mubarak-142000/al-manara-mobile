@@ -1,6 +1,8 @@
 import { buildJuzRanges, countMemorizedInJuz, type JuzRange } from "@/core/progress/juz";
 import { getSurahAyahCount } from "@/core/quran/surahAyahCounts";
+import { currentUserIdNow } from "@/features/account/accountStore";
 import { mushafStarts } from "@/features/mushaf/mushaf";
+import { enqueue, registerHandler, throwIfError } from "@/lib/outbox";
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -18,19 +20,27 @@ function utcDay(date: Date = new Date()): string {
 }
 
 const recorded = new Set<string>();
+const ACTIVITY_OP = "activity";
 
-/** Marks today as a day of activity (once per learner per day; failures are harmless). */
+registerHandler<{ learnerId: string; day: string }>(ACTIVITY_OP, async ({ learnerId, day }) => {
+  if (!supabase) return;
+  throwIfError(
+    await supabase.from("activity_days").upsert({ learner_id: learnerId, day }, { onConflict: "learner_id,day", ignoreDuplicates: true }),
+  );
+});
+
+/**
+ * Marks today as a day of activity (once per learner per day). Goes through the outbox with the day it
+ * happened on, so a day of practice offline still counts in the streak once it syncs.
+ */
 export function recordActivity(learnerId: string | null) {
-  if (!supabase || !learnerId) return;
-  const key = `${learnerId}:${utcDay()}`;
+  const owner = currentUserIdNow();
+  if (!supabase || !learnerId || !owner) return;
+  const day = utcDay();
+  const key = `${learnerId}:${day}`;
   if (recorded.has(key)) return;
   recorded.add(key);
-  supabase
-    .from("activity_days")
-    .upsert({ learner_id: learnerId, day: utcDay() }, { onConflict: "learner_id,day", ignoreDuplicates: true })
-    .then(({ error }) => {
-      if (error) recorded.delete(key);
-    });
+  enqueue({ kind: ACTIVITY_OP, owner, payload: { learnerId, day }, dedupeKey: `${ACTIVITY_OP}:${key}` });
 }
 
 /** Starts the review schedule of any surah these ayahs completed, like the website does on memorizing. */

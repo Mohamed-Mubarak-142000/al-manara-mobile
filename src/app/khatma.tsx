@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/Button";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount } from "@/features/account/accountStore";
 import { CreateKhatmaForm, formatDay } from "@/features/khatma/CreateKhatmaForm";
-import { khatma, useKhatma } from "@/features/khatma/khatmaStore";
+import { khatma, reloadKhatma, useKhatma } from "@/features/khatma/khatmaStore";
+import { SyncBadge } from "@/features/khatma/SyncBadge";
 import { buildKhatmaView } from "@/features/khatma/view";
 import { getSurahs, mushafBoundaries } from "@/features/mushaf/mushaf";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -91,6 +92,7 @@ export default function KhatmaScreen() {
           </View>
           {view && <Ring percent={view.percent} />}
         </View>
+        {account.status === "signed-in" && <SyncBadge />}
         {account.status === "guest" && account.configured && (
           <Text className="mt-4 font-sans text-xs text-white/60">ختمتك محفوظة على هذا الجهاز. سجّل الدخول لمزامنتها مع الموقع.</Text>
         )}
@@ -99,6 +101,8 @@ export default function KhatmaScreen() {
       <View className="gap-4 px-4 pt-5">
         {state.status === "loading" ? (
           <StateMessage loading />
+        ) : state.status === "unavailable" ? (
+          <StateMessage message="تعذّر تحميل ختمتك الآن." onRetry={() => void reloadKhatma()} />
         ) : !view ? (
           <CreateKhatmaForm />
         ) : (

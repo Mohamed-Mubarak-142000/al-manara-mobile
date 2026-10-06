@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { formatDay } from "@/features/khatma/CreateKhatmaForm";
+import { SyncBadge } from "@/features/khatma/SyncBadge";
 import { getSurahs, mushafStarts } from "@/features/mushaf/mushaf";
 import { CreatePlanForm } from "@/features/plan/CreatePlanForm";
-import { planActions, usePlan } from "@/features/plan/planStore";
+import { planActions, reloadPlan, usePlan } from "@/features/plan/planStore";
 import { buildTodayView, type PageLink } from "@/features/plan/view";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -94,11 +95,14 @@ export default function PlanScreen() {
             </Text>
           </View>
         )}
+        {state.status !== "guest" && <SyncBadge />}
       </View>
 
       <View className="gap-4 px-4 pt-5">
         {state.status === "loading" ? (
           <StateMessage loading />
+        ) : state.status === "unavailable" ? (
+          <StateMessage message="تعذّر تحميل خطتك الآن." onRetry={() => void reloadPlan()} />
         ) : state.status === "guest" ? (
           <View className="items-center rounded-3xl border border-border bg-surface p-6">
             <Lock size={28} color={primary} />
