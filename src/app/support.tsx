@@ -6,11 +6,18 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from "
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
-import { ALL_PRODUCT_IDS, DONATIONS, SUPPORTER_PACK, isDonation, setSupporter, useSupporter } from "@/features/support/supportStore";
+import {
+  ALL_PRODUCT_IDS,
+  DONATIONS,
+  SUPPORTER_PACK,
+  SUPPORTER_PERKS,
+  isDonation,
+  setSupporter,
+  useSupporter,
+} from "@/features/support/supportStore";
 import { track } from "@/lib/telemetry";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-const PERKS = ["ألوان إضافية لصفحات المصحف", "شكر خاص في صفحة الداعمين", "أجر المساهمة في نشر القرآن بإذن الله"];
 
 /**
  * "ادعم المنارة": the app stays free with no ads and no subscriptions. Donations are consumable
@@ -107,7 +114,7 @@ export default function SupportScreen() {
               <Text className="font-sans text-xs text-fg-muted">مرة واحدة مدى الحياة · بلا اشتراك</Text>
             </View>
           </View>
-          {PERKS.map((perk) => (
+          {SUPPORTER_PERKS.map((perk) => (
             <View key={perk} className="flex-row items-center gap-2">
               <Check size={16} color={primary} />
               <Text className="font-sans text-sm text-fg">{perk}</Text>

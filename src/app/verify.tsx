@@ -1,12 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ShieldCheck } from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { MailCheck, ShieldCheck, Timer } from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
+import { Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { AuthLayout, FormError, TextLink } from "@/features/account/AuthLayout";
 import { authFlows, type OtpType } from "@/features/account/authFlows";
+import { OtpInput } from "@/features/account/OtpInput";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const RESEND_SECONDS = 60;
@@ -17,9 +18,12 @@ export default function VerifyScreen() {
   const params = useLocalSearchParams<{ email?: string; type?: string }>();
   const email = params.email ?? "";
   const type: OtpType = TYPES.includes(params.type as OtpType) ? (params.type as OtpType) : "signup";
-  const fg = useThemeColor("fg");
+  const primary = useThemeColor("primary");
+  const muted = useThemeColor("fg-muted");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  // Autofill can deliver the code twice before `busy` re-renders; a second verify would burn the code.
+  const verifying = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(RESEND_SECONDS);
@@ -35,9 +39,14 @@ export default function VerifyScreen() {
       setError("الكود ٦ أرقام");
       return;
     }
+    if (verifying.current) return;
+    verifying.current = true;
     setBusy(true);
     setError(null);
-    const result = await authFlows.verify(email, type, value);
+    const result = await authFlows
+      .verify(email, type, value)
+      .catch(() => ({ ok: false as const, error: "تعذّر التحقق الآن. تأكد من الاتصال وحاول مرة أخرى." }));
+    verifying.current = false;
     setBusy(false);
     if (!result.ok) {
       setError(result.error);
@@ -58,30 +67,36 @@ export default function VerifyScreen() {
 
   return (
     <AuthLayout title="أدخل الكود" description={`أرسلنا كودًا من ٦ أرقام إلى ${email}. صالح لمدة ١٥ دقيقة.`}>
-      <TextInput
+      <OtpInput
         value={code}
-        onChangeText={(text) => {
-          const digits = text.replace(/\D/g, "").slice(0, 6);
+        onChange={(digits) => {
           setCode(digits);
-          if (digits.length === 6) submit(digits);
+          if (error) setError(null);
         }}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="one-time-code"
-        maxLength={6}
-        autoFocus
-        accessibilityLabel="الكود"
-        className="h-16 rounded-2xl border border-border bg-surface text-center font-display-bold text-3xl tracking-[12px]"
-        style={{ color: fg }}
+        onComplete={(digits) => {
+          if (!busy) submit(digits);
+        }}
+        invalid={!!error}
+        editable={!busy}
       />
       <FormError message={error} />
-      {notice && !error ? <Text className="font-sans text-sm text-primary">{notice}</Text> : null}
+      {notice && !error ? (
+        <View className="flex-row items-center gap-2 rounded-2xl bg-primary-soft px-4 py-3">
+          <MailCheck size={18} color={primary} />
+          <Text className="flex-1 font-sans text-sm text-primary">{notice}</Text>
+        </View>
+      ) : null}
       <Button icon={ShieldCheck} size="lg" onPress={() => submit()} disabled={busy}>
         {busy ? "جارٍ التحقق…" : "تأكيد"}
       </Button>
-      <View className="mt-2 items-center">
+      <View className="mt-1 items-center">
         {cooldown > 0 ? (
-          <Text className="font-sans text-sm text-fg-muted">يمكنك طلب كود جديد بعد {toArabicDigits(cooldown)} ثانية</Text>
+          <View className="flex-row items-center gap-2 rounded-full bg-surface-alt px-4 py-2">
+            <Timer size={15} color={muted} />
+            <Text className="font-sans text-sm text-fg-muted">
+              يمكنك طلب كود جديد بعد <Text className="font-sans-bold text-fg">{toArabicDigits(cooldown)}</Text> ثانية
+            </Text>
+          </View>
         ) : (
           <TextLink label="أرسل كودًا جديدًا" onPress={resend} />
         )}

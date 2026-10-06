@@ -1,10 +1,11 @@
 import { router } from "expo-router";
-import { KeyRound } from "lucide-react-native";
+import { KeyRound, Lock, ShieldCheck } from "lucide-react-native";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { AuthField, AuthLayout, FormError, passwordProblem } from "@/features/account/AuthLayout";
 import { authFlows } from "@/features/account/authFlows";
+import { PasswordStrength } from "@/features/account/PasswordStrength";
 
 /** Reached after a recovery code signed the user in. */
 export default function ResetPasswordScreen() {
@@ -31,13 +32,15 @@ export default function ResetPasswordScreen() {
     <AuthLayout title="كلمة مرور جديدة" description="اختر كلمة مرور جديدة لحسابك.">
       <AuthField
         label="كلمة المرور الجديدة"
+        icon={Lock}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         autoComplete="new-password"
         textContentType="newPassword"
       />
-      <AuthField label="تأكيد كلمة المرور" value={confirm} onChangeText={setConfirm} secureTextEntry />
+      <PasswordStrength password={password} />
+      <AuthField label="تأكيد كلمة المرور" icon={ShieldCheck} value={confirm} onChangeText={setConfirm} secureTextEntry />
       <FormError message={error} />
       <Button icon={KeyRound} size="lg" onPress={submit} disabled={busy}>
         {busy ? "جارٍ الحفظ…" : "حفظ كلمة المرور"}

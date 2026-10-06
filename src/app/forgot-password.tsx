@@ -32,6 +32,8 @@ export default function ForgotPasswordScreen() {
     <AuthLayout title="استعادة كلمة المرور" description="أدخل بريدك وسنرسل لك كودًا لتعيين كلمة مرور جديدة.">
       <AuthField
         label="البريد الإلكتروني"
+        icon={Mail}
+        placeholder="name@example.com"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"

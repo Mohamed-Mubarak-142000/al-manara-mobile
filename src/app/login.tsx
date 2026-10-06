@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { LogIn } from "lucide-react-native";
+import { Lock, LogIn, Mail } from "lucide-react-native";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
@@ -38,6 +38,8 @@ export default function LoginScreen() {
       <GoogleButton onDone={() => router.back()} />
       <AuthField
         label="البريد الإلكتروني"
+        icon={Mail}
+        placeholder="name@example.com"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -46,6 +48,7 @@ export default function LoginScreen() {
       />
       <AuthField
         label="كلمة المرور"
+        icon={Lock}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -60,7 +63,7 @@ export default function LoginScreen() {
         <TextLink label="إنشاء حساب جديد" onPress={() => router.replace("/register")} />
         <TextLink label="نسيت كلمة المرور؟" onPress={() => router.push({ pathname: "/forgot-password", params: { email } })} />
       </View>
-      <Text className="mt-4 text-center font-sans text-xs leading-6 text-fg-muted">
+      <Text className="mt-1 text-center font-sans text-xs leading-6 text-fg-muted">
         التطبيق يعمل كاملًا بدون حساب. الحساب فقط لمزامنة تقدمك مع الموقع والأجهزة الأخرى.
       </Text>
     </AuthLayout>

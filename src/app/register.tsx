@@ -1,10 +1,20 @@
 import { router } from "expo-router";
-import { UserPlus } from "lucide-react-native";
+import { Lock, Mail, ShieldCheck, User, UserPlus } from "lucide-react-native";
 import { useState } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import { AuthField, AuthLayout, FormError, GoogleButton, TextLink, emailProblem, passwordProblem } from "@/features/account/AuthLayout";
+import {
+  AuthField,
+  AuthLayout,
+  FormError,
+  GoogleButton,
+  TextLink,
+  emailProblem,
+  errorHaptic,
+  passwordProblem,
+} from "@/features/account/AuthLayout";
+import { PasswordStrength } from "@/features/account/PasswordStrength";
 import { authFlows } from "@/features/account/authFlows";
 
 type Errors = Partial<Record<"fullName" | "email" | "password" | "confirm", string>>;
@@ -27,7 +37,10 @@ export default function RegisterScreen() {
       confirm: password !== confirm ? "كلمتا المرور غير متطابقتين" : undefined,
     };
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
+    if (Object.values(next).some(Boolean)) {
+      errorHaptic();
+      return;
+    }
     setBusy(true);
     setError(null);
     const address = email.trim().toLowerCase();
@@ -43,6 +56,7 @@ export default function RegisterScreen() {
       <GoogleButton onDone={() => router.dismissAll()} />
       <AuthField
         label="الاسم"
+        icon={User}
         value={fullName}
         onChangeText={setFullName}
         autoCapitalize="words"
@@ -51,6 +65,8 @@ export default function RegisterScreen() {
       />
       <AuthField
         label="البريد الإلكتروني"
+        icon={Mail}
+        placeholder="name@example.com"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -60,6 +76,7 @@ export default function RegisterScreen() {
       />
       <AuthField
         label="كلمة المرور"
+        icon={Lock}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -67,12 +84,31 @@ export default function RegisterScreen() {
         textContentType="newPassword"
         error={errors.password}
       />
-      <AuthField label="تأكيد كلمة المرور" value={confirm} onChangeText={setConfirm} secureTextEntry error={errors.confirm} />
+      <PasswordStrength password={password} />
+      <AuthField
+        label="تأكيد كلمة المرور"
+        icon={ShieldCheck}
+        value={confirm}
+        onChangeText={setConfirm}
+        secureTextEntry
+        autoComplete="new-password"
+        error={errors.confirm}
+      />
       <FormError message={error} />
       <Button icon={UserPlus} size="lg" onPress={submit} disabled={busy}>
         {busy ? "جارٍ الإنشاء…" : "إنشاء الحساب"}
       </Button>
-      <View className="mt-2 items-center">
+      <Text className="text-center font-sans text-xs leading-6 text-fg-muted">
+        بالتسجيل فإنك توافق على{" "}
+        <Text accessibilityRole="link" className="font-sans-bold text-primary" onPress={() => router.push("/terms")}>
+          الشروط
+        </Text>{" "}
+        و
+        <Text accessibilityRole="link" className="font-sans-bold text-primary" onPress={() => router.push("/privacy")}>
+          سياسة الخصوصية
+        </Text>
+      </Text>
+      <View className="mt-1 items-center">
         <TextLink label="لديك حساب؟ سجّل الدخول" onPress={() => router.replace("/login")} />
       </View>
     </AuthLayout>

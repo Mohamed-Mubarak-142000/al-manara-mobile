@@ -14,6 +14,9 @@ export const DONATIONS = [
 
 export const SUPPORTER_PACK = "almanara.supporter.lifetime";
 
+/** What the supporter pack gives; shown on /support and in the onboarding support step. */
+export const SUPPORTER_PERKS = ["ألوان إضافية لصفحات المصحف", "شكر خاص في صفحة الداعمين", "أجر المساهمة في نشر القرآن بإذن الله"] as const;
+
 export const ALL_PRODUCT_IDS = [...DONATIONS.map((donation) => donation.id), SUPPORTER_PACK];
 
 export function isDonation(productId: string): boolean {
