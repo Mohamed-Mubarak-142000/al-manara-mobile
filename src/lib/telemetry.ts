@@ -33,7 +33,8 @@ export type AppEvent =
   | "exam_submitted"
   | "surah_downloaded"
   | "support_purchase"
-  | "onboarding_finished";
+  | "onboarding_finished"
+  | "onboarding_skipped";
 
 export function track(event: AppEvent, properties?: Record<string, string | number | boolean>) {
   posthog?.capture(event, properties);

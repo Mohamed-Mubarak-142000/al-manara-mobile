@@ -19,12 +19,19 @@ import { usePushRegistration } from "@/features/notifications/usePushRegistratio
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
 import { trackScreen, withTelemetry } from "@/lib/telemetry";
+import { startOutbox } from "@/lib/outbox";
+import { restoreLastRoute, useRouteMemory } from "@/lib/useRouteMemory";
+// Registers the outbox handlers before anything is flushed.
+import "@/features/khatma/sync";
+import "@/features/plan/sync";
 import { applySavedTextScale } from "@/theme/textScale";
 import { useWidgetSync } from "@/widgets/useWidgetSync";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 SplashScreen.preventAutoHideAsync();
 applySavedTextScale();
+// Khatma/plan changes made offline are queued and sent when the connection returns.
+startOutbox();
 
 export { ErrorFallback as ErrorBoundary } from "@/components/ErrorFallback";
 
@@ -38,6 +45,7 @@ function RootLayout() {
   useEffect(() => {
     trackScreen(pathname);
   }, [pathname]);
+  useRouteMemory();
   useNotificationLinks(fontsLoaded || !!fontError);
   const scheme = useColorScheme();
   const bg = useThemeColor("bg");
@@ -51,8 +59,12 @@ function RootLayout() {
     // First launch: the three setup steps before anything else. The splash stays up until the
     // onboarding screen has replaced Home, so Home never flashes first.
     if (onboarding.isDone()) {
-      SplashScreen.hideAsync();
-      return;
+      // After Android ended the process in the background, reopen the screen the user left (on top of
+      // Home) before the splash goes, so Home doesn't flash first.
+      void restoreLastRoute(true).finally(() => setTimeout(() => SplashScreen.hideAsync(), 50));
+      // Never keep the splash up longer than this, whatever happens above.
+      const fallback = setTimeout(() => SplashScreen.hideAsync(), 1500);
+      return () => clearTimeout(fallback);
     }
     router.replace("/onboarding");
     const id = setTimeout(() => SplashScreen.hideAsync(), 250);
