@@ -27,7 +27,11 @@ class PrayerReceiver : BroadcastReceiver() {
             BackgroundState.prefs(context).edit().putString("scheduleError", "تعذّر بدء الأذان، راجع أذونات المنبهات").apply()
           }
         }
-      } finally { pending.finish() }
+      } finally {
+        // A prayer (or its reminder) just began: move the home-screen widget to the next one.
+        PrayerWidget.refresh(context)
+        pending.finish()
+      }
     }
   }
   companion object { private val executor = Executors.newSingleThreadExecutor() }

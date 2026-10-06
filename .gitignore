@@ -44,3 +44,6 @@ example
 
 # Real env file (public values only, but keep project URLs out of git)
 .env
+
+# Gradle caches from opening the local native module in Android Studio
+.gradle/

@@ -74,6 +74,64 @@ export function NextPrayerWidget({ data, now }: { data: PrayerWidgetData; now: D
   );
 }
 
+export interface TasbihWidgetData {
+  text: string;
+  source: string;
+  count: number;
+  target: number;
+  complete: boolean;
+}
+
+const chip = { backgroundColor: C.night, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 } as const;
+
+/** A short dhikr (opens the adhkar screen) over a tap counter; each tap is handled headless. */
+export function TasbihWidget({ data }: { data: TasbihWidgetData }) {
+  return (
+    <FlexWidget
+      style={{
+        height: "match_parent",
+        width: "match_parent",
+        backgroundColor: C.deep,
+        borderRadius: 24,
+        padding: 12,
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
+      <FlexWidget
+        clickAction="OPEN_URI"
+        clickActionData={{ uri: "almanara://adhkar" }}
+        accessibilityLabel="افتح الأذكار"
+        style={{ width: "match_parent", flexDirection: "column" }}
+      >
+        <TextWidget text={data.text} maxLines={3} truncate="END" style={{ fontSize: 14, color: C.ivory, fontFamily: FONT, textAlign: "right" }} />
+        <TextWidget text={data.source} maxLines={1} style={{ fontSize: 10, color: C.faint, fontFamily: FONT, textAlign: "right" }} />
+      </FlexWidget>
+      <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
+        <FlexWidget
+          clickAction="TASBIH_TAP"
+          accessibilityLabel={data.complete ? "اكتمل، اضغط لذكر جديد" : "سبّح"}
+          style={{ ...chip, paddingHorizontal: 14, paddingVertical: 4, flexDirection: "row", alignItems: "center" }}
+        >
+          <TextWidget
+            text={data.complete ? "اكتمل" : toArabicDigits(data.count)}
+            style={{ fontSize: 22, color: C.gold, fontFamily: FONT }}
+          />
+          <TextWidget text={` / ${toArabicDigits(data.target)}`} style={{ fontSize: 12, color: C.goldSoft, fontFamily: FONT }} />
+        </FlexWidget>
+        <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+          <FlexWidget clickAction="TASBIH_TARGET" accessibilityLabel="غيّر العدد ٣٣ أو ١٠٠" style={{ ...chip, marginHorizontal: 4 }}>
+            <TextWidget text={toArabicDigits(data.target === 33 ? 100 : 33)} style={{ fontSize: 12, color: C.goldSoft, fontFamily: FONT }} />
+          </FlexWidget>
+          <FlexWidget clickAction="TASBIH_RESET" accessibilityLabel="صفّر العدّاد" style={chip}>
+            <TextWidget text="صفّر" style={{ fontSize: 12, color: C.ivory, fontFamily: FONT }} />
+          </FlexWidget>
+        </FlexWidget>
+      </FlexWidget>
+    </FlexWidget>
+  );
+}
+
 export interface ReadingWidgetData {
   surahName: string | null;
   ayah: number;

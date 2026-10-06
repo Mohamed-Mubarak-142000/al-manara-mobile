@@ -151,6 +151,7 @@
     },
     "plugins": [
       "./plugins/withAlmanaraBackground",
+      "./plugins/withAppShortcuts",
       "expo-router",
       [
         "expo-splash-screen",
@@ -226,6 +227,17 @@
               "minWidth": "180dp",
               "minHeight": "110dp",
               "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 3600000
+            },
+            {
+              "name": "Tasbih",
+              "label": "ذكر",
+              "description": "ذكر قصير يتجدد كل ساعة مع عدّاد للتسبيح",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
               "targetCellHeight": 2,
               "resizeMode": "horizontal|vertical",
               "updatePeriodMillis": 3600000

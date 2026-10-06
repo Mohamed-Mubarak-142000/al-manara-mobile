@@ -4,6 +4,7 @@ import { AppState } from "react-native";
 import { locationKey } from "@/core/prayer/location";
 import { useReaderState } from "@/features/mushaf/readerPrefs";
 import { useUserLocation } from "@/features/prayer/locationStore";
+import { usePrayerCalcSettings } from "@/features/prayer/prayerCalcSettings";
 
 import { refreshIosWidgets } from "./iosWidgets";
 import { WIDGETS, refreshWidgets } from "./taskHandler";
@@ -17,7 +18,8 @@ export function useWidgetSync() {
   const { lastRead } = useReaderState();
   const location = useUserLocation();
   const readingKey = lastRead ? `${lastRead.page}:${lastRead.surah}:${lastRead.ayah}` : "";
-  const placeKey = locationKey(location);
+  const calc = usePrayerCalcSettings();
+  const placeKey = `${locationKey(location)}|${JSON.stringify(calc)}`;
 
   useEffect(() => {
     const id = setTimeout(() => {

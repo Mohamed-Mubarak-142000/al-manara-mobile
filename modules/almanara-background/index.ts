@@ -37,6 +37,8 @@ interface BackgroundModule {
   downloadVoice(id: string, url: string): Promise<string>;
   replaceSchedule(moments: string): Promise<number>;
   stopAdhan(): Promise<void>;
+  /** Optional for APKs built before it: wakes the NextPrayer widget at `at` (epoch ms) to redraw. */
+  scheduleWidgetRefresh?(at: number): Promise<boolean>;
 }
 
 export const background = Platform.OS === "android" ? requireOptionalNativeModule<BackgroundModule>("AlmanaraBackground") : null;

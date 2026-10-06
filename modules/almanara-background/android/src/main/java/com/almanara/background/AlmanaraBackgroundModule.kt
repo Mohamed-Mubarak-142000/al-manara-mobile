@@ -64,6 +64,7 @@ class AlmanaraBackgroundModule : Module() {
     }
     AsyncFunction("downloadVoice") { id: String, url: String -> VoiceCache.download(context, id, url) }
     AsyncFunction("replaceSchedule") { moments: String -> BackgroundState.replace(context, moments) }
+    AsyncFunction("scheduleWidgetRefresh") { at: Double -> PrayerWidget.schedule(context, at.toLong()).isSuccess }
     AsyncFunction("stopAdhan") { context.stopService(Intent(context, AdhanService::class.java)) }.runOnQueue(Queues.MAIN)
   }
 }
