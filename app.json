@@ -14,13 +14,19 @@
       "infoPlist": {
         "CFBundleDevelopmentRegion": "ar",
         "ExpoLocalization_forcesRTL": true,
-        "CFBundleLocalizations": ["ar"],
+        "CFBundleLocalizations": [
+          "ar"
+        ],
         "NSSpeechRecognitionUsageDescription": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
         "NSMicrophoneUsageDescription": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك."
       },
-      "associatedDomains": ["applinks:eslami-platform.vercel.app"],
+      "associatedDomains": [
+        "applinks:eslami-platform.vercel.app"
+      ],
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.almanara.app"]
+        "com.apple.security.application-groups": [
+          "group.com.almanara.app"
+        ]
       }
     },
     "android": {
@@ -132,7 +138,10 @@
               "pathPrefix": "/tasmee"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -158,7 +167,9 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["ar"],
+          "supportedLocales": [
+            "ar"
+          ],
           "forcesRTL": true
         }
       ],
@@ -173,7 +184,9 @@
         "expo-notifications",
         {
           "color": "#003e32",
-          "sounds": ["./assets/audio/adhan_short.wav"]
+          "sounds": [
+            "./assets/audio/adhan_short.wav"
+          ]
         }
       ],
       "expo-sharing",
@@ -182,14 +195,18 @@
         {
           "microphonePermission": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك.",
           "speechRecognitionPermission": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
         }
       ],
       "expo-iap",
       [
         "react-native-android-widget",
         {
-          "fonts": ["./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"],
+          "fonts": [
+            "./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"
+          ],
           "widgets": [
             {
               "name": "NextPrayer",
@@ -219,7 +236,16 @@
       "expo-asset",
       "expo-web-browser",
       "@bacons/apple-targets",
-      "@sentry/react-native"
+      "@sentry/react-native",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

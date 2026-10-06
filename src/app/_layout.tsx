@@ -23,6 +23,8 @@ import { useThemeColor } from "@/theme/useThemeColor";
 SplashScreen.preventAutoHideAsync();
 applySavedTextScale();
 
+export { ErrorFallback as ErrorBoundary } from "@/components/ErrorFallback";
+
 function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
   useAdhanSchedule();
@@ -43,9 +45,15 @@ function RootLayout() {
 
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
-    SplashScreen.hideAsync();
-    // First launch: the three setup steps before anything else.
-    if (!onboarding.isDone()) router.replace("/onboarding");
+    // First launch: the three setup steps before anything else. The splash stays up until the
+    // onboarding screen has replaced Home, so Home never flashes first.
+    if (onboarding.isDone()) {
+      SplashScreen.hideAsync();
+      return;
+    }
+    router.replace("/onboarding");
+    const id = setTimeout(() => SplashScreen.hideAsync(), 250);
+    return () => clearTimeout(id);
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;
