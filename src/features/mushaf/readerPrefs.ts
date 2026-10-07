@@ -22,6 +22,8 @@ export const READER_THEMES: Record<
 export const SUPPORTER_THEMES: readonly ReaderTheme[] = ["emerald", "dusk"];
 
 export const FONT_SIZES = [19, 22, 25, 28, 32] as const;
+/** The normal size: at it (and below) a page shows whole, like a printed mushaf; larger sizes scroll. */
+export const DEFAULT_FONT_STEP = 1;
 
 export interface ReaderPrefs {
   theme: ReaderTheme;
@@ -63,7 +65,7 @@ interface ReaderState {
 
 const KEY = "al-manara:reader:v1";
 const DEFAULTS: ReaderState = {
-  prefs: { theme: "light", fontStep: 1, tajweed: true, riwaya: "hafs" },
+  prefs: { theme: "light", fontStep: DEFAULT_FONT_STEP, tajweed: true, riwaya: "hafs" },
   bookmarks: [],
   lastRead: null,
   notes: {},

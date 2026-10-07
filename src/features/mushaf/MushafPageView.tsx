@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { TAJWEED_RULES } from "@/core/quran/tajweedApi";
@@ -14,6 +14,11 @@ interface MushafPageViewProps {
   width: number;
   theme: ReaderTheme;
   fontSize: number;
+  /**
+   * The whole page on screen at once, like printed-mushaf apps: the text shrinks (never grows) until the
+   * page fits. Off for the larger text sizes, which scroll instead.
+   */
+  fit: boolean;
   selected: number | null;
   /** Global ids of the ayahs the player is reciting right now, for a soft highlight. */
   playingId: number | null;
@@ -66,12 +71,83 @@ function SurahBanner({
   );
 }
 
+/** Smallest size the fit goes down to; a page that still doesn't fit scrolls. */
+const MIN_FIT_SIZE = 15;
+const MAX_FIT_PASSES = 5;
+
+/**
+ * Shrinks the font until the page's content fits its frame. Wrapped text grows with roughly the square
+ * of the font size (more lines, each taller), so each pass scales by the square root of the overflow;
+ * two or three passes settle it.
+ */
+function useFitToPage(chosen: number, fit: boolean, pageKey: string) {
+  const [size, setSize] = useState(chosen);
+  const [fitted, setFitted] = useState(!fit);
+  const frame = useRef(0);
+  const content = useRef(0);
+  const passes = useRef({ key: "", count: 0 });
+  const [overflow, setOverflow] = useState(false);
+
+  // A new page, width, riwaya or text size starts over from the chosen size (adjusted while rendering,
+  // React's pattern for resetting state when an input changes).
+  const resetKey = `${chosen}:${fit}:${pageKey}`;
+  const [seenKey, setSeenKey] = useState(resetKey);
+  if (seenKey !== resetKey) {
+    setSeenKey(resetKey);
+    setSize(chosen);
+    setFitted(!fit);
+  }
+
+  // Never leave a page invisible if a measurement doesn't come back.
+  useEffect(() => {
+    if (fitted) return;
+    const id = setTimeout(() => setFitted(true), 800);
+    return () => clearTimeout(id);
+  }, [fitted]);
+
+  function adjust() {
+    if (passes.current.key !== resetKey) passes.current = { key: resetKey, count: 0 };
+    const available = frame.current;
+    const needed = content.current;
+    if (!available || !needed) return;
+    setOverflow(needed > available + 1);
+    if (!fit) return;
+    const tooBig = needed > available + 1;
+    const roomToGrow = needed < available * 0.92 && size < chosen;
+    if ((!tooBig && !roomToGrow) || passes.current.count >= MAX_FIT_PASSES) {
+      setFitted(true);
+      return;
+    }
+    passes.current.count += 1;
+    const next = Math.max(MIN_FIT_SIZE, Math.min(chosen, size * Math.sqrt(available / needed) * 0.985));
+    if (Math.abs(next - size) < 0.2) setFitted(true);
+    else setSize(next);
+  }
+
+  return {
+    fontSize: fit ? size : chosen,
+    fitted: fitted || !fit,
+    scrolls: !fit || overflow,
+    onFrame(height: number) {
+      if (Math.abs(height - frame.current) < 1) return;
+      frame.current = height;
+      passes.current = { key: resetKey, count: 0 };
+      adjust();
+    },
+    onContent(height: number) {
+      content.current = height;
+      adjust();
+    },
+  };
+}
+
 /** One mushaf page. Long-press an ayah for tafsir, audio, sharing and bookmarks; tap anywhere for the controls. */
 export const MushafPageView = memo(function MushafPageView({
   page,
   width,
   theme,
-  fontSize,
+  fontSize: chosenSize,
+  fit,
   selected,
   playingId,
   tajweed,
@@ -80,6 +156,7 @@ export const MushafPageView = memo(function MushafPageView({
   onAyahLongPress,
 }: MushafPageViewProps) {
   const colors = READER_THEMES[theme];
+  const { fontSize, fitted, scrolls, onFrame, onContent } = useFitToPage(chosenSize, fit, `${page}:${width}:${riwaya ? 1 : 0}`);
   const ayahs = riwaya ? (riwaya.mushaf.pages[page - 1] ?? []) : getPage(page);
   const basmala = riwaya ? riwaya.mushaf.basmala : getBasmala();
   const fontFamily = riwaya?.fontFamily;
@@ -119,6 +196,11 @@ export const MushafPageView = memo(function MushafPageView({
         <ScrollView
           contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, flexGrow: 1, justifyContent: "center" }}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={scrolls}
+          onLayout={(event) => onFrame(event.nativeEvent.layout.height)}
+          onContentSizeChange={(_, height) => onContent(height)}
+          // Hidden only while the first fit is measured, so the page never shows at the wrong size.
+          style={{ opacity: fitted ? 1 : 0 }}
         >
           {runs.map((run) => (
             <View key={`${run[0]!.surah}-${run[0]!.ayah}`}>
