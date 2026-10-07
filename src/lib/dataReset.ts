@@ -14,8 +14,17 @@ export const DATA_VERSION = 1;
 
 const VERSION_KEY = "al-manara:data-version";
 
+/**
+ * expo-sqlite keeps its databases in <documents>/SQLite, and the kv-store database is open by now.
+ * Deleting it under the open connection made every later write fail with "attempt to write a readonly
+ * database" (the version mark too, so the wipe repeated on every launch and no sign-in could be saved).
+ * Storage.clearSync() above already emptied it.
+ */
+const SQLITE_DIRECTORY = "SQLite";
+
 function wipeDocuments() {
   for (const entry of new Directory(Paths.document).list()) {
+    if (entry.name === SQLITE_DIRECTORY) continue;
     try {
       entry.delete();
     } catch {

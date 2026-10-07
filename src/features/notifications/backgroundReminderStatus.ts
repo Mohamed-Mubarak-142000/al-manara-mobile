@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { recordError } from "@/lib/crashLog";
+
 import { background, type BackgroundStatus } from "../../../modules/almanara-background";
 
 let status: BackgroundStatus | null = null;
@@ -17,8 +19,20 @@ export function refreshBackgroundStatus() {
   notify();
 }
 
+const FALLBACK = "تعذّر حفظ التذكير على هذا الهاتف. أغلق التطبيق وافتحه من جديد، ثم حاول مرة أخرى.";
+const ARABIC = /[؀-ۿ]/;
+
+/**
+ * Our own messages are Arabic and shown as they are; a raw native error (English, e.g. an SQLite
+ * failure) goes to the crash log and the card shows a plain Arabic line instead.
+ */
 export function reportReminderError(value: unknown) {
-  error = value instanceof Error ? value.message : String(value);
+  const message = value instanceof Error ? value.message : String(value);
+  if (ARABIC.test(message)) error = message;
+  else {
+    recordError(value, "error");
+    error = FALLBACK;
+  }
   notify();
 }
 
