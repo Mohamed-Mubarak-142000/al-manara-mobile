@@ -1,9 +1,12 @@
 import * as Notifications from "expo-notifications";
-import { ALargeSmall, Bell, BellOff, BellRing, BookOpen, LocateFixed, Sparkles } from "lucide-react-native";
+import { router } from "expo-router";
+import { ALargeSmall, Bell, BellOff, BellRing, BookOpen, CalendarHeart, LocateFixed, Sparkles } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { AppState, Linking, Pressable, Switch, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
+import { useAccount } from "@/features/account/accountStore";
+import { REMINDER_TOPICS, settings, type SettingsResult } from "@/features/account/settings";
 import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
 import { FONT_SIZES, reader, useReaderState } from "@/features/mushaf/readerPrefs";
@@ -68,6 +71,67 @@ export function AdhkarToastCard() {
         <Text className="font-sans text-xs leading-5 text-fg-muted">ذكر قصير كل ١٠ دقائق وأنت تتصفح التطبيق.</Text>
       </View>
       <Switch value={enabled} onValueChange={setAdhkarToastEnabled} trackColor={{ false: border, true: primary }} thumbColor={surface} />
+    </View>
+  );
+}
+
+// ── Special days (Friday, fasting days, seasons): saved on the account ──
+
+/**
+ * The account's reminder topics (the website's /account switches), here with the other notifications.
+ * They are sent by the server (email and push), so they need an account; guests see why and a way in.
+ */
+export function SpecialDaysCard() {
+  const primary = useThemeColor("primary");
+  const border = useThemeColor("border");
+  const surface = useThemeColor("surface");
+  const account = useAccount();
+  const profile = account.status === "signed-in" ? account.profile : null;
+  const [busy, setBusy] = useState<string | null>(null);
+  const [result, setResult] = useState<SettingsResult | null>(null);
+
+  async function toggle(column: (typeof REMINDER_TOPICS)[number]["column"], value: boolean) {
+    setBusy(column);
+    setResult(await settings.setReminder(column, value));
+    setBusy(null);
+  }
+
+  return (
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-4">
+      <View className="flex-row items-center gap-3">
+        <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
+          <CalendarHeart size={22} color={primary} />
+        </View>
+        <View className="flex-1">
+          <Text className="font-display-bold text-base text-fg">تذكيرات الأيام المميزة</Text>
+          <Text className="font-sans text-xs leading-5 text-fg-muted">
+            صباح الجمعة بسورة الكهف، وليلة أيام الصيام، ومواسم الخير — إشعارًا على هاتفك ورسالة على بريدك.
+          </Text>
+        </View>
+      </View>
+      {account.status !== "signed-in" ? (
+        <Button variant="outline" size="sm" onPress={() => router.push("/login")}>
+          سجّل الدخول لتفعيلها
+        </Button>
+      ) : (
+        <>
+          {REMINDER_TOPICS.map((topic) => (
+            <View key={topic.column} className="flex-row items-center justify-between gap-3">
+              <Text className="flex-1 font-sans text-sm leading-6 text-fg">{topic.label}</Text>
+              <Switch
+                value={profile?.[topic.column] ?? true}
+                disabled={busy === topic.column}
+                onValueChange={(value) => void toggle(topic.column, value)}
+                trackColor={{ false: border, true: primary }}
+                thumbColor={surface}
+              />
+            </View>
+          ))}
+          {result ? (
+            <Text className={`font-sans text-sm ${result.ok ? "text-primary" : "text-danger"}`}>{result.ok ? result.message : result.error}</Text>
+          ) : null}
+        </>
+      )}
     </View>
   );
 }

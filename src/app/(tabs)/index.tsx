@@ -13,13 +13,12 @@ import { Screen, Section } from "@/components/ui/Screen";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { OfflineNotice } from "@/features/home/OfflineNotice";
 import { SetupPrompt } from "@/features/settings/SetupPrompt";
-import { QuickActions, openReading } from "@/features/home/QuickActions";
+import { QuickActions } from "@/features/home/QuickActions";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { SECTION_GROUPS } from "@/features/home/sections";
 import { SponsorCarousel } from "@/features/home/SponsorCard";
 import { SupportersStrip } from "@/features/home/SupportersStrip";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
-import { useReaderState } from "@/features/mushaf/readerPrefs";
 import { RamadanCard } from "@/features/ramadan/RamadanCard";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -56,7 +55,6 @@ export default function HomeScreen() {
   const bg = useThemeColor("bg");
   const enter = (index: number) => FadeInDown.duration(700).delay(150 + index * 120);
   const hijri = hijriLine();
-  const { lastRead } = useReaderState();
 
   return (
     <Screen bleed>
@@ -83,7 +81,8 @@ export default function HomeScreen() {
             اقرأ القرآن الكريم، واستمع لأجمل التلاوات، واجعل للذكر مكانًا ثابتًا في يومك.
           </Animated.Text>
           <Animated.View entering={enter(3)} className="mt-6 flex-row flex-wrap gap-3">
-            <Button variant="gold" icon={BookOpen} onPress={() => openReading(lastRead)}>
+            {/* The index, not the last page: "continue reading" is the card below, once on Home. */}
+            <Button variant="gold" icon={BookOpen} onPress={() => router.push("/quran")}>
               اقرأ القرآن
             </Button>
             <Button variant="light" icon={Headphones} onPress={() => router.push("/listen")}>

@@ -18,6 +18,7 @@ import {
   LocationCard,
   NotificationPermissionCard,
   ReadingCard,
+  SpecialDaysCard,
   TextSizeCard,
 } from "@/features/settings/SettingsCards";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -83,6 +84,7 @@ export default function SettingsScreen() {
         <Section className="mt-2 gap-3 pb-32">
           <Group title="الإشعارات" hint="فعّلها مرة واحدة، ثم اختر ما يصلك منها.">
             <NotificationPermissionCard />
+            <SpecialDaysCard />
           </Group>
 
           <Group title="الأذان" hint="يرتفع الأذان عند دخول كل صلاة، حتى والتطبيق مغلق.">
@@ -106,7 +108,7 @@ export default function SettingsScreen() {
           </Group>
 
           {userId ? (
-            <LinkCard icon={UserRound} title="الحساب والرسائل" hint="اسمك، ورسائل البريد، وتذكيرات الجمعة والصيام" onPress={() => router.push("/account")} />
+            <LinkCard icon={UserRound} title="الحساب" hint="اسمك، وأطفالك، وكلمة المرور، ورسائل البريد" onPress={() => router.push("/account")} />
           ) : null}
         </Section>
       </Screen>

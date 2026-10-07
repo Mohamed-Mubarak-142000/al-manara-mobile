@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount, type Learner } from "@/features/account/accountStore";
 import { AuthField } from "@/features/account/AuthLayout";
-import { MAX_CHILDREN, REMINDER_TOPICS, settings, type SettingsResult } from "@/features/account/settings";
+import { MAX_CHILDREN, settings, type SettingsResult } from "@/features/account/settings";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -272,25 +272,13 @@ export default function AccountScreen() {
                 thumbColor={surface}
               />
             </View>
-          </Section>
-
-          <Section
-            title="تذكيرات الأيام المميزة"
-            description="تصلك على بريدك وكإشعار على هاتفك: صباح الجمعة بسورة الكهف، وليلة أيام الصيام، ومواسم الخير."
-          >
-            {REMINDER_TOPICS.map((topic) => (
-              <View key={topic.column} className="flex-row items-center justify-between gap-3">
-                <Text className="flex-1 font-sans text-sm leading-6 text-fg">{topic.label}</Text>
-                <Switch
-                  value={profile?.[topic.column] ?? true}
-                  onValueChange={(value) => void run(topic.column, () => settings.setReminder(topic.column, value), setPrefResult)}
-                  trackColor={track}
-                  thumbColor={surface}
-                />
-              </View>
-            ))}
             <Feedback result={prefResult} />
           </Section>
+
+          {/* The Friday / fasting / seasons reminders are in Settings → الإشعارات, with the other notifications. */}
+          <Pressable accessibilityRole="link" onPress={() => router.push("/settings")} hitSlop={8} className="self-center py-1">
+            <Text className="font-sans-bold text-sm text-primary">تذكيرات الجمعة والصيام في الإعدادات ←</Text>
+          </Pressable>
 
           <Section title="حذف الحساب" description="يُحذف حسابك وملفات أطفالك وكل التقدّم والشهادات نهائيًا، ولا يمكن التراجع.">
             <AuthField label='اكتب "حذف" للتأكيد' value={deleteText} onChangeText={setDeleteText} />

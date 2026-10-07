@@ -1,8 +1,8 @@
 import { router } from "expo-router";
-import { BookOpenText, Compass, Radio, Sparkles, type LucideIcon } from "lucide-react-native";
+import { Compass, Mic, Radio, Sparkles, type LucideIcon } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
-import { useReaderState, type LastRead } from "@/features/mushaf/readerPrefs";
+import type { LastRead } from "@/features/mushaf/readerPrefs";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 /** The mushaf at the last-read page, or the Quran index when nothing has been read yet. */
@@ -34,17 +34,14 @@ function Action({ icon: Icon, label, hint, onPress }: { icon: LucideIcon; label:
   );
 }
 
-/** One tap to the four things most people open Home for. */
+/**
+ * One tap to four things most people open Home for. Not the mushaf: "اقرأ القرآن" above and the
+ * continue-reading card below already open it.
+ */
 export function QuickActions() {
-  const { lastRead } = useReaderState();
   return (
     <View className="flex-row gap-2 rounded-3xl border border-border bg-surface p-2 shadow-soft">
-      <Action
-        icon={BookOpenText}
-        label={lastRead ? "أكمل القراءة" : "المصحف"}
-        hint={lastRead ? "يفتح المصحف على آخر صفحة قرأتها" : undefined}
-        onPress={() => openReading(lastRead)}
-      />
+      <Action icon={Mic} label="التسميع" hint="سمّع من حفظك بصوتك" onPress={() => router.push("/tasmee")} />
       <Action icon={Sparkles} label="الأذكار" onPress={() => router.push("/adhkar")} />
       <Action icon={Compass} label="القبلة" onPress={() => router.push("/qibla")} />
       <Action icon={Radio} label="الإذاعة" onPress={() => router.push("/radio")} />
