@@ -1,12 +1,13 @@
 import { router } from "expo-router";
 import { Lock, LogIn, Mail } from "lucide-react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { account } from "@/features/account/accountStore";
 import { AuthField, AuthLayout, FormError, GoogleButton, TextLink } from "@/features/account/AuthLayout";
 import { authFlows } from "@/features/account/authFlows";
+import { useCloseAuthFlow } from "@/features/account/closeAuthFlow";
 
 /** Sign-in with the website account. */
 export default function LoginScreen() {
@@ -14,12 +15,17 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const close = useCloseAuthFlow();
+  // `busy` lags a render: two quick taps would both sign in and close twice.
+  const submitting = useRef(false);
 
   async function submit() {
     if (!email.trim() || !password) {
       setError("أدخل البريد الإلكتروني وكلمة المرور.");
       return;
     }
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError(null);
     let result = await account.signIn(email, password);
@@ -28,14 +34,15 @@ export default function LoginScreen() {
       const confirmed = await authFlows.confirmLegacy(email.trim().toLowerCase(), password);
       result = confirmed.ok ? await account.signIn(email, password) : { ok: false, message: confirmed.error };
     }
+    submitting.current = false;
     setBusy(false);
-    if (result.ok) router.back();
+    if (result.ok) close();
     else setError(result.message);
   }
 
   return (
     <AuthLayout title="تسجيل الدخول" description="بنفس حسابك على موقع المنارة، ليتابع معك حفظك وختمتك وموضع قراءتك أينما كنت.">
-      <GoogleButton onDone={() => router.back()} />
+      <GoogleButton onDone={close} />
       <AuthField
         label="البريد الإلكتروني"
         icon={Mail}

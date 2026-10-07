@@ -144,7 +144,7 @@ export default function AccountScreen() {
         {state.status === "loading" ? (
           <StateMessage loading />
         ) : (
-          <StateMessage message="سجّل الدخول لإدارة حسابك." actionLabel="تسجيل الدخول" onAction={() => router.replace("/login")} />
+          <StateMessage message="سجّل الدخول لإدارة حسابك." actionLabel="تسجيل الدخول" onAction={() => router.push("/login")} />
         )}
       </View>
     );

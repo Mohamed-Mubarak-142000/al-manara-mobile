@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { ChevronRight, CircleAlert, Eye, EyeOff, type LucideIcon } from "lucide-react-native";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View, type TextInputProps } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeOut, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,7 +24,18 @@ export function errorHaptic() {
  * The shared frame of the account screens: the home screen's Quran-terrace scene under an emerald wash,
  * logo and title, then the form in a raised card that overlaps the bottom of the scene.
  */
-export function AuthLayout({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+export function AuthLayout({
+  title,
+  description,
+  children,
+  onBack,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+  /** Replaces the default back (e.g. the reset screen closes the whole flow). */
+  onBack?: () => void;
+}) {
   const insets = useSafeAreaInsets();
   const hero = useThemeColor("hero");
   const goldSoft = useThemeColor("gold-soft");
@@ -45,7 +56,7 @@ export function AuthLayout({ title, description, children }: { title: string; de
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="رجوع"
-            onPress={() => router.back()}
+            onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace("/")))}
             hitSlop={12}
             className="size-10 items-center justify-center self-start rounded-full border border-white/15 bg-white/10"
           >
@@ -206,6 +217,15 @@ export function GoogleButton({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fg = useThemeColor("fg");
+  // A second sheet can't open while one is ("WebBrowser is already open"); `busy` lags a render.
+  const opening = useRef(false);
+  const mounted = useRef(true);
+  useEffect(
+    () => () => {
+      mounted.current = false;
+    },
+    [],
+  );
   return (
     <View className="gap-4">
       <Pressable
@@ -213,10 +233,14 @@ export function GoogleButton({ onDone }: { onDone: () => void }) {
         accessibilityState={{ busy, disabled: busy }}
         disabled={busy}
         onPress={async () => {
+          if (opening.current) return;
+          opening.current = true;
           Haptics.selectionAsync().catch(() => {});
           setBusy(true);
           setError(null);
-          const result = await signInWithGoogle();
+          const result = await signInWithGoogle().catch(() => ({ ok: false as const, error: "تعذّر بدء الدخول بجوجل الآن." }));
+          opening.current = false;
+          if (!mounted.current) return;
           setBusy(false);
           if (result.ok) onDone();
           else if (result.error) setError(result.error);

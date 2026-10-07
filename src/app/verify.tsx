@@ -6,7 +6,8 @@ import { Text, View } from "react-native";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { AuthLayout, FormError, TextLink } from "@/features/account/AuthLayout";
-import { authFlows, type OtpType } from "@/features/account/authFlows";
+import { authFlows, recovery, type OtpType } from "@/features/account/authFlows";
+import { useCloseAuthFlow } from "@/features/account/closeAuthFlow";
 import { OtpInput } from "@/features/account/OtpInput";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -27,6 +28,7 @@ export default function VerifyScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(RESEND_SECONDS);
+  const close = useCloseAuthFlow();
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -45,15 +47,17 @@ export default function VerifyScreen() {
     setError(null);
     const result = await authFlows
       .verify(email, type, value)
-      .catch(() => ({ ok: false as const, error: "تعذّر التحقق الآن. تأكد من الاتصال وحاول مرة أخرى." }));
+      .catch(() => ({ ok: false as const, error: "تعذّر التحقق الآن، حاول مرة أخرى بعد قليل." }));
     verifying.current = false;
     setBusy(false);
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    if (type === "recovery") router.replace("/reset-password");
-    else router.dismissAll();
+    if (type === "recovery") {
+      recovery.active = true;
+      router.replace("/reset-password");
+    } else close();
   }
 
   async function resend() {

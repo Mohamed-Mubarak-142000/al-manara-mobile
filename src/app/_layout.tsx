@@ -10,7 +10,6 @@ import { useColorScheme } from "react-native";
 import { useLastReadSync } from "@/features/account/useLastReadSync";
 import { AdhkarToaster } from "@/features/adhkar/AdhkarToaster";
 import { GlobalMiniPlayer } from "@/features/audio/MiniPlayer";
-import { OfflineBanner } from "@/components/OfflineBanner";
 import { ReadingStreakTracker } from "@/features/streak/streakStore";
 import { BackgroundReminders } from "@/features/notifications/BackgroundReminders";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
@@ -34,6 +33,9 @@ applySavedTextScale();
 startOutbox();
 
 export { ErrorFallback as ErrorBoundary } from "@/components/ErrorFallback";
+
+/** A deep link straight to a screen (almanara://login…) still has Home under it to go back to. */
+export const unstable_settings = { initialRouteName: "(tabs)" };
 
 function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
@@ -88,7 +90,8 @@ function RootLayout() {
         <Stack.Screen name="register" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="verify" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="forgot-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        {/* No swipe-down: leaving goes through the screen's own back, which closes the whole flow. */}
+        <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom", gestureEnabled: false }} />
         <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
@@ -96,7 +99,6 @@ function RootLayout() {
       </Stack>
       <ReadingStreakTracker />
       <GlobalMiniPlayer />
-      <OfflineBanner />
       <AdhkarToaster />
     </ThemeProvider>
   );

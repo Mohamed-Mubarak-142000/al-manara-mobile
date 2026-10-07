@@ -68,3 +68,14 @@ export async function restoreLastRoute(onboardingDone: boolean): Promise<void> {
     // Home is a fine place to be.
   }
 }
+
+/**
+ * A cold start from Google's redirect (Android ended the app while the sign-in sheet was open): the
+ * launch link was ours, not the user's, so the screen they started from is reopened after all.
+ */
+export function restoreAfterAuthRedirect(onboardingDone: boolean) {
+  const target = decideRestore({ saved: coldStartRoute, now: Date.now(), launchedByLink: false, onboardingDone, lastRestoreAt: readLastRestoreAt() });
+  if (!target) return;
+  markRestored();
+  router.push(target as Href);
+}

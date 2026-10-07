@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Lock, Mail, ShieldCheck, User, UserPlus } from "lucide-react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
@@ -16,6 +16,7 @@ import {
 } from "@/features/account/AuthLayout";
 import { PasswordStrength } from "@/features/account/PasswordStrength";
 import { authFlows } from "@/features/account/authFlows";
+import { useCloseAuthFlow } from "@/features/account/closeAuthFlow";
 
 type Errors = Partial<Record<"fullName" | "email" | "password" | "confirm", string>>;
 
@@ -28,6 +29,8 @@ export default function RegisterScreen() {
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const close = useCloseAuthFlow();
+  const submitting = useRef(false);
 
   async function submit() {
     const next: Errors = {
@@ -41,19 +44,22 @@ export default function RegisterScreen() {
       errorHaptic();
       return;
     }
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError(null);
     const address = email.trim().toLowerCase();
     const result = await authFlows.register(fullName.trim(), address, password);
+    submitting.current = false;
     setBusy(false);
     // Signed in right away, like the website: back to wherever the user came from.
-    if (result.ok) router.dismissAll();
+    if (result.ok) close();
     else setError(result.error);
   }
 
   return (
     <AuthLayout title="حساب جديد" description="أنشئ حسابك مرة واحدة واستخدمه على الموقع والتطبيق.">
-      <GoogleButton onDone={() => router.dismissAll()} />
+      <GoogleButton onDone={close} />
       <AuthField
         label="الاسم"
         icon={User}

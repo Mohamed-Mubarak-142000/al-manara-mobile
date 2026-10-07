@@ -1,14 +1,31 @@
-import { router } from "expo-router";
 import { KeyRound, Lock, ShieldCheck } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BackHandler } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { AuthField, AuthLayout, FormError, passwordProblem } from "@/features/account/AuthLayout";
-import { authFlows } from "@/features/account/authFlows";
+import { authFlows, recovery } from "@/features/account/authFlows";
+import { useCloseAuthFlow } from "@/features/account/closeAuthFlow";
 import { PasswordStrength } from "@/features/account/PasswordStrength";
 
-/** Reached after a recovery code signed the user in. */
+/**
+ * Reached after a recovery code signed the user in. Leaving it (back, Android back) closes the whole
+ * sign-in flow rather than landing on the login form while already signed in.
+ */
 export default function ResetPasswordScreen() {
+  const close = useCloseAuthFlow();
+  const leave = () => {
+    recovery.active = false;
+    close();
+  };
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      recovery.active = false;
+      close();
+      return true;
+    });
+    return () => sub.remove();
+  }, [close]);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +41,12 @@ export default function ResetPasswordScreen() {
     setError(null);
     const result = await authFlows.setPassword(password);
     setBusy(false);
-    if (result.ok) router.dismissAll();
+    if (result.ok) leave();
     else setError(result.error);
   }
 
   return (
-    <AuthLayout title="كلمة مرور جديدة" description="اختر كلمة مرور جديدة لحسابك.">
+    <AuthLayout title="كلمة مرور جديدة" description="اختر كلمة مرور جديدة لحسابك." onBack={leave}>
       <AuthField
         label="كلمة المرور الجديدة"
         icon={Lock}
