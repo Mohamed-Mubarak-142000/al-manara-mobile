@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { FlatList, Modal, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, cancelAnimation } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,7 +29,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
-import { audio, currentTrack, getPlayerState, usePlayer } from "@/features/audio/playerStore";
+import { audio, currentTrack, getPlayerState, usePlayerValue } from "@/features/audio/playerStore";
 import { ayahSource } from "@/features/downloads/ayahPacks";
 import { loadSurahReview, markAyahsMemorized, markSurahReviewed, recordActivity } from "@/features/journey/progress";
 import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mushaf";
@@ -73,9 +73,10 @@ function speechSupported(): boolean {
 
 /** Plays (or pauses) one ayah in al-Husary's voice, like the website's AyahPlay. */
 function useAyahAudio(ayah: MushafAyah, surahName: string) {
-  const player = usePlayer();
   const id = `tasmee-fix-${ayah.id}`;
-  const isThis = currentTrack(player)?.id === id;
+  const isThis = usePlayerValue((s) => currentTrack(s)?.id === id);
+  const playing = usePlayerValue((s) => s.playing);
+  const buffering = usePlayerValue((s) => s.buffering);
   const toggle = () =>
     isThis
       ? audio.toggle()
@@ -85,7 +86,7 @@ function useAyahAudio(ayah: MushafAyah, surahName: string) {
           artist: "الحصري — مرتّل",
           ...ayahSource("husary", ayah.surah, ayah.ayah),
         });
-  return { isThis, playing: isThis && player.playing, loading: isThis && player.buffering, toggle };
+  return { isThis, playing: isThis && playing, loading: isThis && buffering, toggle };
 }
 
 function AyahPlay({ ayah, surahName }: { ayah: MushafAyah; surahName: string }) {
@@ -99,7 +100,13 @@ function AyahPlay({ ayah, surahName }: { ayah: MushafAyah; surahName: string }) 
       hitSlop={8}
       className="mt-1 size-9 items-center justify-center rounded-full border border-border bg-surface"
     >
-      {loading ? <LoaderCircle size={16} color={primary} /> : playing ? <Pause size={16} color={primary} /> : <Play size={16} color={primary} />}
+      {loading ? (
+        <LoaderCircle size={16} color={primary} />
+      ) : playing ? (
+        <Pause size={16} color={primary} />
+      ) : (
+        <Play size={16} color={primary} />
+      )}
     </Pressable>
   );
 }
@@ -114,7 +121,10 @@ function Ping({ active }: { active: boolean }) {
       progress.set(0);
     }
   }, [active, progress]);
-  const style = useAnimatedStyle(() => ({ opacity: active ? 0.45 * (1 - progress.get()) : 0, transform: [{ scale: 1 + progress.get() * 0.6 }] }));
+  const style = useAnimatedStyle(() => ({
+    opacity: active ? 0.45 * (1 - progress.get()) : 0,
+    transform: [{ scale: 1 + progress.get() * 0.6 }],
+  }));
   return <Animated.View pointerEvents="none" style={style} className="absolute inset-0 rounded-full bg-danger" />;
 }
 
@@ -222,6 +232,114 @@ function MistakeSheet({
 }
 
 /**
+ * One ayah of the session. Its own component with plain props, so (with the React Compiler) a new
+ * speech result re-renders only the ayah whose words changed, not the whole surah word by word.
+ */
+function AyahRow({
+  item,
+  index,
+  isCurrent,
+  upcoming,
+  shown,
+  manual,
+  surahName,
+  onReveal,
+  onMark,
+}: {
+  item: Item;
+  index: number;
+  isCurrent: boolean;
+  upcoming: boolean;
+  shown: number;
+  manual: boolean;
+  surahName: string;
+  onReveal: (index: number, revealed: number) => void;
+  onMark: (index: number, mark: Mark) => void;
+}) {
+  const accent = useThemeColor("accent-strong");
+  const ayahText = useScaledText(22, 48);
+  return (
+    <View
+      className={`rounded-3xl border p-4 ${
+        item.mark === "correct"
+          ? "border-primary/30 bg-primary-soft"
+          : item.mark === "mistake"
+            ? "border-danger/30 bg-danger/5"
+            : isCurrent
+              ? "border-primary/40 bg-surface shadow-lift"
+              : "border-border bg-surface"
+      } ${upcoming ? "opacity-55" : ""}`}
+    >
+      <View className="flex-row items-start gap-3">
+        <View
+          accessibilityLabel={item.mark === "correct" ? "صحيحة" : item.mark === "mistake" ? "للمراجعة" : undefined}
+          className={`mt-2 size-8 items-center justify-center rounded-full ${
+            item.mark === "correct" ? "bg-primary" : item.mark === "mistake" ? "bg-danger" : "bg-accent-soft"
+          }`}
+        >
+          {item.mark === "correct" ? (
+            <Check size={16} color="#fff" />
+          ) : item.mark === "mistake" ? (
+            <X size={16} color="#fff" />
+          ) : (
+            <Text className="font-display-bold text-sm text-accent-strong">{toArabicDigits(item.ayah.ayah)}</Text>
+          )}
+        </View>
+        <Text
+          className="flex-1 font-quran text-fg"
+          style={ayahText}
+          accessibilityLabel={shown < item.words.length ? `الآية ${toArabicDigits(item.ayah.ayah)} مخفية` : undefined}
+        >
+          {item.words.map((word, wordIndex) => (
+            <Text key={wordIndex}>
+              {/* A hidden word keeps its width: same text, painted in the placeholder colour. */}
+              <Text style={wordIndex < shown ? undefined : { color: "transparent", backgroundColor: "rgba(0,85,68,0.12)" }}>
+                {word}
+              </Text>{" "}
+            </Text>
+          ))}
+          <Text style={{ color: accent }}>﴿{toArabicDigits(item.ayah.ayah)}﴾</Text>
+        </Text>
+        {item.mark && <AyahPlay ayah={item.ayah} surahName={surahName} />}
+      </View>
+
+      {isCurrent && (
+        <View className="mt-4 flex-row flex-wrap gap-2 border-t border-border pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={SkipForward}
+            disabled={shown >= item.words.length}
+            onPress={() => onReveal(index, Math.min(shown + 1, item.words.length))}
+          >
+            اكشف كلمة
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Eye}
+            disabled={shown >= item.words.length}
+            onPress={() => onReveal(index, item.words.length)}
+          >
+            اكشف الآية
+          </Button>
+          {manual && (
+            <>
+              <Button variant="outline" size="sm" icon={X} onPress={() => onMark(index, "mistake")}>
+                أخطأت
+              </Button>
+              <Button size="sm" icon={Check} onPress={() => onMark(index, "correct")}>
+                قرأتها صحيحة
+              </Button>
+            </>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
+/**
  * التسميع, as on the website (features/tasmee/TasmeeSession.tsx): the ayahs hidden, each one appearing
  * as it is recited; a mistake stops the session and shows what was said and what is right. Manual mode
  * reveals words and is marked by hand. The finished session is saved to tasmee_sessions, the correct
@@ -256,10 +374,8 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
   const onPrimary = useThemeColor("on-primary");
   const surface = useThemeColor("surface");
   const border = useThemeColor("border");
-  const accent = useThemeColor("accent-strong");
-  const ayahText = useScaledText(22, 48);
   const learnerId = activeLearnerId(useAccount());
-  const player = usePlayer();
+  const playerPlaying = usePlayerValue((s) => s.playing);
 
   const all = useMemo(() => getSurahAyahs(surahNumber).filter((ayah) => ayah.ayah >= from && ayah.ayah <= to), [surahNumber, from, to]);
   const ayahCount = getSurah(surahNumber)?.ayahCount ?? all.length;
@@ -369,8 +485,8 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
 
   // Any recitation starting to play stops the mic, so it doesn't hear the reciter (the website does the same).
   useEffect(() => {
-    if (player.playing && listening) stopListening();
-  }, [player.playing, listening, stopListening]);
+    if (playerPlaying && listening) stopListening();
+  }, [playerPlaying, listening, stopListening]);
 
   function listen() {
     pauseAudio();
@@ -426,15 +542,20 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
   const mistakes = items.filter((item) => item.mark === "mistake");
   const answered = correct.length + mistakes.length;
 
-  // Keeps the ayah being recited in the middle of the screen (the website's scrollIntoView).
-  const scrollRef = useRef<ScrollView>(null);
-  const offsets = useRef<number[]>([]);
-  const [viewport, setViewport] = useState(0);
+  // Keeps the ayah being recited in the upper third of the screen (the website's scrollIntoView).
+  const listRef = useRef<FlatList<Item>>(null);
   useEffect(() => {
-    const y = offsets.current[currentIndex];
-    if (currentIndex < 0 || y === undefined) return;
-    scrollRef.current?.scrollTo({ y: Math.max(0, y - viewport / 3), animated: true });
-  }, [currentIndex, viewport]);
+    if (currentIndex <= 0) return;
+    listRef.current?.scrollToIndex({ index: currentIndex, viewPosition: 0.3, animated: true });
+  }, [currentIndex]);
+
+  // Stable for the rows (so they can skip re-rendering); they always reach the latest handlers.
+  const actions = useRef({ update, markMany });
+  useEffect(() => {
+    actions.current = { update, markMany };
+  });
+  const onReveal = useCallback((index: number, revealed: number) => actions.current.update(index, { revealed }), []);
+  const onMark = useCallback((index: number, mark: Mark) => actions.current.markMany(new Map([[index, mark]])), []);
 
   return (
     <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8 }}>
@@ -483,156 +604,96 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
         <ProgressBar value={items.length ? answered / items.length : 0} />
       </View>
 
-      <ScrollView
-        ref={scrollRef}
+      {/* Virtualized: al-Baqara is 286 ayahs and some 6,000 word spans; only those near the screen are drawn. */}
+      <FlatList
+        ref={listRef}
         className="flex-1"
-        onLayout={(event) => setViewport(event.nativeEvent.layout.height)}
+        data={items}
+        keyExtractor={(item) => String(item.ayah.id)}
         contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}
-      >
-        {items.map((item, index) => {
+        initialNumToRender={6}
+        windowSize={7}
+        onScrollToIndexFailed={({ index, averageItemLength }) => {
+          // Rows not measured yet: jump close, then settle on the row once it is laid out.
+          listRef.current?.scrollToOffset({ offset: Math.max(0, index * averageItemLength - 120), animated: false });
+          setTimeout(() => listRef.current?.scrollToIndex({ index, viewPosition: 0.3, animated: true }), 120);
+        }}
+        renderItem={({ item, index }) => {
           const isCurrent = index === currentIndex;
           const upcoming = !finished && index > currentIndex;
           const heard = mode === "voice" ? heardInAyah(Math.max(pos, preview), ayahStarts[index], item.words.length) : 0;
           const shown = shownCount({ revealed: item.revealed, words: item.words.length, heard, hint: hint && (isCurrent || upcoming) });
           return (
-            <View
-              key={item.ayah.id}
-              onLayout={(event) => {
-                offsets.current[index] = event.nativeEvent.layout.y;
-              }}
-              className={`rounded-3xl border p-4 ${
-                item.mark === "correct"
-                  ? "border-primary/30 bg-primary-soft"
-                  : item.mark === "mistake"
-                    ? "border-danger/30 bg-danger/5"
-                    : isCurrent
-                      ? "border-primary/40 bg-surface shadow-lift"
-                      : "border-border bg-surface"
-              } ${upcoming ? "opacity-55" : ""}`}
-            >
-              <View className="flex-row items-start gap-3">
-                <View
-                  accessibilityLabel={item.mark === "correct" ? "صحيحة" : item.mark === "mistake" ? "للمراجعة" : undefined}
-                  className={`mt-2 size-8 items-center justify-center rounded-full ${
-                    item.mark === "correct" ? "bg-primary" : item.mark === "mistake" ? "bg-danger" : "bg-accent-soft"
-                  }`}
-                >
-                  {item.mark === "correct" ? (
-                    <Check size={16} color="#fff" />
-                  ) : item.mark === "mistake" ? (
-                    <X size={16} color="#fff" />
-                  ) : (
-                    <Text className="font-display-bold text-sm text-accent-strong">{toArabicDigits(item.ayah.ayah)}</Text>
-                  )}
-                </View>
-                <Text
-                  className="flex-1 font-quran text-fg"
-                  style={ayahText}
-                  accessibilityLabel={shown < item.words.length ? `الآية ${toArabicDigits(item.ayah.ayah)} مخفية` : undefined}
-                >
-                  {item.words.map((word, wordIndex) => (
-                    <Text key={wordIndex}>
-                      {/* A hidden word keeps its width: same text, painted in the placeholder colour. */}
-                      <Text style={wordIndex < shown ? undefined : { color: "transparent", backgroundColor: "rgba(0,85,68,0.12)" }}>
-                        {word}
-                      </Text>{" "}
-                    </Text>
-                  ))}
-                  <Text style={{ color: accent }}>﴿{toArabicDigits(item.ayah.ayah)}﴾</Text>
-                </Text>
-                {item.mark && <AyahPlay ayah={item.ayah} surahName={surahName} />}
-              </View>
-
-              {isCurrent && (
-                <View className="mt-4 flex-row flex-wrap gap-2 border-t border-border pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    icon={SkipForward}
-                    disabled={shown >= item.words.length}
-                    onPress={() => update(index, { revealed: Math.min(shown + 1, item.words.length) })}
-                  >
-                    اكشف كلمة
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    icon={Eye}
-                    disabled={shown >= item.words.length}
-                    onPress={() => update(index, { revealed: item.words.length })}
-                  >
-                    اكشف الآية
-                  </Button>
-                  {mode === "manual" && (
-                    <>
-                      <Button variant="outline" size="sm" icon={X} onPress={() => markMany(new Map([[index, "mistake"]]))}>
-                        أخطأت
-                      </Button>
-                      <Button size="sm" icon={Check} onPress={() => markMany(new Map([[index, "correct"]]))}>
-                        قرأتها صحيحة
-                      </Button>
-                    </>
-                  )}
-                </View>
-              )}
-            </View>
+            <AyahRow
+              item={item}
+              index={index}
+              isCurrent={isCurrent}
+              upcoming={upcoming}
+              shown={shown}
+              manual={mode === "manual"}
+              surahName={surahName}
+              onReveal={onReveal}
+              onMark={onMark}
+            />
           );
-        })}
-
-        {finished && (
-          <View className="rounded-4xl bg-hero p-6" accessibilityLiveRegion="polite">
-            <Text className="font-display-bold text-2xl text-hero-fg">انتهى التسميع — بارك الله فيك</Text>
-            <Text className="mt-2 font-sans text-base text-white/80">
-              <Text className="font-sans-bold text-gold-soft">{toArabicDigits(correct.length)}</Text> آية صحيحة
-              {mistakes.length > 0 && (
-                <>
-                  {" "}
-                  و<Text className="font-sans-bold text-danger">{toArabicDigits(mistakes.length)}</Text> للمراجعة
-                </>
-              )}{" "}
-              من {toArabicDigits(items.length)}.
-            </Text>
-            {mistakes.length > 0 && (
-              <Text className="mt-2 font-sans text-sm text-white/70">
-                راجع الآيات: {mistakes.map((item) => toArabicDigits(item.ayah.ayah)).join("، ")}
+        }}
+        ListFooterComponent={
+          finished ? (
+            <View className="rounded-4xl bg-hero p-6" accessibilityLiveRegion="polite">
+              <Text className="font-display-bold text-2xl text-hero-fg">انتهى التسميع — بارك الله فيك</Text>
+              <Text className="mt-2 font-sans text-base text-white/80">
+                <Text className="font-sans-bold text-gold-soft">{toArabicDigits(correct.length)}</Text> آية صحيحة
+                {mistakes.length > 0 && (
+                  <>
+                    {" "}
+                    و<Text className="font-sans-bold text-danger">{toArabicDigits(mistakes.length)}</Text> للمراجعة
+                  </>
+                )}{" "}
+                من {toArabicDigits(items.length)}.
               </Text>
-            )}
-            {countedAsReview && <Text className="mt-3 font-sans-bold text-sm text-gold-soft">سُجّلت مراجعة السورة لليوم ✓</Text>}
-            <Text className="mt-3 font-sans text-xs text-white/60">
-              {!learnerId
-                ? "سجّل الدخول لتُحفظ جلسات التسميع في حسابك."
-                : saved === "saving"
-                  ? "جارٍ حفظ الجلسة في حسابك..."
-                  : saved === "saved"
-                    ? "حُفظت الجلسة في رحلتك."
-                    : saved === "failed"
-                      ? "تعذّر حفظ الجلسة."
-                      : ""}
-            </Text>
-            <View className="mt-5 flex-row flex-wrap gap-2">
-              {correct.length > 0 && learnerId && (
-                <Button
-                  variant="gold"
-                  size="sm"
-                  icon={BookmarkCheck}
-                  disabled={memorized === "saving" || memorized === "done"}
-                  onPress={() => memorizeCorrect(correct.map((item) => item.ayah.ayah))}
-                >
-                  {memorized === "done" ? "سُجّلت كمحفوظة" : memorized === "failed" ? "تعذّر الحفظ، حاول مجددًا" : "علّم الصحيحة كمحفوظة"}
-                </Button>
-              )}
               {mistakes.length > 0 && (
-                <Button variant="light" size="sm" icon={RotateCcw} onPress={() => restart(true)}>
-                  سمّع آيات المراجعة فقط
-                </Button>
+                <Text className="mt-2 font-sans text-sm text-white/70">
+                  راجع الآيات: {mistakes.map((item) => toArabicDigits(item.ayah.ayah)).join("، ")}
+                </Text>
               )}
-              <Button variant="light" size="sm" icon={RotateCcw} onPress={() => restart(false)}>
-                من جديد
-              </Button>
+              {countedAsReview && <Text className="mt-3 font-sans-bold text-sm text-gold-soft">سُجّلت مراجعة السورة لليوم ✓</Text>}
+              <Text className="mt-3 font-sans text-xs text-white/60">
+                {!learnerId
+                  ? "سجّل الدخول لتُحفظ جلسات التسميع في حسابك."
+                  : saved === "saving"
+                    ? "جارٍ حفظ الجلسة في حسابك..."
+                    : saved === "saved"
+                      ? "حُفظت الجلسة في رحلتك."
+                      : saved === "failed"
+                        ? "تعذّر حفظ الجلسة."
+                        : ""}
+              </Text>
+              <View className="mt-5 flex-row flex-wrap gap-2">
+                {correct.length > 0 && learnerId && (
+                  <Button
+                    variant="gold"
+                    size="sm"
+                    icon={BookmarkCheck}
+                    disabled={memorized === "saving" || memorized === "done"}
+                    onPress={() => memorizeCorrect(correct.map((item) => item.ayah.ayah))}
+                  >
+                    {memorized === "done" ? "سُجّلت كمحفوظة" : memorized === "failed" ? "تعذّر الحفظ، حاول مجددًا" : "علّم الصحيحة كمحفوظة"}
+                  </Button>
+                )}
+                {mistakes.length > 0 && (
+                  <Button variant="light" size="sm" icon={RotateCcw} onPress={() => restart(true)}>
+                    سمّع آيات المراجعة فقط
+                  </Button>
+                )}
+                <Button variant="light" size="sm" icon={RotateCcw} onPress={() => restart(false)}>
+                  من جديد
+                </Button>
+              </View>
             </View>
-          </View>
-        )}
-      </ScrollView>
+          ) : null
+        }
+        extraData={`${pos}|${preview}|${hint}|${mode}|${currentIndex}`}
+      />
 
       {mode === "voice" && !finished && (
         <View className="border-t border-border bg-surface px-4 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
@@ -659,7 +720,10 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
                       ? "توقّف الاستماع — اضغط الميكروفون لتتابع"
                       : "اضغط الميكروفون وابدأ القراءة من حفظك"}
                 </Text>
-                <Text className={`mt-0.5 font-sans text-sm ${speech.error ? "text-danger" : "text-fg-muted"}`} numberOfLines={speech.error ? undefined : 2}>
+                <Text
+                  className={`mt-0.5 font-sans text-sm ${speech.error ? "text-danger" : "text-fg-muted"}`}
+                  numberOfLines={speech.error ? undefined : 2}
+                >
                   {speech.error
                     ? SPEECH_ERRORS[speech.error]
                     : interim || "تظهر كل آية وأنت تقرؤها، ونوقفك عند أي خطأ ونريك الصحيح. لا نحكم على التشكيل والتجويد."}

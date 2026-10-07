@@ -414,6 +414,14 @@ export function useHasTrack(): boolean {
   return useSyncExternalStore(subscribe, () => currentTrack(state) !== null);
 }
 
+/**
+ * One value from the player (a boolean, a string id…). The caller re-renders only when that value
+ * changes, not on every progress tick. `select` must return a primitive.
+ */
+export function usePlayerValue<T extends string | number | boolean | null>(select: (s: PlayerState) => T): T {
+  return useSyncExternalStore(subscribe, () => select(state));
+}
+
 /** The current state outside React (tests, one-off reads). */
 export function getPlayerState(): PlayerState {
   return state;
