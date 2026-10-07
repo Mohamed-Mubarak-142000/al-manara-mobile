@@ -37,6 +37,8 @@ module.exports = function withAlmanaraBackground(config) {
     put(app.service, {
       $: {
         "android:name": "com.almanara.background.DhikrService",
+        // Its own small process: a running reminder no longer keeps the whole app (~300 MB) in memory.
+        "android:process": ":dhikr",
         "android:exported": "false",
         "android:stopWithTask": "false",
         "android:foregroundServiceType": "specialUse",

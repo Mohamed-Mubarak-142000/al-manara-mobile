@@ -23,9 +23,9 @@ class AlmanaraBackgroundModule : Module() {
       val moments = JSONArray(saved.getString("moments", "[]"))
       mapOf(
         "overlayAllowed" to Settings.canDrawOverlays(context),
-        "overlayEnabled" to saved.getBoolean("overlayEnabled", false),
-        "overlayRunning" to BackgroundState.overlayRunning,
-        "overlayError" to saved.getString("overlayError", ""),
+        "overlayEnabled" to OverlayStore.enabled(context),
+        "overlayRunning" to DhikrService.running(context),
+        "overlayError" to OverlayStore.error(context),
         "exactAllowed" to BackgroundState.exactAllowed(context),
         "batteryOptimized" to DeviceAccess.batteryOptimized(context),
         "autostartHint" to DeviceAccess.autostartHint(),
@@ -44,27 +44,26 @@ class AlmanaraBackgroundModule : Module() {
     AsyncFunction("openBatterySettings") { DeviceAccess.openBatterySettings(context) }.runOnQueue(Queues.MAIN)
     AsyncFunction("openAutostartSettings") { DeviceAccess.openAutostartSettings(context) }.runOnQueue(Queues.MAIN)
     AsyncFunction("setOverlay") { enabled: Boolean, config: String ->
-      val saved = BackgroundState.prefs(context)
       if (enabled) {
         check(Settings.canDrawOverlays(context)) { "اسمح بالظهور فوق التطبيقات أولًا" }
         org.json.JSONObject(config) // Validate before changing the active configuration.
-        saved.edit().putString("overlayConfig", config).apply()
-        saved.edit().putBoolean("overlayEnabled", true).putString("overlayError", "").commit()
+        OverlayStore.setConfig(context, config)
+        OverlayStore.setEnabled(context, true)
         try {
           ContextCompat.startForegroundService(context, Intent(context, DhikrService::class.java))
         } catch (error: Exception) {
-          saved.edit().putBoolean("overlayEnabled", false)
-            .putString("overlayError", "تعذّر تشغيل التذكير في الخلفية. راجع أذونات الإشعارات والظهور فوق التطبيقات ثم فعّله مرة أخرى.").commit()
+          OverlayStore.setEnabled(context, false, "تعذّر تشغيل التذكير في الخلفية. راجع أذونات الإشعارات والظهور فوق التطبيقات ثم فعّله مرة أخرى.")
           throw error
         }
       } else {
-        saved.edit().putBoolean("overlayEnabled", false).putString("overlayError", "").commit()
+        OverlayStore.setEnabled(context, false)
         context.stopService(Intent(context, DhikrService::class.java))
       }
     }.runOnQueue(Queues.MAIN)
     AsyncFunction("updateOverlay") { config: String ->
       org.json.JSONObject(config)
-      BackgroundState.prefs(context).edit().putString("overlayConfig", config).apply()
+      // Unchanged config: no write, so the 5 s check in the app stays a read.
+      if (OverlayStore.config(context) != config) OverlayStore.setConfig(context, config)
     }
     AsyncFunction("downloadVoice") { id: String, url: String -> VoiceCache.download(context, id, url) }
     AsyncFunction("replaceSchedule") { moments: String -> BackgroundState.replace(context, moments) }

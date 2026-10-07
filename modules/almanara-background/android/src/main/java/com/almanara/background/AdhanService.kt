@@ -81,7 +81,11 @@ class AdhanService : Service() {
     handler.removeCallbacksAndMessages(null)
     player?.release(); player = null
     wake?.let { if (it.isHeld) it.release() }; wake = null
-    if (BackgroundState.adhanPlaying) BackgroundState.adhanFinishedAt = System.currentTimeMillis()
+    if (BackgroundState.adhanPlaying) {
+      BackgroundState.adhanFinishedAt = System.currentTimeMillis()
+      // DhikrService lives in another process: it learns the adhan ended from this broadcast.
+      sendBroadcast(Intent("${packageName}.ADHAN_FINISHED").setPackage(packageName))
+    }
     BackgroundState.adhanPlaying = false
     super.onDestroy()
   }

@@ -13,18 +13,48 @@ import androidx.core.app.NotificationCompat
 import org.json.JSONObject
 import java.util.Calendar
 
+/**
+ * Runs in its own ":dhikr" process (withAlmanaraBackground): a few MB instead of keeping the whole app
+ * process alive. Nothing here may rely on statics shared with the app: the switch, error and config
+ * are in OverlayStore, and the adhan's start and end arrive as broadcasts.
+ */
 class DhikrService : Service() {
   companion object {
     private const val SHOW_EVERY_MS = 10 * 60_000L
+    private const val ADHAN_MAX_MS = 10 * 60_000L
+
+    /** Asked from the app process, where a static flag set in this process is never visible. */
+    fun running(context: Context): Boolean {
+      val manager = context.getSystemService(ActivityManager::class.java) ?: return false
+      @Suppress("DEPRECATION")
+      return manager.getRunningServices(Int.MAX_VALUE).any { it.service.className == DhikrService::class.java.name }
+    }
   }
 
   private val handler = Handler(Looper.getMainLooper())
   private var card: View? = null
+  private var ticking = false
+  private var adhanStartedAt = 0L
+  private var adhanFinishedAt = 0L
   private val windows get() = getSystemService(WindowManager::class.java)
   private val power get() = getSystemService(PowerManager::class.java)
   private val keyguard get() = getSystemService(KeyguardManager::class.java)
+
+  /** Quiet while the adhan plays and for a minute after it; a lost "finished" broadcast still ends it. */
+  private fun adhanQuiet(now: Long): Boolean {
+    val playing = adhanStartedAt > adhanFinishedAt && now - adhanStartedAt < ADHAN_MAX_MS
+    return playing || now - adhanFinishedAt < 60_000
+  }
+
   private val screenEvents = object : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+      when (intent.action) {
+        "${packageName}.ADHAN_FINISHED" -> {
+          adhanFinishedAt = System.currentTimeMillis()
+          return
+        }
+        "${packageName}.ADHAN_STARTED" -> adhanStartedAt = System.currentTimeMillis()
+      }
       hide()
       handler.removeCallbacks(tick)
       if (intent.action != Intent.ACTION_SCREEN_OFF) {
@@ -40,15 +70,17 @@ class DhikrService : Service() {
       }
       val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
       if (power.isInteractive && !keyguard.isKeyguardLocked && hour in 7..21 &&
-          !BackgroundState.adhanPlaying && System.currentTimeMillis() - BackgroundState.adhanFinishedAt >= 60_000 &&
-          dueForCard()) {
+          !adhanQuiet(System.currentTimeMillis()) && dueForCard()) {
         runCatching { show() }.onFailure {
           Log.e("AlmanaraDhikr", "Unable to display dhikr overlay", it)
           fail("تعذّر إظهار بطاقة الذكر فوق التطبيقات. راجع إذن الظهور فوق التطبيقات ثم فعّل التذكير مرة أخرى.")
         }
       }
-      if (BackgroundState.prefs(this@DhikrService).getBoolean("overlayEnabled", false)) {
+      if (OverlayStore.enabled(this@DhikrService)) {
         handler.postDelayed(this, 60_000)
+      } else {
+        // Switched off from the app (stopService normally arrives first): nothing left to do here.
+        stopSelf()
       }
     }
   }
@@ -66,8 +98,7 @@ class DhikrService : Service() {
   }
 
   private fun fail(message: String) {
-    BackgroundState.prefs(this).edit().putBoolean("overlayEnabled", false).putString("overlayError", message).commit()
-    BackgroundState.overlayRunning = false
+    OverlayStore.setEnabled(this, false, message)
     stopSelf()
   }
 
@@ -75,7 +106,7 @@ class DhikrService : Service() {
     super.onCreate()
     val filter = IntentFilter().apply {
       addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_USER_PRESENT)
-      addAction("${packageName}.ADHAN_STARTED")
+      addAction("${packageName}.ADHAN_STARTED"); addAction("${packageName}.ADHAN_FINISHED")
     }
     if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenEvents, filter, Context.RECEIVER_NOT_EXPORTED)
     else @Suppress("DEPRECATION") registerReceiver(screenEvents, filter)
@@ -83,11 +114,11 @@ class DhikrService : Service() {
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     if (intent?.action == "stop") {
-      BackgroundState.prefs(this).edit().putBoolean("overlayEnabled", false).commit()
+      OverlayStore.setEnabled(this, false)
       stopSelf()
       return START_NOT_STICKY
     }
-    if (!Settings.canDrawOverlays(this) || !BackgroundState.prefs(this).getBoolean("overlayEnabled", false)) {
+    if (!Settings.canDrawOverlays(this) || !OverlayStore.enabled(this)) {
       stopSelf()
       return START_NOT_STICKY
     }
@@ -103,8 +134,8 @@ class DhikrService : Service() {
       return START_NOT_STICKY
     }
     // A repeated enable request must not postpone the next card indefinitely.
-    if (!BackgroundState.overlayRunning) handler.postDelayed(tick, 60_000)
-    BackgroundState.overlayRunning = true
+    if (!ticking) handler.postDelayed(tick, 60_000)
+    ticking = true
     return START_STICKY
   }
 
@@ -113,7 +144,7 @@ class DhikrService : Service() {
   private fun show() {
     hide()
     val saved = BackgroundState.prefs(this)
-    val config = JSONObject(saved.getString("overlayConfig", "{}")!!)
+    val config = JSONObject(OverlayStore.config(this))
     val entries = config.getJSONArray("entries")
     if (entries.length() == 0) return
     val index = (saved.getInt("index", -1) + 1) % entries.length()
@@ -163,7 +194,7 @@ class DhikrService : Service() {
     handler.removeCallbacksAndMessages(null)
     hide()
     unregisterReceiver(screenEvents)
-    BackgroundState.overlayRunning = false
+    ticking = false
     super.onDestroy()
   }
   override fun onBind(intent: Intent?) = null

@@ -19,7 +19,7 @@ internal object BackgroundState {
   const val AUDIO_NOTIFICATION = 7102
   private const val ON_TIME_MS = 3 * 60_000L
   private const val LATE_NOTICE_MS = 30 * 60_000L
-  @Volatile var overlayRunning = false
+  // App process only. The dhikr overlay runs in its own process: see OverlayStore and DhikrService.running.
   @Volatile var adhanPlaying = false
   @Volatile var adhanFinishedAt = 0L
 
