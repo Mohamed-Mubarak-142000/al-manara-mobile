@@ -64,6 +64,36 @@ export async function scheduleCompletedSurahs(learnerId: string, surahs: number[
   );
 }
 
+/**
+ * The website's progress.setAyahsMemorized(surah, ayahs, true) after a tasmee ("علّم الصحيحة كمحفوظة"):
+ * the ayahs on the account, then the review schedule of the surah if that completed it.
+ */
+export async function markAyahsMemorized(learnerId: string, surah: number, ayahs: number[]): Promise<boolean> {
+  if (!supabase || ayahs.length === 0) return false;
+  const { error } = await supabase
+    .from("memorized_ayahs")
+    .upsert(
+      ayahs.map((ayah) => ({ learner_id: learnerId, surah, ayah })),
+      { onConflict: "learner_id,surah,ayah", ignoreDuplicates: true },
+    );
+  if (error) return false;
+  await scheduleCompletedSurahs(learnerId, [surah]).catch(() => {});
+  recordActivity(learnerId);
+  return true;
+}
+
+/** The surah's review row when it has one (null for none or when it can't be read). */
+export async function loadSurahReview(learnerId: string, surah: number): Promise<ReviewRow | null> {
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("review_schedule")
+    .select("surah, interval_index, due_at")
+    .eq("learner_id", learnerId)
+    .eq("surah", surah)
+    .maybeSingle();
+  return data ?? null;
+}
+
 export interface ReviewRow {
   surah: number;
   interval_index: number;
