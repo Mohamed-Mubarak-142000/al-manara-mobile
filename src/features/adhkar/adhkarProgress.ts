@@ -44,6 +44,11 @@ export function resetDhikr(ids: string[]) {
   write({ day: today(), counts });
 }
 
+/** Today's counts outside React (right after a tap, before the screen re-renders). */
+export function getAdhkarCounts(): Record<string, number> {
+  return read().counts;
+}
+
 export function useAdhkarCounts(): Record<string, number> {
   return useSyncExternalStore(
     (listener) => {

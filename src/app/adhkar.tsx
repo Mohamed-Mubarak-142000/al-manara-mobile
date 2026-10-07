@@ -10,7 +10,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { countDhikr, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
+import { AdhkarCelebration, claimCelebration } from "@/features/adhkar/AdhkarCelebration";
+import { countDhikr, getAdhkarCounts, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
 import { ChapterPicker } from "@/features/adhkar/ChapterPicker";
 import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
@@ -29,7 +30,7 @@ function defaultCategory(): DuaCategory {
   return hour >= 4 && hour < 15 ? "morning" : "evening";
 }
 
-function DhikrCard({ dua, count }: { dua: Dua; count: number }) {
+function DhikrCard({ dua, count, onCounted }: { dua: Dua; count: number; onCounted: () => void }) {
   const primary = useThemeColor("primary");
   const onPrimary = useThemeColor("on-primary");
   const muted = useThemeColor("fg-muted");
@@ -44,6 +45,7 @@ function DhikrCard({ dua, count }: { dua: Dua; count: number }) {
     // .set() rather than assigning .value, which the React Compiler treats as mutating a hook value.
     scale.set(withSequence(withTiming(0.97, { duration: 70 }), withTiming(1, { duration: 140 })));
     countDhikr(dua.id);
+    onCounted();
     // A firmer tap on the last count, so the thumb knows it is finished without looking.
     if (count + 1 >= target) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -155,6 +157,14 @@ export default function AdhkarScreen() {
     [category, chapter],
   );
   const finished = list.filter((dua) => (counts[dua.id] ?? 0) >= (dua.repeat ?? 1)).length;
+  const [celebrate, setCelebrate] = useState<DuaCategory | null>(null);
+
+  /** After each tap: the last dhikr of a daily set finished just now earns a "أحسنت" (once a day). */
+  function checkFinished() {
+    const now = getAdhkarCounts();
+    const complete = list.length > 0 && list.every((dua) => (now[dua.id] ?? 0) >= (dua.repeat ?? 1));
+    if (complete && claimCelebration(category)) setCelebrate(category);
+  }
 
   return (
     <View className="flex-1 bg-bg">
@@ -162,7 +172,7 @@ export default function AdhkarScreen() {
         data={list}
         extraData={counts}
         keyExtractor={(dua) => dua.id}
-        renderItem={({ item }) => <DhikrCard dua={item} count={counts[item.id] ?? 0} />}
+        renderItem={({ item }) => <DhikrCard dua={item} count={counts[item.id] ?? 0} onCounted={checkFinished} />}
         contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
         ListHeaderComponent={
           <View className="mb-4">
@@ -226,6 +236,7 @@ export default function AdhkarScreen() {
           </View>
         }
       />
+      <AdhkarCelebration category={celebrate} onClose={() => setCelebrate(null)} />
     </View>
   );
 }
