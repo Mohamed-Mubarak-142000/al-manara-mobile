@@ -24,7 +24,9 @@ import { AccountCard } from "@/features/account/AccountCard";
 import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
 import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
 import { useDownloads } from "@/features/downloads/downloadStore";
+import { SectionGrid } from "@/features/home/SectionGrid";
 import { openSitePage, shareApp } from "@/features/legal/site";
+import { StreakCard } from "@/features/streak/StreakCard";
 import { TEXT_SCALES, setTextScale, useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -162,7 +164,7 @@ function AdhkarToastCard() {
       <View className="flex-1">
         <Text className="font-display-bold text-base text-fg">ذكّر قلبك</Text>
         <Text className="font-sans text-xs leading-5 text-fg-muted">
-          ذكر قصير كل دقيقة وأنت تتصفح التطبيق. فعّل الظهور فوق التطبيقات من صفحة الأذكار.
+          ذكر قصير كل ١٠ دقائق وأنت تتصفح التطبيق. فعّل الظهور فوق التطبيقات من صفحة الأذكار.
         </Text>
       </View>
       <Switch value={enabled} onValueChange={setAdhkarToastEnabled} trackColor={{ false: border, true: primary }} thumbColor={surface} />
@@ -170,7 +172,7 @@ function AdhkarToastCard() {
   );
 }
 
-/** Account, settings and the website's fixed pages; the sections themselves live on the home screen. */
+/** Account, every section of the app (Home shows only the main ones), settings and the website's fixed pages. */
 export default function MoreScreen() {
   const version = Constants.expoConfig?.version;
   return (
@@ -178,13 +180,17 @@ export default function MoreScreen() {
       <PageHeader
         kicker="المزيد"
         icon={Settings2}
-        title="حسابك والإعدادات"
-        description="حسابك، وتفضيلات التطبيق، وسياسة الخصوصية والشروط."
+        title="حسابك وكل الأقسام"
+        description="حسابك، وكل أقسام المنارة، وتفضيلات التطبيق."
       />
       <Section className="mt-5 gap-3">
         <AccountCard />
-        <DownloadsLink />
+        <StreakCard />
         <SupportLink />
+
+        <GroupTitle>كل الأقسام</GroupTitle>
+        <SectionGrid />
+        <DownloadsLink />
 
         <GroupTitle>الإعدادات</GroupTitle>
         <AdhkarToastCard />

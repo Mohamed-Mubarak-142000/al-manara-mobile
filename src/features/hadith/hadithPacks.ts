@@ -49,7 +49,7 @@ const CONCURRENCY = 4;
 const ATTEMPTS = 3;
 /** The API allows big pages; 100 per request keeps a 1,800-hadith topic to 19 list calls. */
 const LIST_PAGE_SIZE = 100;
-const OFFLINE_MESSAGE = "تعذّر التنزيل، تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.";
+const OFFLINE_MESSAGE = "تعذّر التنزيل الآن، أعد المحاولة بعد قليل.";
 const SAVE_MESSAGE = "تعذّر حفظ الأحاديث على الجهاز، تحقّق من المساحة المتاحة.";
 
 const dir = new Directory(Paths.document, "hadith");

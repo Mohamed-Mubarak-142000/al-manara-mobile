@@ -89,7 +89,7 @@ export default function JourneyScreen() {
         ) : state.status === "loading" ? (
           <StateMessage loading />
         ) : !journey ? (
-          <StateMessage message="تعذّر مزامنة تقدّمك الآن. تحقّق من الاتصال ثم حاول مجددًا." onRetry={reload} />
+          <StateMessage message="تعذّر مزامنة تقدّمك الآن، حاول مجددًا بعد قليل." onRetry={reload} />
         ) : (
           <>
             <View className="flex-row flex-wrap justify-between gap-y-3">

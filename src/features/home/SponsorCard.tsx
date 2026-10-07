@@ -102,25 +102,25 @@ function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: numb
   const muted = useThemeColor("fg-muted");
   const link = sponsor.link_url;
   const card = (
-    <View className={`${height ? "flex-1 " : ""}flex-row items-center gap-4 rounded-3xl border border-border bg-surface p-4 shadow-soft`}>
+    <View className={`${height ? "flex-1 " : ""}flex-row items-center gap-4 rounded-3xl border border-border bg-surface p-5 shadow-soft`}>
       {sponsor.logo_url ? (
         <Image
           source={{ uri: sponsor.logo_url }}
-          style={{ width: 72, height: 72, borderRadius: 20 }}
+          style={{ width: 104, height: 104, borderRadius: 24 }}
           contentFit="cover"
           transition={200}
           accessibilityIgnoresInvertColors
         />
       ) : (
-        <View className="size-18 items-center justify-center rounded-[20px] bg-accent-soft">
-          <HandHeart size={28} color={accent} />
+        <View className="size-26 items-center justify-center rounded-[24px] bg-accent-soft">
+          <HandHeart size={40} color={accent} />
         </View>
       )}
-      <View className="flex-1 gap-1">
-        <Text className="font-display-bold text-base text-fg" numberOfLines={1}>
+      <View className="flex-1 gap-1.5">
+        <Text className="font-display-bold text-lg text-fg" numberOfLines={1}>
           {sponsor.name}
         </Text>
-        <Text className="font-sans text-xs leading-5 text-fg-muted" numberOfLines={height ? 2 : undefined}>
+        <Text className="font-sans text-sm leading-6 text-fg-muted" numberOfLines={height ? 3 : undefined}>
           {sponsor.message}
         </Text>
       </View>
@@ -160,7 +160,7 @@ function Dot({ active }: { active: boolean }) {
 /** Two or more sponsors: paged, auto-advancing every few seconds, paused while touched or out of view. */
 function SponsorPager({ sponsors }: { sponsors: SponsorItem[] }) {
   const textScale = useTextScale();
-  const height = Math.round(104 * Math.max(1, textScale));
+  const height = Math.round(146 * Math.max(1, textScale));
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<SponsorItem>>(null);

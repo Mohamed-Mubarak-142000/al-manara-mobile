@@ -94,7 +94,7 @@ export default function PlayerScreen() {
             accessibilityRole="alert"
             className="mt-5 flex-row items-center gap-3 rounded-2xl border border-gold/30 bg-white/5 px-4 py-2.5"
           >
-            <Text className="flex-1 font-sans-bold text-sm text-gold-soft">تعذّر التشغيل. تحقق من الاتصال أو نزّل التلاوة.</Text>
+            <Text className="flex-1 font-sans-bold text-sm text-gold-soft">تعذّر التشغيل الآن. نزّل التلاوة لتسمعها في أي وقت.</Text>
             <Pressable accessibilityRole="button" onPress={audio.resume} hitSlop={8} className="rounded-full bg-gold px-3 py-1.5">
               <Text className="font-sans-bold text-xs text-emerald-night">إعادة المحاولة</Text>
             </Pressable>

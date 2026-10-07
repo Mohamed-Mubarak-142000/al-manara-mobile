@@ -138,7 +138,7 @@ describe("hadith pack store", () => {
     jest.useRealTimers();
     const state = packState("5");
     expect(state.status).toBe("failed");
-    expect(state.status === "failed" && state.message).toMatch(/الإنترنت/);
+    expect(state.status === "failed" && state.message).toMatch(/تعذّر التنزيل/);
     expect(files.has("doc/hadith/5.json")).toBe(false);
   });
 

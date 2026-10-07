@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { useThemeColor } from "@/theme/useThemeColor";
 
-import { APP_SECTIONS, SECTION_GROUPS, type AppSection } from "./sections";
+import { APP_SECTIONS, SECTION_GROUPS, type AppSection, type SectionGroup } from "./sections";
 
 const COLUMNS = 4;
 
@@ -32,9 +32,12 @@ function SectionTile({ section }: { section: AppSection }) {
   );
 }
 
-/** Every built section at once: a titled row of up to four tiles per group, nothing that moves on its own. */
-export function SectionGrid() {
-  const groups = SECTION_GROUPS.map((group) => ({
+/**
+ * A titled row of up to four tiles per group, nothing that moves on its own. Every built section by
+ * default (المزيد); Home passes just its first groups.
+ */
+export function SectionGrid({ groups: chosen = SECTION_GROUPS }: { groups?: readonly SectionGroup[] }) {
+  const groups = chosen.map((group) => ({
     title: group.title,
     sections: group.labels
       .map((label) => APP_SECTIONS.find((section) => section.label === label))

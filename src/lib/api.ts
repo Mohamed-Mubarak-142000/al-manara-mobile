@@ -25,6 +25,6 @@ export async function api<T extends object>(path: `/api/v1/${string}`, body: unk
     if (!response.ok) return { ok: false, error: json.error ?? "حدث خطأ، حاول مرة أخرى.", status: response.status };
     return { ok: true, ...json };
   } catch {
-    return { ok: false, error: "تعذّر الاتصال. تحقق من الإنترنت وحاول مجددًا.", status: 0 };
+    return { ok: false, error: "تعذّر إتمام الطلب الآن، حاول مجددًا بعد قليل.", status: 0 };
   }
 }

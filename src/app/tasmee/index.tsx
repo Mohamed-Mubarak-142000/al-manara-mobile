@@ -71,8 +71,8 @@ export default function TasmeePickerScreen() {
   function choose(surah: SurahInfo) {
     setChosen(surah);
     setFrom(1);
-    // Long surahs start with a manageable first portion; short ones whole.
-    setTo(Math.min(surah.ayahCount, 10));
+    // The whole surah by default, like the website's picker.
+    setTo(surah.ayahCount);
   }
 
   return (
