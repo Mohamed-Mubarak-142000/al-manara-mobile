@@ -20,17 +20,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ALL_DAYS } from "@/core/plan/schedule";
 import { Button } from "@/components/ui/Button";
+import { useAccount } from "@/features/account/accountStore";
 import { khatma } from "@/features/khatma/khatmaStore";
+import { AccountStep } from "@/features/onboarding/AccountStep";
 import { DonationStep } from "@/features/onboarding/DonationStep";
 import { StepTopBar } from "@/features/onboarding/OnboardingStep";
 import { LocationStep, ReciterStep, WirdStep } from "@/features/onboarding/SetupSteps";
 import { WelcomeStep } from "@/features/onboarding/WelcomeStep";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import {
-  ONBOARDING_STEPS,
   applyDelta,
   canGoNext,
   progressFraction,
+  onboardingSteps,
   slideEdges,
   stepCounter,
   swipeDelta,
@@ -43,8 +45,9 @@ import { track } from "@/lib/telemetry";
 const SLIDE_MS = 320;
 
 /**
- * First run: a welcome screen, then city, favourite reciter, daily wird + adhan, and an optional
- * "support" step. Everything is skippable; swipe or the buttons move between steps.
+ * First run: a welcome screen, then sign-in (or continue as a guest), city, favourite reciter, daily
+ * wird + adhan, and an optional "support" step. Swipe or the buttons move between steps; everything but
+ * the account step can be skipped, so sign-in is never passed over by accident.
  */
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -57,7 +60,12 @@ export default function OnboardingScreen() {
   const [busy, setBusy] = useState(false);
   // State lags a render behind, so two quick taps would both pass `busy` and create two khatmas.
   const finishing = useRef(false);
-  const id = ONBOARDING_STEPS[step];
+  const accountState = useAccount();
+  // Decided once: the step list must not change under the user while the session loads.
+  const [steps] = useState(() => onboardingSteps(accountState.status !== "guest" || accountState.configured));
+  const count = steps.length;
+  const id = steps[step];
+  const signedIn = accountState.status === "signed-in";
 
   // The leaving step keeps the props of its last render, so its exit side is read from a shared value set
   // before the step changes; otherwise going back right after going forward would exit the wrong way.
@@ -82,12 +90,13 @@ export default function OnboardingScreen() {
       if (delta === 0) return;
       exitRight.set(slideEdges(delta, isRTL).exitTo === "right" ? 1 : 0);
       setNav((current) => {
-        const target = applyDelta(current.step, delta);
+        const target = applyDelta(current.step, delta, count);
         return target === current.step ? current : { step: target, direction: delta };
       });
     },
-    [exitRight, isRTL],
+    [count, exitRight, isRTL],
   );
+  const next = useCallback(() => move(1), [move]);
 
   // Android back walks back through the steps before leaving the screen.
   useEffect(() => {
@@ -178,16 +187,17 @@ export default function OnboardingScreen() {
               style={{ flex: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}
             >
               <StepTopBar
-                fraction={progressFraction(step)}
-                counter={stepCounter(step)}
+                fraction={progressFraction(step, count)}
+                counter={stepCounter(step, count)}
                 reduceMotion={reduceMotion}
                 onBack={() => move(-1)}
-                onSkip={id === "support" ? undefined : skipAll}
+                onSkip={id === "support" || id === "account" ? undefined : skipAll}
               />
 
               {/* Steps are layered absolutely so the leaving one can slide out while the next slides in. */}
               <View style={{ flex: 1, minHeight: 0 }} className="mt-4 overflow-hidden">
                 <Animated.View key={id} entering={entering} exiting={exiting} style={StyleSheet.absoluteFill} className="px-5">
+                  {id === "account" && <AccountStep onSignedIn={next} />}
                   {id === "location" && <LocationStep />}
                   {id === "reciter" && <ReciterStep />}
                   {id === "wird" && <WirdStep wird={wird} onWird={setWird} adhan={adhan} onAdhan={setAdhan} />}
@@ -205,8 +215,13 @@ export default function OnboardingScreen() {
                       ربما لاحقًا
                     </Button>
                   </>
+                ) : id === "account" && !signedIn ? (
+                  // While a fresh sign-in loads the account, "continue as guest" would be the wrong button.
+                  <Button variant="light" size="lg" disabled={accountState.status === "loading"} onPress={next}>
+                    {accountState.status === "loading" ? "لحظة…" : "متابعة كضيف"}
+                  </Button>
                 ) : (
-                  <Button variant="gold" size="lg" disabled={busy || !canGoNext(step)} onPress={() => move(1)}>
+                  <Button variant="gold" size="lg" disabled={busy || !canGoNext(step, count)} onPress={next}>
                     {id === "wird" ? "متابعة" : "التالي"}
                   </Button>
                 )}

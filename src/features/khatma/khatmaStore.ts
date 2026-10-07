@@ -68,6 +68,41 @@ function writeLocal(next: KhatmaSnapshot) {
   if (viewing === null) set({ status: "ready", current: withFinished(next), owner: null });
 }
 
+/**
+ * The khatma started as a guest (e.g. during onboarding) moves to the account on the first sign-in,
+ * when the learner has none running there yet. It is replayed as ordinary outbox steps (create, then
+ * each day read, oldest first), so it syncs offline-safe like any other change; the device copy is then
+ * cleared so it can't be adopted twice. Returns true when something was queued.
+ */
+function adoptGuestKhatma(learnerId: string, remote: KhatmaSnapshot): boolean {
+  const userId = currentUserIdNow();
+  const guest = readLocal().current;
+  if (!userId || !guest || guest.khatma.status !== "active" || remote.current || pendingFor(learnerId).length) return false;
+  const row: KhatmaRow = { ...guest.khatma, learner_id: learnerId, position: 0 };
+  const steps: KhatmaOp[] = [
+    { type: "create", row },
+    ...[...guest.log]
+      .sort((a, b) => a.day.localeCompare(b.day))
+      .map((entry): KhatmaOp => ({
+        type: "complete",
+        khatmaId: row.id,
+        day: entry.day,
+        from: entry.from_ayah,
+        to: entry.to_ayah,
+        finished: entry.to_ayah >= TOTAL_AYAHS,
+        at: new Date().toISOString(),
+      })),
+  ];
+  for (const op of steps) enqueue<KhatmaSyncPayload>({ kind: KHATMA_OP, owner: userId, payload: { ...op, learnerId } });
+  try {
+    Storage.removeItemSync(LOCAL_KEY);
+  } catch {
+    // A second adoption is still prevented: the account now has a running khatma.
+  }
+  track("khatma_adopted", { days: guest.log.length });
+  return true;
+}
+
 // ── Account storage (the website's loadCurrentKhatma) ────────────────────────
 
 /** Throws when the server can't be reached, so a failed load never reads as "no khatma". */
@@ -151,6 +186,7 @@ async function refresh(learnerId: string | null): Promise<void> {
     // A step reached the server while this was loading; the answer may predate it.
     if (seq !== settledSeq) return refresh(learnerId);
     saveBase(learnerId, remote);
+    adoptGuestKhatma(learnerId, remote);
     publish(learnerId);
   } catch {
     // Offline or the server failed: keep showing what this device knows.

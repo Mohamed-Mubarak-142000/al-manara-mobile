@@ -1,9 +1,14 @@
 import { toArabicDigits } from "@/core/text/arabic";
 
 /** First-run steps, in order. Pure helpers only: no React Native imports, so they run in plain Jest. */
-export const ONBOARDING_STEPS = ["welcome", "location", "reciter", "wird", "support"] as const;
+export const ONBOARDING_STEPS = ["welcome", "account", "location", "reciter", "wird", "support"] as const;
 export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
 export const STEP_COUNT = ONBOARDING_STEPS.length;
+
+/** The steps this build shows: "account" is left out when sign-in isn't configured. */
+export function onboardingSteps(accountsEnabled: boolean): readonly OnboardingStepId[] {
+  return accountsEnabled ? ONBOARDING_STEPS : ONBOARDING_STEPS.filter((step) => step !== "account");
+}
 
 /** +1 moves forward (towards "support"), -1 moves back, 0 stays. */
 export type StepDelta = -1 | 0 | 1;
