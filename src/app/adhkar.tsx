@@ -1,16 +1,17 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Bell, BellRing, Check, ChevronRight, RotateCcw, Share2 } from "lucide-react-native";
+import { Bell, BellRing, Check, ChevronRight, ExternalLink, RotateCcw, Share2 } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DUAS, DUA_CATEGORY_LABELS, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
+import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { countDhikr, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
+import { ChapterPicker } from "@/features/adhkar/ChapterPicker";
 import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useScaledText } from "@/theme/textScale";
@@ -19,14 +20,13 @@ import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
 import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
 import { reportReminderError } from "@/features/notifications/backgroundReminderStatus";
 
-const CATEGORIES = Object.keys(DUA_CATEGORY_LABELS) as DuaCategory[];
+/** The website's tab order (features/adhkar/AdhkarView.tsx). */
+const CATEGORIES: DuaCategory[] = ["morning", "evening", "after-prayer", "sleep", "waking", "general"];
 
+/** Same as the website: morning from 04:00 until 15:00, evening otherwise. */
 function defaultCategory(): DuaCategory {
   const hour = new Date().getHours();
-  if (hour >= 3 && hour < 12) return "morning";
-  if (hour >= 15 && hour < 21) return "evening";
-  if (hour >= 21 || hour < 3) return "sleep";
-  return "general";
+  return hour >= 4 && hour < 15 ? "morning" : "evening";
 }
 
 function DhikrCard({ dua, count }: { dua: Dua; count: number }) {
@@ -75,7 +75,27 @@ function DhikrCard({ dua, count }: { dua: Dua; count: number }) {
           {dua.text}
         </Text>
         <View className="mt-2 flex-row items-center justify-between gap-2">
-          <Text className="flex-1 font-sans text-xs text-fg-muted">{dua.source}</Text>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityHint="يفتح المصدر على موقع سنة"
+            onPress={() => Linking.openURL(dua.sourceUrl).catch(() => {})}
+            hitSlop={6}
+            className="flex-1 flex-row items-center gap-1"
+          >
+            <Text className="shrink font-sans text-xs text-fg-muted underline">{dua.source}</Text>
+            <ExternalLink size={12} color={muted} />
+          </Pressable>
+          {count > 0 && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`إعادة عدّ ${dua.title}`}
+              onPress={() => resetDhikr([dua.id])}
+              hitSlop={10}
+              className="p-1.5"
+            >
+              <RotateCcw size={16} color={muted} />
+            </Pressable>
+          )}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`مشاركة ${dua.title} كصورة`}
@@ -88,7 +108,7 @@ function DhikrCard({ dua, count }: { dua: Dua; count: number }) {
         </View>
         {!done && (
           <Text className="mt-3 text-center font-sans text-xs" style={{ color: primary }}>
-            اضغط على البطاقة للعدّ
+            {target > 1 ? `اضغط على البطاقة مع كل مرة (${toArabicDigits(target - count)} متبقية)` : "اضغط على البطاقة للعدّ"}
           </Text>
         )}
       </Animated.View>
@@ -127,8 +147,13 @@ export default function AdhkarScreen() {
   const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
   const [category, setCategory] = useState<DuaCategory>(defaultCategory);
+  const [chapter, setChapter] = useState(DUA_CHAPTERS[0]?.id ?? 0);
   const counts = useAdhkarCounts();
-  const list = useMemo(() => DUAS.filter((dua) => dua.category === category), [category]);
+  // "باقي الأذكار والأدعية" is 128 chapters: one chapter at a time, like the website's select.
+  const list = useMemo(
+    () => DUAS.filter((dua) => dua.category === category && (category !== "general" || dua.chapter === chapter)),
+    [category, chapter],
+  );
   const finished = list.filter((dua) => (counts[dua.id] ?? 0) >= (dua.repeat ?? 1)).length;
 
   return (
@@ -157,6 +182,7 @@ export default function AdhkarScreen() {
                 </Pressable>
               </View>
               <Text className="mt-2 font-display-bold text-3xl text-hero-fg">{DUA_CATEGORY_LABELS[category]}</Text>
+              <Text className="mt-1 font-sans text-xs text-gold-soft">من حصن المسلم</Text>
               <Text className="mt-1 font-sans text-sm text-white/70">
                 أتممت {toArabicDigits(finished)} من {toArabicDigits(list.length)}
               </Text>
@@ -196,6 +222,7 @@ export default function AdhkarScreen() {
                 );
               })}
             </ScrollView>
+            {category === "general" && <ChapterPicker value={chapter} onChange={setChapter} />}
           </View>
         }
       />
