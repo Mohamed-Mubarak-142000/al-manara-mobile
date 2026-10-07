@@ -28,11 +28,12 @@ const posthog = POSTHOG_KEY
 export type AppEvent =
   | "khatma_started"
   | "khatma_day_read"
+  | "khatma_adopted"
   | "plan_created"
   | "tasmee_finished"
   | "exam_submitted"
   | "surah_downloaded"
-  | "support_purchase"
+  | "donation_submitted"
   | "onboarding_finished"
   | "onboarding_skipped";
 

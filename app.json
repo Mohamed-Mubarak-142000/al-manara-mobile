@@ -211,7 +211,14 @@
           ]
         }
       ],
-      "expo-iap",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "يحتاج المنارة إلى صورك لترفع صورة تحويل الدعم عبر إنستاباي.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       [
         "react-native-android-widget",
         {

@@ -1,16 +1,14 @@
-import { Check, ChevronLeft, HandHeart, Palette } from "lucide-react-native";
+import { Check, ChevronLeft, HandHeart, Smartphone } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { StepLayout } from "@/features/onboarding/OnboardingStep";
 import { tapHaptic } from "@/features/onboarding/SetupSteps";
-import { DONATIONS, SUPPORTER_PERKS, useSupporter } from "@/features/support/supportStore";
+import { INSTAPAY_NUMBER, SUPPORTER_PERKS, useSupporter } from "@/features/support/supportStore";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-/** Same copy as the supporter pack on the support screen. */
-
 /**
- * Optional last step. Nothing is bought here: prices and the purchase itself live on /support, so this
- * step never opens a store connection and cannot fail when in-app purchases are unavailable.
+ * Optional last step. Nothing is sent from here: the InstaPay number and the form for the transfer
+ * screenshot live on /support, which `onDonate` opens once onboarding is done.
  */
 export function DonationStep({ onDonate }: { onDonate: () => void }) {
   const goldSoft = useThemeColor("gold-soft");
@@ -33,13 +31,31 @@ export function DonationStep({ onDonate }: { onDonate: () => void }) {
         كل آية تُقرأ وكل أذان يُرفع عبر المنارة قد يكون في ميزانك. دعمك يغطي الخوادم، ويضيف قرّاءً وروايات ومحتوى للأطفال.
       </Text>
 
-      <View className="gap-3 rounded-2xl border border-white/10 bg-white/8 p-4">
-        <View className="flex-row items-center gap-3">
-          <Palette size={20} color={goldSoft} />
-          <View className="flex-1">
-            <Text className="font-display-bold text-base text-white">باقة الداعمين</Text>
-            <Text className="font-sans text-xs text-white/60">مرة واحدة مدى الحياة · بلا اشتراك</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`ادعم عبر إنستاباي على الرقم ${INSTAPAY_NUMBER}`}
+        accessibilityHint="يفتح صفحة الدعم لإرسال صورة التحويل"
+        onPress={() => {
+          tapHaptic();
+          onDonate();
+        }}
+        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
+      >
+        <View className="flex-row items-center gap-3 rounded-2xl border border-white/10 bg-white/8 p-4">
+          <View className="size-10 items-center justify-center rounded-full bg-gold/15">
+            <Smartphone size={20} color={goldSoft} />
           </View>
+          <View className="flex-1">
+            <Text className="font-display-bold text-base text-white">إنستاباي</Text>
+            <Text className="font-display-bold text-lg tracking-widest text-gold-soft">{INSTAPAY_NUMBER}</Text>
+          </View>
+          <ChevronLeft size={20} color={goldSoft} />
+        </View>
+      </Pressable>
+
+      <View className="gap-3 rounded-2xl border border-white/10 bg-white/8 p-4">
+        <View className="flex-row items-center justify-between">
+          <Text className="font-display-bold text-base text-white">داعمو المنارة</Text>
           {supporter ? <Text className="font-sans-bold text-xs text-gold-soft">أنت من الداعمين ✓</Text> : null}
         </View>
         {SUPPORTER_PERKS.map((perk) => (
@@ -49,35 +65,7 @@ export function DonationStep({ onDonate }: { onDonate: () => void }) {
           </View>
         ))}
       </View>
-
-      <Text className="font-display-bold text-base text-white">أو صدقة لمرة واحدة</Text>
-      {DONATIONS.map((donation) => (
-        <Pressable
-          key={donation.id}
-          accessibilityRole="button"
-          accessibilityLabel={donation.label}
-          accessibilityHint="يفتح صفحة الدعم لإتمام الصدقة"
-          onPress={() => {
-            tapHaptic();
-            onDonate();
-          }}
-          style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
-        >
-          <View className="flex-row items-center gap-3 rounded-2xl border border-white/10 bg-white/8 p-4">
-            <View className="size-10 items-center justify-center rounded-full bg-gold/15">
-              <HandHeart size={20} color={goldSoft} />
-            </View>
-            <View className="flex-1">
-              <Text className="font-display-bold text-base text-white">{donation.label}</Text>
-              <Text className="font-sans text-xs leading-5 text-white/65">{donation.note}</Text>
-            </View>
-            <ChevronLeft size={20} color={goldSoft} />
-          </View>
-        </Pressable>
-      ))}
-      <Text className="text-center font-sans text-xs leading-5 text-white/50">
-        الدفع يتم عبر المتجر بأمان، ويمكنك الدعم في أي وقت من صفحة «المزيد».
-      </Text>
+      <Text className="text-center font-sans text-xs leading-5 text-white/50">حوّل أي مبلغ ثم ارفع صورة التحويل، ويمكنك الدعم في أي وقت من «المزيد».</Text>
     </StepLayout>
   );
 }

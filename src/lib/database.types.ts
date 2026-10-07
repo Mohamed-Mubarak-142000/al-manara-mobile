@@ -166,6 +166,29 @@ export type SponsorRow = {
   active: boolean;
   created_at: Timestamp;
 };
+export type SupporterStatus = "pending" | "approved" | "rejected";
+export type SupporterRow = {
+  id: string;
+  user_id: string;
+  display_name: string;
+  message: string | null;
+  show_name: boolean;
+  amount: number;
+  sender: string;
+  receipt_path: string;
+  status: SupporterStatus;
+  reject_reason: string | null;
+  reviewed_at: Timestamp | null;
+  thanked_at: Timestamp | null;
+  created_at: Timestamp;
+};
+/** The public_supporters view: approved supporters, name and message only. */
+export type PublicSupporterRow = {
+  id: string;
+  name: string;
+  message: string | null;
+  approved_at: Timestamp | null;
+};
 export type PushPlatform = "ios" | "android";
 export type PushTokenRow = {
   token: string;
@@ -350,6 +373,13 @@ export type Database = {
       reminder_deliveries: TableDef<ReminderDeliveryRow, Optional<ReminderDeliveryRow, "sent_at">>;
       push_tokens: TableDef<PushTokenRow, Optional<PushTokenRow, "created_at" | "updated_at">>;
       sponsors: TableDef<SponsorRow, Optional<SponsorRow, "id" | "link_url" | "logo_url" | "active" | "created_at">>;
+      supporters: TableDef<
+        SupporterRow,
+        Optional<
+          SupporterRow,
+          "id" | "user_id" | "message" | "show_name" | "status" | "reject_reason" | "reviewed_at" | "thanked_at" | "created_at"
+        >
+      >;
       certificates: TableDef<CertificateRow, Optional<CertificateRow, "id" | "exam_attempt_id" | "issued_at" | "revoked_at">>;
       memorization_plans: TableDef<
         MemorizationPlanRow,
@@ -381,7 +411,9 @@ export type Database = {
       >;
       khatma_log: TableDef<KhatmaLogRow, Optional<KhatmaLogRow, "done_at">>;
     };
-    Views: { [_ in never]: never };
+    Views: {
+      public_supporters: { Row: PublicSupporterRow; Relationships: [] };
+    };
     Functions: {
       is_admin: { Args: Record<string, never>; Returns: boolean };
       owns_learner: { Args: { target: string }; Returns: boolean };

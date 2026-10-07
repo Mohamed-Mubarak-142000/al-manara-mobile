@@ -19,6 +19,7 @@ import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mush
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
 import { Button } from "@/components/ui/Button";
 import {
+  DEFAULT_FONT_STEP,
   FONT_SIZES,
   READER_THEMES,
   SUPPORTER_THEMES,
@@ -128,7 +129,7 @@ export default function MushafScreen() {
             {riwayaState?.status === "downloading" || riwayaState?.status === "opening"
               ? "جارٍ تجهيز المصحف…"
               : riwayaState?.status === "failed"
-                ? "تعذّر تنزيل الرواية. تحقق من الاتصال وحاول مجددًا."
+                ? "تعذّر تنزيل الرواية الآن، حاول مجددًا بعد قليل."
                 : "مصحف هذه الرواية يُنزَّل مرة واحدة (نحو ١٫٥ ميجابايت) ثم يعمل دون إنترنت."}
           </Text>
           {riwayaState?.status !== "downloading" && riwayaState?.status !== "opening" && (
@@ -164,6 +165,8 @@ export default function MushafScreen() {
               width={width}
               theme={state.prefs.theme}
               fontSize={fontSize}
+              // The default size (and smaller) shows the whole page like a printed mushaf; larger sizes scroll.
+              fit={state.prefs.fontStep <= DEFAULT_FONT_STEP}
               selected={selected?.id ?? null}
               playingId={playingId}
               tajweed={state.prefs.tajweed}
@@ -267,7 +270,7 @@ export default function MushafScreen() {
                     key={key}
                     accessibilityRole="radio"
                     accessibilityState={{ selected: active }}
-                    accessibilityHint={locked ? "متاح مع باقة الداعمين" : undefined}
+                    accessibilityHint={locked ? "متاح لداعمي المنارة" : undefined}
                     onPress={() => {
                       if (!locked) return reader.setTheme(key);
                       setSettingsOpen(false);
