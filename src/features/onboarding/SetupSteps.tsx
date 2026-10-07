@@ -193,11 +193,13 @@ export function WirdStep({ wird, onWird, adhan, onAdhan }: WirdStepProps) {
       <View className="flex-row items-center gap-3 rounded-2xl border border-white/10 bg-white/8 p-4">
         <Bell size={20} color={goldSoft} />
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-white">تنبيه الأذان</Text>
-          <Text className="font-sans text-xs leading-5 text-white/65">إشعار عند دخول وقت كل صلاة، حتى والتطبيق مغلق</Text>
+          <Text className="font-display-bold text-base text-white">الأذان وتذكير الأذكار</Text>
+          <Text className="font-sans text-xs leading-5 text-white/65">
+            الأذان عند دخول كل صلاة، وتذكير بأذكار الصباح والمساء، حتى والتطبيق مغلق. سنطلب إذن الإشعارات مرة واحدة.
+          </Text>
         </View>
         <Switch
-          accessibilityLabel="تنبيه الأذان"
+          accessibilityLabel="الأذان وتذكير الأذكار"
           value={adhan}
           onValueChange={(value) => {
             tapHaptic();

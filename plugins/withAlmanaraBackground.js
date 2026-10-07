@@ -5,7 +5,9 @@ module.exports = function withAlmanaraBackground(config) {
     const manifest = mod.modResults.manifest;
     const permissions = [
       "SYSTEM_ALERT_WINDOW",
-      "SCHEDULE_EXACT_ALARM",
+      // Prayer times are the app's alarm-clock feature: granted at install on Android 13+, where
+      // SCHEDULE_EXACT_ALARM is off by default on 14 and would leave the adhan unscheduled.
+      "USE_EXACT_ALARM",
       "RECEIVE_BOOT_COMPLETED",
       "FOREGROUND_SERVICE",
       "FOREGROUND_SERVICE_SPECIAL_USE",
@@ -20,6 +22,10 @@ module.exports = function withAlmanaraBackground(config) {
         manifest["uses-permission"].push({ $: { "android:name": full } });
       }
     }
+    // Android 12 (API 31-32) has no USE_EXACT_ALARM; there SCHEDULE_EXACT_ALARM is granted by default.
+    const exact = "android.permission.SCHEDULE_EXACT_ALARM";
+    manifest["uses-permission"] = manifest["uses-permission"].filter((item) => item.$["android:name"] !== exact);
+    manifest["uses-permission"].push({ $: { "android:name": exact, "android:maxSdkVersion": "32" } });
     const app = AndroidConfig.Manifest.getMainApplicationOrThrow(mod.modResults);
     app.service ??= [];
     app.receiver ??= [];
@@ -40,7 +46,7 @@ module.exports = function withAlmanaraBackground(config) {
           $: {
             "android:name": "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE",
             "android:value":
-              "User-enabled short Arabic dhikr overlay once per minute while screen is unlocked; persistent notification provides stop control.",
+              "User-enabled short Arabic dhikr overlay once every 10 minutes while screen is unlocked; persistent notification provides stop control.",
           },
         },
       ],

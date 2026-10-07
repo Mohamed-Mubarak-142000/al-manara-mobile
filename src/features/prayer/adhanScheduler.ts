@@ -48,13 +48,9 @@ export async function ensureAdhanPermission(): Promise<boolean> {
     current.granted ||
     (await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } })).granted;
   if (!granted) return false;
-  if (Platform.OS === "android") {
-    if (!background) throw new Error("الأذان خارج التطبيق يحتاج نسخة أندرويد الجديدة.");
-    if (!background.getStatus().exactAllowed) {
-      await background.openAlarmSettings();
-      return false;
-    }
-  }
+  if (Platform.OS === "android" && !background) throw new Error("الأذان خارج التطبيق يحتاج نسخة أندرويد الجديدة.");
+  // Exact alarms are no longer a gate: the app declares USE_EXACT_ALARM (granted at install), and
+  // without exact alarms the native side still schedules the adhan, a little less precisely.
   return true;
 }
 
@@ -85,7 +81,6 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
   }
   if (!(await Notifications.getPermissionsAsync()).granted) throw new Error("إشعارات الصلاة غير مسموح بها. راجع إعدادات الجهاز.");
   if (Platform.OS === "android" && !background) throw new Error("الأذان خارج التطبيق يحتاج بناء أندرويد الجديد.");
-  if (background && !background.getStatus().exactAllowed) throw new Error("اسمح بالمنبهات والتذكيرات من إعدادات الجهاز لضبط وقت الأذان.");
   const voice = readAdhanVoice();
   if (background && voice && !voice.offlineKey) await setAdhanVoice(voice);
 
@@ -177,7 +172,8 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
       content: {
         title: moment.title,
         body: moment.body,
-        sound: moment.play && readAdhanVoice() ? "adhan_short.wav" : "default",
+        // The prayer itself raises the bundled adhan (iOS caps a notification sound at 30 s).
+        sound: moment.play ? "adhan_short.wav" : "default",
         data: { kind: "adhan", url: "/prayer", at: moment.date.getTime() },
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: moment.date, channelId: CHANNEL_ID },

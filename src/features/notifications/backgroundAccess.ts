@@ -1,15 +1,10 @@
 import { background } from "../../../modules/almanara-background";
 
 /**
- * Android: after a reminder is turned on, ask for exact alarms so Doze cannot postpone it. Battery
- * and autostart are explained by BackgroundAccessHint instead: their settings are system lists that
- * would confuse if opened unannounced.
+ * Android: nothing to open any more. Exact alarms come with USE_EXACT_ALARM at install, and the native
+ * scheduler falls back to an inexact alarm without them, so turning a reminder on never jumps to a
+ * system screen. Battery and autostart are explained by BackgroundAccessHint, on the settings screen.
  */
 export async function requestBackgroundAccess() {
   if (!background) return;
-  try {
-    if (!background.getStatus().exactAllowed) await background.openAlarmSettings();
-  } catch {
-    // The reminder is already saved; BackgroundAccessHint still offers these settings.
-  }
 }

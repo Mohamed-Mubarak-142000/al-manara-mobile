@@ -94,7 +94,10 @@ export default function AdhanVoiceScreen() {
             }}
             className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 ${chosen === null ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
           >
-            <Text className="font-display-bold text-base text-fg">صوت الإشعار فقط (بدون أذان)</Text>
+            <View className="flex-1">
+              <Text className="font-display-bold text-base text-fg">الأذان الافتراضي</Text>
+              <Text className="font-sans text-xs text-fg-muted">مدمج في التطبيق، يعمل دون تنزيل أو إنترنت</Text>
+            </View>
             {chosen === null && <Check size={18} color={primary} />}
           </Pressable>
           <SearchField value={query} onChangeText={setQuery} placeholder="ابحث باسم المؤذن" />

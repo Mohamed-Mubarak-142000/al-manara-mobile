@@ -38,7 +38,9 @@ import {
   swipeDelta,
   type StepDelta,
 } from "@/features/onboarding/steps";
+import { setAdhkarReminder } from "@/features/adhkar/adhkarReminders";
 import { ensureAdhanPermission } from "@/features/prayer/adhanScheduler";
+import { snoozeSetupPrompt } from "@/features/settings/SetupPrompt";
 import { writeAdhanSettings } from "@/features/prayer/adhanSettings";
 import { track } from "@/lib/telemetry";
 
@@ -135,11 +137,26 @@ export default function OnboardingScreen() {
     setBusy(true);
     try {
       if (wird) await khatma.create({ mode: "amount", unit: "pages", perSession: wird, targetDay: "", days: [...ALL_DAYS] });
-      if (adhan && (await ensureAdhanPermission())) writeAdhanSettings({ enabled: true });
     } catch {
-      // Both can be set up later from their own screens; never trap the user on the first run.
+      // The khatma can be started later from its own screen; never trap the user on the first run.
+    }
+    if (adhan) {
+      // The choice is saved whatever the system answers: the adhan schedules as soon as notifications
+      // are allowed (useAdhanSchedule retries on every return to the app). One permission dialog
+      // covers the adhan and the morning/evening adhkar reminders.
+      writeAdhanSettings({ enabled: true });
+      try {
+        if (await ensureAdhanPermission()) {
+          await setAdhkarReminder("morning", true);
+          await setAdhkarReminder("evening", true);
+        }
+      } catch {
+        // Shown on the settings screen (الإعدادات) instead.
+      }
     }
     onboarding.finish();
+    // Onboarding just set the essentials: the "complete your settings" invitation waits a day.
+    snoozeSetupPrompt(24 * 60 * 60 * 1000);
     track("onboarding_finished", { wird: wird ?? 0, adhan, support: then === "support" });
     setBusy(false);
     router.replace("/");

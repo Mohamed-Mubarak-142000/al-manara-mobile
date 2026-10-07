@@ -17,6 +17,8 @@ internal object BackgroundState {
   const val AUDIO_CHANNEL = "adhan-playing-v1"
   const val DHIKR_NOTIFICATION = 7101
   const val AUDIO_NOTIFICATION = 7102
+  private const val ON_TIME_MS = 3 * 60_000L
+  private const val LATE_NOTICE_MS = 30 * 60_000L
   @Volatile var overlayRunning = false
   @Volatile var adhanPlaying = false
   @Volatile var adhanFinishedAt = 0L
@@ -60,12 +62,17 @@ internal object BackgroundState {
       alarms(context).cancel(alarmIntent(context, 0))
       return
     }
-    check(exactAllowed(context)) { "اسمح بالمنبهات والتذكيرات من إعدادات الجهاز" }
-    // User-requested prayer alarms must not be delayed by the idle-mode quota between reminders.
-    alarms(context).setAlarmClock(
-      AlarmManager.AlarmClockInfo(next.getLong("at"), openApp(context, "prayer")),
-      alarmIntent(context, next.getLong("at")),
-    )
+    if (exactAllowed(context)) {
+      // User-requested prayer alarms must not be delayed by the idle-mode quota between reminders.
+      alarms(context).setAlarmClock(
+        AlarmManager.AlarmClockInfo(next.getLong("at"), openApp(context, "prayer")),
+        alarmIntent(context, next.getLong("at")),
+      )
+    } else {
+      // Exact alarms switched off (Android 14 asks for them separately): still schedule, allowed to
+      // fire in Doze. It can come a few minutes late, which beats no adhan at all.
+      alarms(context).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.getLong("at"), alarmIntent(context, next.getLong("at")))
+    }
   }
 
   @Synchronized fun replace(context: Context, serialized: String): Int {
@@ -122,7 +129,10 @@ internal object BackgroundState {
     runCatching { arm(context, remaining) }.onFailure {
       saved.edit().putString("scheduleError", it.message).apply()
     }
-    // Do not play overdue alarms after a restart or clock adjustment.
-    return if (!duplicate && matched != null && now - at in 0..120_000) matched else null
+    // A late delivery (Doze, an inexact alarm, a busy phone) still gets its notification, without the
+    // adhan audio; older ones after a restart or clock change are dropped.
+    if (duplicate || now - at !in 0..LATE_NOTICE_MS) return null
+    matched.put("late", now - at > ON_TIME_MS)
+    return matched
   }
 }

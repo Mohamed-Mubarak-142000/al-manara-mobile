@@ -65,7 +65,7 @@ export function AdhanSettingsCard() {
       {denied && (
         <Pressable onPress={() => Linking.openSettings()} className="mt-3 rounded-2xl bg-accent-soft p-3">
           <Text className="font-sans text-sm text-accent-strong">
-            راجع إذن الإشعارات وإذن المنبهات والتذكيرات، ثم فعّل الأذان مرة أخرى.
+            اسمح للمنارة بالإشعارات من إعدادات الجهاز، ثم فعّل الأذان مرة أخرى.
           </Text>
         </Pressable>
       )}
@@ -79,7 +79,7 @@ export function AdhanSettingsCard() {
               }}
               className="mt-3 rounded-2xl bg-accent-soft p-3"
             >
-              <Text className="font-sans text-sm text-accent-strong">اضغط للسماح بالمنبهات والتذكيرات لضبط وقت الأذان.</Text>
+              <Text className="font-sans text-sm text-accent-strong">الأذان يعمل، وقد يتأخر دقائق قليلة. اضغط للسماح بالمنبهات ليصل في وقته بالضبط.</Text>
             </Pressable>
           )}
           <BackgroundAccessHint />
@@ -110,7 +110,7 @@ export function AdhanSettingsCard() {
             <View className="flex-1">
               <Text className="font-sans-bold text-sm text-fg">صوت الأذان</Text>
               <Text className="font-sans text-xs text-fg-muted" numberOfLines={1}>
-                {voice ? voice.artist : "صوت الإشعار فقط"}
+                {voice ? voice.artist : "الأذان الافتراضي"}
               </Text>
             </View>
             <ChevronLeft size={18} color={primary} />

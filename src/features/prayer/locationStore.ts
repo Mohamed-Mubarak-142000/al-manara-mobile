@@ -70,6 +70,17 @@ export async function requestPreciseLocation(): Promise<GeolocateResult> {
   }
 }
 
+/** The current location outside React (settings sync). */
+export function readUserLocation(): UserLocation {
+  return read();
+}
+
+/** Restores a location saved on the account (another phone, or before a reinstall). */
+export function restoreUserLocation(location: UserLocation) {
+  if (typeof location?.label !== "string" || typeof location.city !== "string") return;
+  write(location);
+}
+
 export function chooseCity(city: string) {
   const choice = CITY_CHOICES.find((entry) => entry.city === city);
   if (choice) write({ source: "timezone", ...choice });
