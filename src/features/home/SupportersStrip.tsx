@@ -69,8 +69,10 @@ function SupporterCard({ supporter }: { supporter: Supporter }) {
 function JoinCard() {
   const gold = useThemeColor("gold-soft");
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push("/support")} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-      <View className="h-full w-36 items-center justify-center gap-2 rounded-3xl bg-hero p-4 shadow-lift">
+    <Pressable accessibilityRole="button" onPress={() => router.push("/support")} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
+      {/* flex-1, not h-full: a percentage height inside the horizontal list resolved against the whole
+          screen, stretching every card down past the tab bar. The row's stretch matches the tallest card. */}
+      <View className="flex-1 w-36 items-center justify-center gap-2 rounded-3xl bg-hero p-4 shadow-lift">
         <View className="size-10 items-center justify-center rounded-full bg-white/10">
           <Plus size={20} color={gold} />
         </View>
@@ -108,7 +110,9 @@ export function SupportersStrip({ className }: { className?: string }) {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SupporterCard supporter={item} />}
         ListFooterComponent={<JoinCard />}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
+        ListFooterComponentStyle={{ minHeight: 112 }}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 10, alignItems: "stretch" }}
         showsHorizontalScrollIndicator={false}
       />
     </View>

@@ -112,16 +112,27 @@ function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: numb
       style={height ? { height } : undefined}
       className={`${height ? "flex-1 " : ""}overflow-hidden rounded-3xl border border-border bg-surface shadow-soft`}
     >
-      <View className="items-center justify-center bg-accent-soft" style={{ height: IMAGE_HEIGHT }}>
+      <View className="items-center justify-center overflow-hidden bg-accent-soft" style={{ height: IMAGE_HEIGHT }}>
         {sponsor.logo_url ? (
-          <Image
-            source={{ uri: sponsor.logo_url }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="contain"
-            transition={200}
-            accessibilityIgnoresInvertColors
-            accessibilityLabel={sponsor.name}
-          />
+          <>
+            {/* A portrait photo left empty bands on both sides: the same image, blurred and filling the
+                band, sits behind the uncropped one. */}
+            <Image
+              source={{ uri: sponsor.logo_url }}
+              style={{ position: "absolute", width: "100%", height: "100%", opacity: 0.55 }}
+              contentFit="cover"
+              blurRadius={24}
+              accessible={false}
+            />
+            <Image
+              source={{ uri: sponsor.logo_url }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="contain"
+              transition={200}
+              accessibilityIgnoresInvertColors
+              accessibilityLabel={sponsor.name}
+            />
+          </>
         ) : (
           <HandHeart size={56} color={accent} />
         )}
