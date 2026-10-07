@@ -14,6 +14,10 @@ import { Cairo_800ExtraBold } from "@expo-google-fonts/cairo/800ExtraBold";
 /**
  * Every family the design system names in src/global.css (--font-*), keyed by that exact name.
  * The website's fonts, except the Quran ones, which are its .woff2 files converted to .ttf.
+ *
+ * On Android the same files are also built into the app (the expo-font plugin in app.json, named by
+ * file, so the keys here must stay equal to the file names): useFonts then finds them already loaded
+ * on the first render and the splash doesn't wait. iOS and web still load them at runtime.
  */
 export const APP_FONTS = {
   Cairo_400Regular,
