@@ -82,7 +82,7 @@
     "format:check": "prettier --check .",
     "sync:tokens": "node scripts/sync-tokens.mjs",
     "doctor": "expo-doctor",
-    "build:mushaf": "node scripts/build-mushaf.mjs",
+    "build:mushaf": "node scripts/build-mushaf.mjs && node scripts/build-mushaf-index.mjs",
     "test": "jest",
     "build:tafsir": "node scripts/build-tafsir.mjs",
     "build:surah-names": "node scripts/build-surah-names.mjs",

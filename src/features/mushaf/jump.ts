@@ -1,4 +1,4 @@
-import { TOTAL_PAGES, getPage, mushafStarts, pageOf, type MushafAyah } from "./mushaf";
+import { TOTAL_PAGES, getPage, type MushafAyah } from "./mushaf";
 
 /** The ayahs of one page: the bundled Hafs pages, or another riwaya's own layout. */
 export type PageSource = (page: number) => MushafAyah[];
@@ -20,14 +20,8 @@ export function juzStartPage(source: PageSource, juz: number): number {
   return firstPageWhere(source, (ayah) => ayah.juz === juz) ?? 1;
 }
 
-let hizbPages: number[] | null = null;
-
-/** First Hafs page of each of the 60 ahzab (index 0 = hizb 1), from the bundle's hizb-quarter data. */
-export function hizbStartPages(): number[] {
-  if (hizbPages) return hizbPages;
-  hizbPages = mushafStarts().hizbStarts.map((ref) => pageOf(ref.surah, ref.ayah));
-  return hizbPages;
-}
+/** First Hafs page of each of the 60 ahzab (index 0 = hizb 1), from the small mushaf index. */
+export { hizbStartPages } from "./mushaf";
 
 /** The Hafs page of a global ayah id (1…6236): ids run in page order, so a binary search does. */
 export function pageOfAyahId(id: number): number | null {

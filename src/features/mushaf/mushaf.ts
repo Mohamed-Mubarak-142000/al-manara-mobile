@@ -33,7 +33,8 @@ export interface SurahInfo {
 
 export const TOTAL_PAGES = 604;
 
-let cache: { ayahs: MushafAyah[]; pages: MushafAyah[][]; basmala: string } | null = null;
+/** `surahStart[s]` is the index in `ayahs` of surah s's first ayah (s = 1…114; [115] = the end). */
+let cache: { ayahs: MushafAyah[]; pages: MushafAyah[][]; surahStart: number[]; basmala: string } | null = null;
 
 function load() {
   if (cache) return cache;
@@ -50,9 +51,28 @@ function load() {
     text,
   }));
   const pages: MushafAyah[][] = Array.from({ length: TOTAL_PAGES }, () => []);
-  for (const ayah of ayahs) pages[ayah.page - 1]!.push(ayah);
-  cache = { ayahs, pages, basmala: data.basmala };
+  const surahStart: number[] = [];
+  ayahs.forEach((ayah, index) => {
+    pages[ayah.page - 1]!.push(ayah);
+    if (surahStart[ayah.surah] === undefined) surahStart[ayah.surah] = index;
+  });
+  surahStart[115] = ayahs.length;
+  cache = { ayahs, pages, surahStart, basmala: data.basmala };
   return cache;
+}
+
+/** A row of src/data/mushaf-index.json: [surah, ayah]. */
+type RawRef = [surah: number, ayah: number];
+
+let index: { pageStarts: RawRef[]; juzStarts: RawRef[]; hizbStarts: RawRef[]; juzPages: number[]; hizbPages: number[] } | null = null;
+
+/**
+ * Where every page, juz and hizb begins, from the small mushaf-index.json (scripts/build-mushaf-index.mjs),
+ * so the Quran index, the khatma and the plan don't load the full text for it.
+ */
+function divisions() {
+  index ??= require("@/data/mushaf-index.json") as NonNullable<typeof index>;
+  return index;
 }
 
 let surahs: SurahInfo[] | null = null;
@@ -93,18 +113,26 @@ export function getBasmala(): string {
 }
 
 export function getSurahAyahs(surah: number): MushafAyah[] {
-  return load().ayahs.filter((ayah) => ayah.surah === surah);
+  const { ayahs, surahStart } = load();
+  const from = surahStart[surah];
+  return from === undefined ? [] : ayahs.slice(from, surahStart[surah + 1]);
 }
 
 export function pageOf(surah: number, ayah: number): number {
-  return load().ayahs.find((entry) => entry.surah === surah && entry.ayah === ayah)?.page ?? 1;
+  const { ayahs, surahStart } = load();
+  const from = surahStart[surah];
+  const entry = from === undefined ? undefined : ayahs[from + ayah - 1];
+  return entry?.surah === surah && entry.ayah === ayah ? entry.page : 1;
 }
 
 /** First page of each juz, for the juz index. */
 export function juzStartPages(): { juz: number; page: number }[] {
-  const starts: { juz: number; page: number }[] = [];
-  for (const ayah of load().ayahs) if (!starts[ayah.juz - 1]) starts[ayah.juz - 1] = { juz: ayah.juz, page: ayah.page };
-  return starts;
+  return divisions().juzPages.map((page, index) => ({ juz: index + 1, page }));
+}
+
+/** First page of each of the 60 ahzab (index 0 = hizb 1). */
+export function hizbStartPages(): number[] {
+  return divisions().hizbPages;
 }
 
 let starts: { pageStarts: AyahRef[]; juzStarts: AyahRef[]; hizbStarts: AyahRef[] } | null = null;
@@ -112,18 +140,9 @@ let starts: { pageStarts: AyahRef[]; juzStarts: AyahRef[]; hizbStarts: AyahRef[]
 /** The first ayah of every page, juz and hizb (the shape the website's Quran-API helpers return). */
 export function mushafStarts() {
   if (starts) return starts;
-  const pageStarts: AyahRef[] = [];
-  const juzStarts: AyahRef[] = [];
-  const hizbStarts: AyahRef[] = [];
-  for (const ayah of load().ayahs) {
-    const ref = { surah: ayah.surah, ayah: ayah.ayah };
-    if (!pageStarts[ayah.page - 1]) pageStarts[ayah.page - 1] = ref;
-    if (!juzStarts[ayah.juz - 1]) juzStarts[ayah.juz - 1] = ref;
-    // A hizb is four quarters; it starts where its first quarter does.
-    const hizb = Math.ceil(ayah.hizbQuarter / 4);
-    if (!hizbStarts[hizb - 1]) hizbStarts[hizb - 1] = ref;
-  }
-  starts = { pageStarts, juzStarts, hizbStarts };
+  const toRefs = (rows: RawRef[]): AyahRef[] => rows.map(([surah, ayah]) => ({ surah, ayah }));
+  const { pageStarts, juzStarts, hizbStarts } = divisions();
+  starts = { pageStarts: toRefs(pageStarts), juzStarts: toRefs(juzStarts), hizbStarts: toRefs(hizbStarts) };
   return starts;
 }
 

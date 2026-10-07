@@ -126,6 +126,58 @@ describe("bundled tafsir", () => {
     expect(tafsirFor(262)?.length).toBeGreaterThan(50); // Ayat al-Kursi (2:255)
     expect(tafsirFor(6236)?.length).toBeGreaterThan(10);
   });
+
+  it("finds the right surah file at surah boundaries", () => {
+    const { tafsirFor } = jest.requireActual<typeof import("@/features/mushaf/tafsir")>("@/features/mushaf/tafsir");
+    const { loadBundledTafsir } = jest.requireActual<typeof import("@/data/tafsir")>("@/data/tafsir");
+    expect(tafsirFor(7)).toBe(loadBundledTafsir(1)?.[6]); // al-Fatiha's last
+    expect(tafsirFor(8)).toBe(loadBundledTafsir(2)?.[0]); // al-Baqara's first
+    expect(tafsirFor(6236)).toBe(loadBundledTafsir(114)?.[5]);
+    expect(tafsirFor(6237)).toBeUndefined();
+  });
+});
+
+describe("mushaf index", () => {
+  const mushaf = jest.requireActual<typeof import("@/features/mushaf/mushaf")>("@/features/mushaf/mushaf");
+
+  it("matches the divisions of the full text", () => {
+    const pageStarts: string[] = [];
+    const juzStarts: string[] = [];
+    const hizbStarts: string[] = [];
+    const juzPages: number[] = [];
+    const hizbPages: number[] = [];
+    for (const ayah of mushaf.getAllAyahs()) {
+      const ref = `${ayah.surah}:${ayah.ayah}`;
+      const hizb = Math.ceil(ayah.hizbQuarter / 4);
+      pageStarts[ayah.page - 1] ??= ref;
+      if (!juzStarts[ayah.juz - 1]) {
+        juzStarts[ayah.juz - 1] = ref;
+        juzPages[ayah.juz - 1] = ayah.page;
+      }
+      if (!hizbStarts[hizb - 1]) {
+        hizbStarts[hizb - 1] = ref;
+        hizbPages[hizb - 1] = ayah.page;
+      }
+    }
+    const refs = (list: { surah: number; ayah: number }[]) => list.map((ref) => `${ref.surah}:${ref.ayah}`);
+    const starts = mushaf.mushafStarts();
+    expect(refs(starts.pageStarts)).toEqual(pageStarts);
+    expect(refs(starts.juzStarts)).toEqual(juzStarts);
+    expect(refs(starts.hizbStarts)).toEqual(hizbStarts);
+    expect(mushaf.juzStartPages().map((entry) => entry.page)).toEqual(juzPages);
+    expect(mushaf.hizbStartPages()).toEqual(hizbPages);
+  });
+
+  it("looks up a surah's ayahs and an ayah's page directly", () => {
+    const all = mushaf.getAllAyahs();
+    for (const surah of [1, 2, 9, 114]) {
+      expect(mushaf.getSurahAyahs(surah)).toEqual(all.filter((ayah) => ayah.surah === surah));
+    }
+    expect(mushaf.pageOf(2, 255)).toBe(all.find((ayah) => ayah.surah === 2 && ayah.ayah === 255)?.page);
+    expect(mushaf.pageOf(114, 6)).toBe(604);
+    expect(mushaf.pageOf(1, 99)).toBe(1);
+    expect(mushaf.getSurahAyahs(115)).toEqual([]);
+  });
 });
 
 describe("website links", () => {
