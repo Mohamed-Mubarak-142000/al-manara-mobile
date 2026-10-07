@@ -21,7 +21,7 @@ export function overlayConfig(colors: Record<string, string>) {
 export async function enableOverlay(config: string) {
   if (!background) throw new Error("تذكير فوق التطبيقات يحتاج نسخة أندرويد الجديدة، ولا يعمل في Expo Go.");
   await Notifications.setNotificationChannelAsync("dhikr-service-v1", {
-    name: "ذكر كل دقيقة",
+    name: "ذكر كل ١٠ دقائق",
     importance: Notifications.AndroidImportance.LOW,
     sound: null,
   });

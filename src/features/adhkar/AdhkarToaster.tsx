@@ -10,9 +10,34 @@ import { TOAST_ADHKAR, type ToastDhikr } from "@/core/adhkar/toastAdhkar";
 import { useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
 
 /** In-app fallback; Android's native overlay owns delivery when enabled. */
-const INTERVAL_MS = 60_000;
+const INTERVAL_MS = 10 * 60_000;
+/** How often the gap since the last card is checked; a card still shows only once per INTERVAL_MS. */
+const CHECK_MS = 30_000;
 const VISIBLE_MS = 5_000;
 const KEY = "al-manara:adhkar-toast:v1";
+/** When the last card showed, so reopening the app doesn't bring one straight back. */
+const LAST_SHOWN_KEY = "al-manara:adhkar-toast:last-shown:v1";
+
+function writeLastShown(at: number) {
+  try {
+    Storage.setItemSync(LAST_SHOWN_KEY, String(at));
+  } catch {
+    // Lasts for this session only.
+  }
+}
+
+/** The first run seeds "now", so the first card waits a full interval. */
+function readLastShown(): number {
+  try {
+    const saved = Number(Storage.getItemSync(LAST_SHOWN_KEY));
+    if (Number.isFinite(saved) && saved > 0) return saved;
+  } catch {
+    // Seeded below.
+  }
+  const now = Date.now();
+  writeLastShown(now);
+  return now;
+}
 
 /** Reading, reciting, exams and the player are never interrupted (the website skips its mushaf reader). */
 const SUPPRESSED = /^\/(mushaf|tasmee|exams\/|player|repeat|onboarding|login|register|verify)/;
@@ -71,14 +96,19 @@ export function AdhkarToaster() {
     if (!on || suppressed) return;
     // A random starting dhikr, then in order (the website does the same).
     if (index.current < 0) index.current = Math.floor(Math.random() * TOAST_ADHKAR.length);
+    let lastShown = readLastShown();
     const tick = setInterval(() => {
       // Only while the app is on screen, like the website's visibility check.
       if (AppState.currentState !== "active") return;
       const hour = new Date().getHours();
       if (hour < 7 || hour >= 22) return;
+      const now = Date.now();
+      if (now - lastShown < INTERVAL_MS) return;
+      lastShown = now;
+      writeLastShown(now);
       index.current = (index.current + 1) % TOAST_ADHKAR.length;
       setCurrent(TOAST_ADHKAR[index.current] ?? null);
-    }, INTERVAL_MS);
+    }, CHECK_MS);
     return () => clearInterval(tick);
   }, [on, suppressed]);
 

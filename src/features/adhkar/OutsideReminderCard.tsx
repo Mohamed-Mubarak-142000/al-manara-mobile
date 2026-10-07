@@ -55,15 +55,15 @@ export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }
       )}
       <View className="flex-row items-center gap-3">
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">{android ? "ذكر كل دقيقة فوق التطبيقات" : "إشعارات أذكار اليوم"}</Text>
+          <Text className="font-display-bold text-base text-fg">{android ? "ذكر كل ١٠ دقائق فوق التطبيقات" : "إشعارات أذكار اليوم"}</Text>
           <Text className="mt-1 font-sans text-xs leading-5 text-fg-muted">
             {android
-              ? "بطاقة لمدة ٥ ثوانٍ كل دقيقة من ٧ صباحًا إلى ١٠ مساءً، حتى والتطبيق مقفول، طالما الشاشة مفتوحة. اضغط عليها لإغلاقها."
-              : "ذكر في إشعار كل ساعة من ٧ صباحًا إلى ١٠ مساءً، حتى والتطبيق مقفول أو الشاشة مقفولة. آيفون لا يدعم الظهور فوق التطبيقات أو التوقيت كل دقيقة في الخلفية."}
+              ? "بطاقة لمدة ٥ ثوانٍ كل ١٠ دقائق من ٧ صباحًا إلى ١٠ مساءً، حتى والتطبيق مقفول، طالما الشاشة مفتوحة. اضغط عليها لإغلاقها."
+              : "ذكر في إشعار كل ساعة من ٧ صباحًا إلى ١٠ مساءً، حتى والتطبيق مقفول أو الشاشة مقفولة. آيفون لا يدعم الظهور فوق التطبيقات أو التوقيت كل بضع دقائق في الخلفية."}
           </Text>
         </View>
         <Switch
-          accessibilityLabel={android ? "ذكر كل دقيقة فوق التطبيقات" : "إشعارات أذكار اليوم"}
+          accessibilityLabel={android ? "ذكر كل ١٠ دقائق فوق التطبيقات" : "إشعارات أذكار اليوم"}
           value={enabled}
           disabled={busy || Platform.OS === "web"}
           trackColor={{ false: border, true: primary }}

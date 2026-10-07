@@ -14,6 +14,10 @@ import org.json.JSONObject
 import java.util.Calendar
 
 class DhikrService : Service() {
+  companion object {
+    private const val SHOW_EVERY_MS = 10 * 60_000L
+  }
+
   private val handler = Handler(Looper.getMainLooper())
   private var card: View? = null
   private val windows get() = getSystemService(WindowManager::class.java)
@@ -36,7 +40,8 @@ class DhikrService : Service() {
       }
       val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
       if (power.isInteractive && !keyguard.isKeyguardLocked && hour in 7..21 &&
-          !BackgroundState.adhanPlaying && System.currentTimeMillis() - BackgroundState.adhanFinishedAt >= 60_000) {
+          !BackgroundState.adhanPlaying && System.currentTimeMillis() - BackgroundState.adhanFinishedAt >= 60_000 &&
+          dueForCard()) {
         runCatching { show() }.onFailure {
           Log.e("AlmanaraDhikr", "Unable to display dhikr overlay", it)
           fail("تعذّر إظهار بطاقة الذكر فوق التطبيقات. راجع إذن الظهور فوق التطبيقات ثم فعّل التذكير مرة أخرى.")
@@ -46,6 +51,18 @@ class DhikrService : Service() {
         handler.postDelayed(this, 60_000)
       }
     }
+  }
+
+  /** The minute tick only checks; a card shows at most every SHOW_EVERY_MS. The first run seeds "now". */
+  private fun dueForCard(): Boolean {
+    val saved = BackgroundState.prefs(this)
+    val now = System.currentTimeMillis()
+    val last = saved.getLong("lastShownAt", 0L)
+    if (last == 0L) {
+      saved.edit().putLong("lastShownAt", now).apply()
+      return false
+    }
+    return now - last >= SHOW_EVERY_MS
   }
 
   private fun fail(message: String) {
@@ -75,7 +92,7 @@ class DhikrService : Service() {
       return START_NOT_STICKY
     }
     val stop = PendingIntent.getService(this, 7104, Intent(this, DhikrService::class.java).setAction("stop"), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    val notification = BackgroundState.notification(this, BackgroundState.DHIKR_CHANNEL, "ذكر كل دقيقة", "تذكير قصير من ٧ صباحًا إلى ١٠ مساءً أثناء فتح الشاشة", "adhkar")
+    val notification = BackgroundState.notification(this, BackgroundState.DHIKR_CHANNEL, "ذكر كل ١٠ دقائق", "تذكير قصير من ٧ صباحًا إلى ١٠ مساءً أثناء فتح الشاشة", "adhkar")
       .setOngoing(true).setSilent(true)
       .addAction(NotificationCompat.Action.Builder(0, "إيقاف تذكير الأذكار", stop).build()).build()
     try {
@@ -101,7 +118,7 @@ class DhikrService : Service() {
     if (entries.length() == 0) return
     val index = (saved.getInt("index", -1) + 1) % entries.length()
     val entry = entries.getJSONObject(index)
-    saved.edit().putInt("index", index).apply()
+    saved.edit().putInt("index", index).putLong("lastShownAt", System.currentTimeMillis()).apply()
     val colors = config.getJSONObject("colors")
     val fg = colors.getInt("fg")
     val panel = LinearLayout(this).apply {

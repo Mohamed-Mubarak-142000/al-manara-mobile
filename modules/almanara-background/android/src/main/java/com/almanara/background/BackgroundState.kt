@@ -28,7 +28,7 @@ internal object BackgroundState {
   fun channels(context: Context) {
     if (Build.VERSION.SDK_INT < 26) return
     val manager = context.getSystemService(NotificationManager::class.java)
-    manager.createNotificationChannel(NotificationChannel(DHIKR_CHANNEL, "ذكر كل دقيقة", NotificationManager.IMPORTANCE_LOW).apply { setSound(null, null) })
+    manager.createNotificationChannel(NotificationChannel(DHIKR_CHANNEL, "ذكر كل ١٠ دقائق", NotificationManager.IMPORTANCE_LOW).apply { setSound(null, null) })
     manager.createNotificationChannel(NotificationChannel(AUDIO_CHANNEL, "الأذان الجاري", NotificationManager.IMPORTANCE_LOW).apply { setSound(null, null) })
     manager.createNotificationChannel(NotificationChannel(PRAYER_CHANNEL, "مواقيت الصلاة", NotificationManager.IMPORTANCE_HIGH))
   }

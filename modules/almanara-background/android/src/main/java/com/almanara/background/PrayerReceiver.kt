@@ -48,7 +48,7 @@ class RestoreReceiver : BroadcastReceiver() {
         runCatching { ContextCompat.startForegroundService(context, Intent(context, DhikrService::class.java)) }
           .onFailure {
             BackgroundState.prefs(context).edit()
-              .putString("overlayError", "توقف ذكر كل دقيقة بعد إعادة تشغيل الهاتف. افتح التطبيق لتشغيله مرة أخرى.").apply()
+              .putString("overlayError", "توقف الذكر فوق التطبيقات بعد إعادة تشغيل الهاتف. افتح التطبيق لتشغيله مرة أخرى.").apply()
           }
       }
     }
