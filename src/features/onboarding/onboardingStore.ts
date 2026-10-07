@@ -41,6 +41,9 @@ export const onboarding = {
   isDone(): boolean {
     return read().done;
   },
+  favoriteReciter(): number | null {
+    return read().favoriteReciterId;
+  },
 };
 
 export function useOnboarding(): OnboardingState {

@@ -189,6 +189,13 @@ export type PublicSupporterRow = {
   message: string | null;
   approved_at: Timestamp | null;
 };
+/** The app's settings for an account (supabase/migrations/20261008000001_user_preferences.sql). */
+export type UserPreferencesRow = {
+  user_id: string;
+  prefs: Record<string, unknown>;
+  completed_at: Timestamp | null;
+  updated_at: Timestamp;
+};
 export type PushPlatform = "ios" | "android";
 export type PushTokenRow = {
   token: string;
@@ -380,6 +387,7 @@ export type Database = {
           "id" | "user_id" | "message" | "show_name" | "status" | "reject_reason" | "reviewed_at" | "thanked_at" | "created_at"
         >
       >;
+      user_preferences: TableDef<UserPreferencesRow, Optional<UserPreferencesRow, "prefs" | "completed_at" | "updated_at">>;
       certificates: TableDef<CertificateRow, Optional<CertificateRow, "id" | "exam_attempt_id" | "issued_at" | "revoked_at">>;
       memorization_plans: TableDef<
         MemorizationPlanRow,

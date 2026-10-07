@@ -100,6 +100,11 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
+/** Theme, size, tajweed and riwaya outside React (settings sync). */
+export function readReaderPrefs(): ReaderPrefs {
+  return read().prefs;
+}
+
 export function useReaderState(): ReaderState {
   return useSyncExternalStore(subscribe, read);
 }

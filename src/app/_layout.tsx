@@ -23,6 +23,8 @@ import { restoreLastRoute, useRouteMemory } from "@/lib/useRouteMemory";
 // Registers the outbox handlers before anything is flushed.
 import "@/features/khatma/sync";
 import "@/features/plan/sync";
+import "@/features/settings/preferences";
+import { usePreferencesSync } from "@/features/settings/usePreferencesSync";
 import { applySavedTextScale } from "@/theme/textScale";
 import { useWidgetSync } from "@/widgets/useWidgetSync";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -43,6 +45,7 @@ function RootLayout() {
   useLastReadSync();
   usePushRegistration();
   useWidgetSync();
+  usePreferencesSync();
   const pathname = usePathname();
   useEffect(() => {
     trackScreen(pathname);
@@ -96,6 +99,7 @@ function RootLayout() {
         <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="share-card" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        <Stack.Screen name="settings" options={{ animation: "slide_from_left" }} />
       </Stack>
       <ReadingStreakTracker />
       <GlobalMiniPlayer />

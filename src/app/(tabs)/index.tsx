@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen, Section } from "@/components/ui/Screen";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { OfflineNotice } from "@/features/home/OfflineNotice";
+import { SetupPrompt } from "@/features/settings/SetupPrompt";
 import { QuickActions, openReading } from "@/features/home/QuickActions";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { SECTION_GROUPS } from "@/features/home/sections";
@@ -113,6 +114,7 @@ export default function HomeScreen() {
       </Section>
 
       <OfflineNotice />
+      <SetupPrompt />
     </Screen>
   );
 }

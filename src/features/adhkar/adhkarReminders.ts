@@ -122,6 +122,15 @@ async function channel() {
   }
 }
 
+/** Which reminders are on, outside React (settings sync). */
+export function readAdhkarReminders(): Reminders {
+  return read();
+}
+
+export function readOutsideAdhkarNotifications(): boolean {
+  return readOutside();
+}
+
 export function restoreAdhkarReminders() {
   return serialize(async () => {
     if (!(await Notifications.getPermissionsAsync()).granted) return;

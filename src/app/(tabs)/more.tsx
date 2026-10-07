@@ -1,7 +1,6 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import {
-  ALargeSmall,
   ChevronLeft,
   Download,
   FileText,
@@ -12,22 +11,18 @@ import {
   Settings2,
   Share2,
   ShieldCheck,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react-native";
-import { Platform, Pressable, Switch, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { AccountCard } from "@/features/account/AccountCard";
-import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
-import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
 import { useDownloads } from "@/features/downloads/downloadStore";
 import { SectionGrid } from "@/features/home/SectionGrid";
 import { openSitePage, shareApp } from "@/features/legal/site";
 import { StreakCard } from "@/features/streak/StreakCard";
-import { TEXT_SCALES, setTextScale, useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function GroupTitle({ children }: { children: string }) {
@@ -114,64 +109,6 @@ function SupportLink() {
   );
 }
 
-function TextSizeCard() {
-  const primary = useThemeColor("primary");
-  const scale = useTextScale();
-  return (
-    <View className="gap-3 rounded-3xl border border-border bg-surface p-4">
-      <View className="flex-row items-center gap-3">
-        <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
-          <ALargeSmall size={22} color={primary} />
-        </View>
-        <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">حجم الخط</Text>
-          <Text className="font-sans text-xs text-fg-muted">لنصوص التطبيق كلها، وللمصحف حجم خاص من إعدادات القراءة.</Text>
-        </View>
-      </View>
-      <View className="flex-row gap-2">
-        {TEXT_SCALES.map((option) => {
-          const active = option.value === scale;
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: active }}
-              onPress={() => setTextScale(option.value)}
-              className={`flex-1 items-center rounded-2xl border py-2 ${active ? "border-primary bg-primary" : "border-border bg-bg"}`}
-            >
-              <Text className={`font-sans-bold ${active ? "text-on-primary" : "text-fg"}`} style={{ fontSize: 14 * option.value }}>
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-function AdhkarToastCard() {
-  const primary = useThemeColor("primary");
-  const border = useThemeColor("border");
-  const surface = useThemeColor("surface");
-  const enabled = useAdhkarToastEnabled();
-  if (Platform.OS === "android") return <OutsideReminderCard embedded />;
-  return (
-    <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4">
-      <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
-        <Sparkles size={22} color={primary} />
-      </View>
-      <View className="flex-1">
-        <Text className="font-display-bold text-base text-fg">ذكّر قلبك</Text>
-        <Text className="font-sans text-xs leading-5 text-fg-muted">
-          ذكر قصير كل ١٠ دقائق وأنت تتصفح التطبيق. فعّل الظهور فوق التطبيقات من صفحة الأذكار.
-        </Text>
-      </View>
-      <Switch value={enabled} onValueChange={setAdhkarToastEnabled} trackColor={{ false: border, true: primary }} thumbColor={surface} />
-    </View>
-  );
-}
-
 /** Account, every section of the app (Home shows only the main ones), settings and the website's fixed pages. */
 export default function MoreScreen() {
   const version = Constants.expoConfig?.version;
@@ -193,11 +130,15 @@ export default function MoreScreen() {
         <DownloadsLink />
 
         <GroupTitle>الإعدادات</GroupTitle>
-        <AdhkarToastCard />
         <Group>
+          <LinkRow
+            icon={Settings2}
+            title="الإعدادات والإشعارات"
+            hint="الأذان، والتذكيرات، والمواقيت، والخط في مكان واحد"
+            onPress={() => router.push("/settings")}
+          />
           <LinkRow icon={Landmark} title="صوت الأذان" hint="اختر المؤذن لتنبيهات الصلاة" onPress={() => router.push("/adhan-voice")} last />
         </Group>
-        <TextSizeCard />
 
         <GroupTitle>عن المنارة</GroupTitle>
         <Group>

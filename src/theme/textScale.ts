@@ -55,6 +55,11 @@ export function applySavedTextScale() {
   if (value !== 1) apply(value);
 }
 
+/** The saved size outside React (settings sync). */
+export function readTextScale(): number {
+  return read();
+}
+
 export function setTextScale(value: number) {
   scale = value;
   try {

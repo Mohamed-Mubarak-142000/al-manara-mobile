@@ -55,6 +55,10 @@ function readEnabled(): boolean {
   return enabled;
 }
 
+export function readAdhkarToastEnabled(): boolean {
+  return readEnabled();
+}
+
 export function setAdhkarToastEnabled(value: boolean) {
   enabled = value;
   try {
