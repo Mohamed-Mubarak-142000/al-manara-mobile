@@ -1,11 +1,12 @@
 import { Image } from "expo-image";
 import { useIsFocused } from "expo-router";
 import Storage from "expo-sqlite/kv-store";
-import { ChevronLeft, HandHeart } from "lucide-react-native";
+import { ExternalLink, HandHeart } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, AppState, FlatList, Linking, Pressable, Text, View, type ViewToken } from "react-native";
+import { AccessibilityInfo, AppState, FlatList, Linking, Text, View, type ViewToken } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
+import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabase";
 import { useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -96,50 +97,57 @@ function openLink(url: string) {
   Linking.openURL(url).catch(() => {});
 }
 
-/** One sponsor: logo, name, message, and a chevron when it links somewhere. */
+/** Height of the sponsor's image band at the top of the card. */
+const IMAGE_HEIGHT = 170;
+
+/**
+ * One sponsor: the image across the top (shown whole, never cropped), then the full name, the message,
+ * and a button when it links somewhere.
+ */
 function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: number }) {
   const accent = useThemeColor("accent-strong");
-  const muted = useThemeColor("fg-muted");
   const link = sponsor.link_url;
-  const card = (
-    <View className={`${height ? "flex-1 " : ""}flex-row items-center gap-4 rounded-3xl border border-border bg-surface p-5 shadow-soft`}>
-      {sponsor.logo_url ? (
-        <Image
-          source={{ uri: sponsor.logo_url }}
-          style={{ width: 104, height: 104, borderRadius: 24 }}
-          contentFit="cover"
-          transition={200}
-          accessibilityIgnoresInvertColors
-        />
-      ) : (
-        <View className="size-26 items-center justify-center rounded-[24px] bg-accent-soft">
-          <HandHeart size={40} color={accent} />
-        </View>
-      )}
-      <View className="flex-1 gap-1.5">
-        <Text className="font-display-bold text-lg text-fg" numberOfLines={1}>
+  return (
+    <View
+      style={height ? { height } : undefined}
+      className={`${height ? "flex-1 " : ""}overflow-hidden rounded-3xl border border-border bg-surface shadow-soft`}
+    >
+      <View className="items-center justify-center bg-accent-soft" style={{ height: IMAGE_HEIGHT }}>
+        {sponsor.logo_url ? (
+          <Image
+            source={{ uri: sponsor.logo_url }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="contain"
+            transition={200}
+            accessibilityIgnoresInvertColors
+            accessibilityLabel={sponsor.name}
+          />
+        ) : (
+          <HandHeart size={56} color={accent} />
+        )}
+      </View>
+      <View className="flex-1 gap-1.5 p-4">
+        <Text className="font-display-bold text-lg leading-8 text-fg" numberOfLines={2}>
           {sponsor.name}
         </Text>
-        <Text className="font-sans text-sm leading-6 text-fg-muted" numberOfLines={height ? 3 : undefined}>
+        <Text className="font-sans text-sm leading-6 text-fg-muted" numberOfLines={height ? 2 : undefined}>
           {sponsor.message}
         </Text>
+        {link ? (
+          <View className="mt-auto pt-2">
+            <Button
+              size="sm"
+              variant="gold"
+              icon={ExternalLink}
+              accessibilityLabel={`زيارة ${sponsor.name}`}
+              onPress={() => openLink(link)}
+            >
+              زيارة الراعي
+            </Button>
+          </View>
+        ) : null}
       </View>
-      {link ? <ChevronLeft size={18} color={muted} /> : null}
     </View>
-  );
-  const box = height ? { height } : undefined;
-  return link ? (
-    <Pressable
-      accessibilityRole="link"
-      accessibilityLabel={`برعاية ${sponsor.name}`}
-      accessibilityHint={sponsor.message}
-      onPress={() => openLink(link)}
-      style={({ pressed }) => [box, { opacity: pressed ? 0.85 : 1 }]}
-    >
-      {card}
-    </Pressable>
-  ) : (
-    <View style={box}>{card}</View>
   );
 }
 
@@ -160,7 +168,8 @@ function Dot({ active }: { active: boolean }) {
 /** Two or more sponsors: paged, auto-advancing every few seconds, paused while touched or out of view. */
 function SponsorPager({ sponsors }: { sponsors: SponsorItem[] }) {
   const textScale = useTextScale();
-  const height = Math.round(146 * Math.max(1, textScale));
+  // Image band + two-line name + two-line message + the button, grown with the text size.
+  const height = IMAGE_HEIGHT + Math.round(190 * Math.max(1, textScale));
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<SponsorItem>>(null);
