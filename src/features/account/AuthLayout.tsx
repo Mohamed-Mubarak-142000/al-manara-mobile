@@ -13,6 +13,8 @@ import { Divider } from "@/components/ui/Ornament";
 import { useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 
+import { recordError } from "@/lib/crashLog";
+
 import { signInWithGoogle } from "./authFlows";
 
 /** The error buzz for a rejected submit (validation or server). */
@@ -238,7 +240,11 @@ export function GoogleButton({ onDone }: { onDone: () => void }) {
           Haptics.selectionAsync().catch(() => {});
           setBusy(true);
           setError(null);
-          const result = await signInWithGoogle().catch(() => ({ ok: false as const, error: "تعذّر بدء الدخول بجوجل الآن." }));
+          const result = await signInWithGoogle().catch((caught: unknown) => {
+            // Kept in the crash log (About → report), so a failure here can be traced.
+            recordError(caught, "error");
+            return { ok: false as const, error: "تعذّر بدء الدخول بجوجل الآن." };
+          });
           opening.current = false;
           if (!mounted.current) return;
           setBusy(false);

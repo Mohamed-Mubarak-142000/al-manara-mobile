@@ -1,7 +1,9 @@
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { AppState, Platform } from "react-native";
 
 import { api } from "@/lib/api";
+import { recordError } from "@/lib/crashLog";
 
 import { redirectParams } from "./oauthRedirect";
 import { supabase } from "@/lib/supabase";
@@ -68,12 +70,39 @@ export async function signInWithGoogle(): Promise<FlowResult | { ok: false; erro
     provider: "google",
     options: { redirectTo: OAUTH_REDIRECT, skipBrowserRedirect: true, queryParams: { prompt: "select_account" } },
   });
-  if (error || !data.url) return { ok: false, error: "تعذّر بدء الدخول بجوجل الآن." };
+  if (error || !data.url) {
+    recordError(error ?? new Error("signInWithOAuth returned no url"), "error");
+    return { ok: false, error: "تعذّر بدء الدخول بجوجل الآن." };
+  }
   const before = latestExchange;
+  if (Platform.OS === "android") return googleOnAndroid(data.url, before);
   const result = await WebBrowser.openAuthSessionAsync(data.url, OAUTH_REDIRECT);
   if (result.type === "success") return completeOAuthRedirect(result.url);
-  // Android's sheet can report "dismiss" just before the deep link with the code arrives.
   return (await exchangeArrivingSoon(before)) ?? { ok: false, error: null };
+}
+
+/**
+ * Android, without expo-web-browser's auth-session polyfill: it keeps a module-level "browser open"
+ * flag that isn't cleared when the redirect wins its race while the app is already in front, so every
+ * later attempt threw "WebBrowser is already open" (shown as "تعذّر بدء الدخول بجوجل"). Here the Custom
+ * Tab is simply opened; the redirect back into the app is exchanged by +native-intent
+ * (completeOAuthRedirect), and once the app is in front again we wait briefly for that exchange. No
+ * exchange means the user closed the tab.
+ */
+async function googleOnAndroid(url: string, before: Promise<FlowResult> | null): Promise<FlowResult | { ok: false; error: null }> {
+  const backInFront = new Promise<void>((resolve) => {
+    let left = false;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") left = true;
+      else if (left) {
+        subscription.remove();
+        resolve();
+      }
+    });
+  });
+  await WebBrowser.openBrowserAsync(url, { showInRecents: true });
+  await backInFront;
+  return (await exchangeArrivingSoon(before, 3000)) ?? { ok: false, error: null };
 }
 
 /**
