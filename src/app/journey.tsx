@@ -13,6 +13,7 @@ import { useAsync } from "@/features/hadith/useAsync";
 import { REVIEW_INTERVALS_DAYS, loadJourney, markSurahReviewed, type ReviewRow } from "@/features/journey/progress";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
 import { getSurah } from "@/features/mushaf/mushaf";
+import { StreakCard } from "@/features/streak/StreakCard";
 import { useNow } from "@/features/time/useNow";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -78,6 +79,8 @@ export default function JourneyScreen() {
       </View>
 
       <View className="gap-4 px-4 pt-5">
+        {/* Kept on the phone, so guests see it too. */}
+        <StreakCard />
         {!learnerId ? (
           <View className="items-center rounded-3xl border border-border bg-surface p-6">
             <Lock size={28} color={primary} />

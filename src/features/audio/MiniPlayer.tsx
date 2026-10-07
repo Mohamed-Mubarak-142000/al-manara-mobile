@@ -8,7 +8,7 @@ import { TrackDownloadButton } from "@/features/downloads/TrackDownloadButton";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { miniPlayerLayout, miniPlayerPlacement, useMiniPlayerLayout, type MiniPlayerPlacement } from "./miniPlayerLayout";
-import { audio, currentTrack, usePlayer, type PlayerState } from "./playerStore";
+import { audio, currentTrack, useHasTrack, usePlayer, type PlayerState } from "./playerStore";
 
 const NIGHT = "#012a22";
 /** The stock bottom tab bar before it has been measured. */
@@ -118,10 +118,10 @@ export function GlobalMiniPlayer() {
  * its last rows (0 while nothing is loaded). Add it on top of the safe-area inset.
  */
 export function useMiniPlayerInset(): number {
-  const state = usePlayer();
+  const hasTrack = useHasTrack();
   const placement = usePlacement();
   const { playerHeight } = useMiniPlayerLayout();
-  if (!currentTrack(state) || placement !== "bottom") return 0;
+  if (!hasTrack || placement !== "bottom") return 0;
   return playerHeight || 72;
 }
 
@@ -130,9 +130,9 @@ export function useMiniPlayerInset(): number {
  * make space for it instead of hiding their last rows under it.
  */
 export function MiniPlayerSpacer() {
-  const state = usePlayer();
+  const hasTrack = useHasTrack();
   const placement = usePlacement();
   const { playerHeight } = useMiniPlayerLayout();
-  if (!currentTrack(state) || placement !== "tabs") return null;
+  if (!hasTrack || placement !== "tabs") return null;
   return <View style={{ height: playerHeight || 72 }} />;
 }

@@ -406,6 +406,14 @@ export function usePlayer(): PlayerState {
   return useSyncExternalStore(subscribe, () => state);
 }
 
+/**
+ * Just "is something loaded": a boolean snapshot, so callers skip the twice-a-second progress
+ * updates that usePlayer() re-renders on. For layout (mini player room) rather than controls.
+ */
+export function useHasTrack(): boolean {
+  return useSyncExternalStore(subscribe, () => currentTrack(state) !== null);
+}
+
 /** The current state outside React (tests, one-off reads). */
 export function getPlayerState(): PlayerState {
   return state;

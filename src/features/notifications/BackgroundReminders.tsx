@@ -57,12 +57,18 @@ export function BackgroundReminders() {
   const config = useOverlayConfig();
   useEffect(() => {
     let busy = false;
+    let configSent = false;
     async function reconcile() {
       if (busy || AppState.currentState !== "active") return;
       busy = true;
       try {
         if (background) {
-          await background.updateOverlay(config);
+          // The config (all the toast adhkar) only changes with this effect; the 5 s check below just
+          // picks up a stop from the notification.
+          if (!configSent) {
+            await background.updateOverlay(config);
+            configSent = true;
+          }
           const current = background.getStatus();
           const pending = Storage.getItemSync(PENDING_OVERLAY) === "on";
           if (current.overlayAllowed && (current.overlayEnabled || pending) && !current.overlayRunning) {

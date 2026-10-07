@@ -14,8 +14,11 @@ function notify() {
   listeners.forEach((listener) => listener());
 }
 
+/** Polled every few seconds while the app is open: listeners only hear about an actual change. */
 export function refreshBackgroundStatus() {
-  status = background?.getStatus() ?? null;
+  const next = background?.getStatus() ?? null;
+  if (JSON.stringify(next) === JSON.stringify(status)) return;
+  status = next;
   notify();
 }
 

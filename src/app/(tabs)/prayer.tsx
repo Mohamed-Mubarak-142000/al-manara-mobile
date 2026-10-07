@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { CalendarRange, Clock, Compass, LocateFixed, WifiOff } from "lucide-react-native";
+import { CalendarRange, Clock, Compass, LocateFixed, Settings2, WifiOff } from "lucide-react-native";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { StateMessage } from "@/components/ui/StateMessage";
-import { AdhanSettingsCard } from "@/features/prayer/AdhanSettingsCard";
-import { CalculationSettingsCard } from "@/features/prayer/CalculationSettingsCard";
 import { requestPreciseLocation, type GeolocateResult } from "@/features/prayer/locationStore";
 import { usePrayerCalcSettings } from "@/features/prayer/prayerCalcSettings";
 import { usePrayerDay } from "@/features/prayer/usePrayerDay";
@@ -124,8 +122,10 @@ export default function PrayerScreen() {
             اتجاه القبلة
           </Button>
         </View>
-        <CalculationSettingsCard />
-        <AdhanSettingsCard />
+        {/* The adhan and calculation settings live once, in Settings, rather than repeated here. */}
+        <Button variant="ghost" icon={Settings2} className="mt-3" onPress={() => router.push("/settings")}>
+          إعدادات الأذان وطريقة الحساب
+        </Button>
       </Section>
     </Screen>
   );

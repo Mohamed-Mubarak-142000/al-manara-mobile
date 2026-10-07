@@ -1,9 +1,10 @@
-import { router } from "expo-router";
 import { Flame } from "lucide-react-native";
 import { Text, View } from "react-native";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Card } from "@/components/ui/Card";
+import { openReading } from "@/features/home/QuickActions";
+import { useReaderState } from "@/features/mushaf/readerPrefs";
 import { useNow } from "@/features/time/useNow";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -21,6 +22,7 @@ function encouragement(streak: number, readToday: boolean): string {
 
 /** Reading streak and this week's summary, from the days the mushaf was opened and read. */
 export function StreakCard() {
+  const { lastRead } = useReaderState();
   const now = useNow(60_000);
   const { log, best } = useReadingLog();
   const accent = useThemeColor("accent");
@@ -32,7 +34,7 @@ export function StreakCard() {
   const todayKey = dayKey(now);
 
   return (
-    <Card onPress={() => router.push("/mushaf")} className="gap-4">
+    <Card onPress={() => openReading(lastRead)} className="gap-4">
       <View className="flex-row items-center gap-3">
         <View className="size-12 items-center justify-center rounded-full bg-accent-soft">
           <Flame size={24} color={accent} fill={streak > 0 ? accent : "transparent"} />

@@ -103,7 +103,6 @@ export default function SettingsScreen() {
           <Group title="القراءة والعرض">
             <ReadingCard />
             <TextSizeCard />
-            <LinkCard icon={Headphones} title="قارئك المفضل" hint="اختر القارئ من صفحة الاستماع" onPress={() => router.push("/listen")} />
           </Group>
 
           {userId ? (

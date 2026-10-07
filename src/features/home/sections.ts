@@ -7,6 +7,7 @@ import {
   CalendarRange,
   Clapperboard,
   Clock,
+  Download,
   GraduationCap,
   HandHeart,
   Headphones,
@@ -67,6 +68,7 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "الختمة", icon: BookMarked, description: "اختم القرآن بوِرد يومي تختاره", href: "/khatma" },
   { label: "التسميع", icon: Mic, description: "سمّع من حفظك بصوتك ونوقفك عند الخطأ", href: "/tasmee" },
   { label: "الاختبارات", icon: GraduationCap, description: "اختبر حفظك جزءًا جزءًا واحصل على شهادة", href: "/exams" },
+  { label: "المحفوظات", icon: Download, description: "التلاوات والأحاديث المنزّلة للاستماع والقراءة دون إنترنت", href: "/downloads" },
   // The website's "الأطفال" (حديقة القرآن للأطفال) comes back here, with its href, once the screen exists.
 ];
 
@@ -83,4 +85,5 @@ export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "صوتيات", labels: ["ابتهالات", "تواشيح", "أدعية", "أذان"] },
   { title: "للعائلة", labels: ["القصص"] },
+  { title: "على جهازك", labels: ["المحفوظات"] },
 ];

@@ -34,7 +34,7 @@ function SectionTile({ section }: { section: AppSection }) {
 
 /**
  * A titled row of up to four tiles per group, nothing that moves on its own. Every built section by
- * default (المزيد); Home passes just its first groups.
+ * default; Home passes just its first groups and links to /sections for the rest.
  */
 export function SectionGrid({ groups: chosen = SECTION_GROUPS }: { groups?: readonly SectionGroup[] }) {
   const groups = chosen.map((group) => ({

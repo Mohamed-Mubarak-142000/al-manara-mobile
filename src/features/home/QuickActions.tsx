@@ -47,7 +47,7 @@ export function QuickActions() {
       />
       <Action icon={Sparkles} label="الأذكار" onPress={() => router.push("/adhkar")} />
       <Action icon={Compass} label="القبلة" onPress={() => router.push("/qibla")} />
-      <Action icon={Radio} label="الراديو" onPress={() => router.push("/radio")} />
+      <Action icon={Radio} label="الإذاعة" onPress={() => router.push("/radio")} />
     </View>
   );
 }

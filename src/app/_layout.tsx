@@ -39,12 +39,20 @@ export { ErrorFallback as ErrorBoundary } from "@/components/ErrorFallback";
 /** A deep link straight to a screen (almanara://login…) still has Home under it to go back to. */
 export const unstable_settings = { initialRouteName: "(tabs)" };
 
+/**
+ * The reading-position followers. Both read useReaderState, which changes on every mushaf page swipe:
+ * in their own component that re-render stays here instead of re-rendering the whole root Stack.
+ */
+function ReadingSync() {
+  useLastReadSync();
+  useWidgetSync();
+  return null;
+}
+
 function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(APP_FONTS);
   useAdhanSchedule();
-  useLastReadSync();
   usePushRegistration();
-  useWidgetSync();
   usePreferencesSync();
   const pathname = usePathname();
   useEffect(() => {
@@ -85,6 +93,7 @@ function RootLayout() {
     <ThemeProvider value={theme}>
       <StatusBar style="auto" />
       <BackgroundReminders />
+      <ReadingSync />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: "fade" }} />

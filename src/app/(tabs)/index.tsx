@@ -32,7 +32,7 @@ function hijriLine(): string | null {
   }
 }
 
-/** Home keeps the everyday groups; the rest (رحلتك، صوتيات، للعائلة) live under المزيد. */
+/** Home keeps the everyday groups; every section (رحلتك، صوتيات، للعائلة too) is on the كل الأقسام screen. */
 const HOME_GROUPS = SECTION_GROUPS.slice(0, 2);
 
 function AllSectionsLink() {
@@ -40,7 +40,7 @@ function AllSectionsLink() {
   return (
     <Pressable
       accessibilityRole="link"
-      onPress={() => router.push("/more")}
+      onPress={() => router.push("/sections")}
       hitSlop={8}
       className="mt-4 flex-row items-center justify-center gap-1 self-center rounded-full border border-border bg-surface px-5 py-2.5"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
