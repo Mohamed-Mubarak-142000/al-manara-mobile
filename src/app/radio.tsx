@@ -77,6 +77,13 @@ export default function RadioScreen() {
         <View className="items-center gap-2">
           <Text className="text-center font-display-black text-4xl leading-[56px] text-hero-fg">إذاعة القرآن الكريم</Text>
           <Text className="text-center font-sans text-base text-white/70">{RADIO_STATION.name}</Text>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push({ pathname: "/sounds/[category]", params: { category: "recordings" } })}
+            className="mt-2 rounded-full border border-gold/40 bg-white/10 px-5 py-2.5"
+          >
+            <Text className="font-sans-bold text-sm text-gold-soft">استمع إلى تسجيلات الإذاعة</Text>
+          </Pressable>
         </View>
 
         <View className="h-20 flex-row items-center gap-1">

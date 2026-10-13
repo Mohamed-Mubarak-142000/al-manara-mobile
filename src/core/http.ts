@@ -23,15 +23,18 @@ export const CACHE_MAX_ENTRIES = 2000;
  * that was opened once keeps working offline. Once per app session, entries unused for 180 days are dropped
  * and the cache is capped at the 2000 most recently used. Reading an entry (even offline) counts as use.
  */
-export async function cachedFetch(url: string, ttlSeconds: number): Promise<Response> {
+export async function cachedFetch(url: string, ttlSeconds: number, init?: { method: "POST" }): Promise<Response> {
   void pruneOnce();
-  const key = PREFIX + url;
+  // A bodyless POST that only reads (the radio library's listings) is cached like a GET, under its own key.
+  const post = init?.method === "POST";
+  const key = PREFIX + (post ? "POST " : "") + url;
   const cached = await readEntry(key);
   if (cached) touch(key).catch(() => {});
   if (cached && Date.now() - cached.savedAt < ttlSeconds * 1000) return toResponse(cached);
 
   try {
-    const response = await fetch(url);
+    // An empty body, so the request carries Content-Length: 0 (the radio's server rejects a POST without it).
+    const response = await fetch(url, post ? { method: "POST", body: "" } : undefined);
     if (!response.ok) return cached ? toResponse(cached) : response;
     const body = await response.text();
     const entry: CacheEntry = { savedAt: Date.now(), status: response.status, body };

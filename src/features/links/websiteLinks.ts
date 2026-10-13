@@ -3,7 +3,7 @@ import { getSurah } from "@/features/mushaf/mushaf";
 /** The website's host: its links open the matching screen when the app is installed (Android App Links). */
 export const SITE_HOST = "eslami-platform.vercel.app";
 
-const SOUND_PAGES = new Set(["ibtihalat", "tawasheeh", "duas", "adhan"]);
+const SOUND_PAGES = new Set(["ibtihalat", "tawasheeh", "duas", "adhan", "recordings"]);
 
 /**
  * Turns a website path into the app's route for the same content. Pure (tested): the website and the
@@ -34,6 +34,11 @@ export function websitePathToAppRoute(pathname: string, search: URLSearchParams)
     case "stories":
     case "exams":
       return second ? `/${first}/${encodeURIComponent(second)}` : `/${first}`;
+    case "kids": {
+      // The kids routes mirror the website's, query and all (/kids/rewards?tab=shop, surah-match?surah=…).
+      const query = search.toString();
+      return `/${parts.map(encodeURIComponent).join("/")}${query ? `?${query}` : ""}`;
+    }
     case "radio":
     case "calendar":
     case "adhkar":

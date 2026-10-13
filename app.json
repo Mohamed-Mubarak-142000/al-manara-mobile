@@ -146,6 +146,16 @@
               "scheme": "https",
               "host": "eslami-platform.vercel.app",
               "pathPrefix": "/terms"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/kids"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/recordings"
             }
           ],
           "category": [

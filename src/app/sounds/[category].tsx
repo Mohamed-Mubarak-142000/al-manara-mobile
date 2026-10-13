@@ -20,8 +20,11 @@ const ARTIST_ROW_LABEL: Record<SoundCategoryKey, string> = {
   tawasheeh: "المنشدون",
   duas: "الأصوات",
   adhan: "المؤذنون",
+  recordings: "القرّاء",
 };
 const KEYS = Object.keys(SOUND_CATEGORIES) as SoundCategoryKey[];
+/** The tabs of the duas-and-ibtihalat family; the radio's Quran library is opened from the radio screen. */
+const TABS = KEYS.filter((key) => key !== "recordings");
 
 /** A library track as a player track: radio clips resolve to their HLS playlist on play, archive files play as-is. */
 function toTrack(track: SoundTrack, artist: string): Track {
@@ -29,7 +32,7 @@ function toTrack(track: SoundTrack, artist: string): Track {
   return { id: `sound-${track.id}`, title: track.title, artist, url: ref ? `${RADIO_REF}${ref}` : track.src };
 }
 
-/** One screen for the website's four sound pages: ابتهالات، تواشيح، أدعية، أذان. */
+/** One screen for the website's sound pages: ابتهالات، تواشيح، أدعية، أذان، and the radio's recordings. */
 export default function SoundsScreen() {
   const params = useLocalSearchParams<{ category: string }>();
   const category: SoundCategoryKey = KEYS.includes(params.category as SoundCategoryKey)
@@ -111,13 +114,14 @@ export default function SoundsScreen() {
             >
               <ChevronRight size={26} color={heroFg} />
             </Pressable>
-            <Text className="font-sans-bold text-sm text-gold-soft">أدعية وابتهالات</Text>
+            <Text className="font-sans-bold text-sm text-gold-soft">{category === "recordings" ? "مكتبة الإذاعة" : "أدعية وابتهالات"}</Text>
             <Text className="mt-2 font-display-bold text-3xl text-hero-fg">{info.title}</Text>
             <Text className="mt-2 font-sans text-sm leading-6 text-white/75" numberOfLines={3}>
               {info.description}
             </Text>
+            {category !== "recordings" && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 16 }}>
-              {KEYS.map((key) => (
+              {TABS.map((key) => (
                 <Pressable
                   key={key}
                   accessibilityRole="tab"
@@ -134,6 +138,7 @@ export default function SoundsScreen() {
                 </Pressable>
               ))}
             </ScrollView>
+            )}
           </View>
           <View className="-mt-6 gap-3 px-4">
             <SearchField

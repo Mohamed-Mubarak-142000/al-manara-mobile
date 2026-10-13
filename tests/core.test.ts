@@ -197,6 +197,10 @@ describe("website links", () => {
     expect(route("/hadith/category/5")).toBe("/hadith/category/5");
     expect(route("/tawasheeh")).toBe("/sounds/tawasheeh");
     expect(route("/listen/123")).toBe("/listen/123");
+    expect(route("/recordings")).toBe("/sounds/recordings");
+    expect(route("/kids")).toBe("/kids");
+    expect(route("/kids/journey/114")).toBe("/kids/journey/114");
+    expect(route("/kids/rewards?tab=shop")).toBe("/kids/rewards?tab=shop");
     expect(route("/admin")).toBe("/");
   });
 });
