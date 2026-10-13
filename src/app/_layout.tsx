@@ -23,6 +23,7 @@ import { restoreLastRoute, useRouteMemory } from "@/lib/useRouteMemory";
 // Registers the outbox handlers before anything is flushed.
 import "@/features/khatma/sync";
 import "@/features/plan/sync";
+import "@/features/kids/progress/sync";
 import "@/features/settings/preferences";
 import { usePreferencesSync } from "@/features/settings/usePreferencesSync";
 import { applySavedTextScale } from "@/theme/textScale";

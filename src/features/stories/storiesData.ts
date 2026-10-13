@@ -36,3 +36,11 @@ export async function markWatched(learnerId: string, storyId: string): Promise<b
 export function thumbnail(youtubeId: string): string {
   return `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
 }
+
+/**
+ * The website's StoryPlayer: the privacy-enhanced YouTube player, and "watched" recorded when the
+ * video ends (the IFrame API reports state 0) or when the child taps "أنهيت القصة".
+ */
+export function playerHtml(youtubeId: string): string {
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;background:#000;height:100%}#p{width:100%;height:100%}</style></head><body><div id="p"></div><script src="https://www.youtube.com/iframe_api"></script><script>function onYouTubeIframeAPIReady(){new YT.Player("p",{host:"https://www.youtube-nocookie.com",videoId:"${youtubeId}",playerVars:{rel:0,modestbranding:1,playsinline:1,hl:"ar"},events:{onStateChange:function(e){if(e.data===0&&window.ReactNativeWebView)window.ReactNativeWebView.postMessage("ended")}}})}</script></body></html>`;
+}

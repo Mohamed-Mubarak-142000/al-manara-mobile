@@ -18,6 +18,7 @@ import {
   Radio,
   ScrollText,
   Sparkles,
+  Trees,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -69,7 +70,7 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "التسميع", icon: Mic, description: "سمّع من حفظك بصوتك ونوقفك عند الخطأ", href: "/tasmee" },
   { label: "الاختبارات", icon: GraduationCap, description: "اختبر حفظك جزءًا جزءًا واحصل على شهادة", href: "/exams" },
   { label: "المحفوظات", icon: Download, description: "التلاوات والأحاديث المنزّلة للاستماع والقراءة دون إنترنت", href: "/downloads" },
-  // The website's "الأطفال" (حديقة القرآن للأطفال) comes back here, with its href, once the screen exists.
+  { label: "الأطفال", icon: Trees, description: "حديقة القرآن للأطفال", href: "/kids" },
 ];
 
 export interface SectionGroup {
@@ -84,6 +85,6 @@ export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "يومك", labels: ["المواقيت", "الأذكار", "الأحاديث", "التقويم"] },
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "صوتيات", labels: ["ابتهالات", "تواشيح", "أدعية", "أذان"] },
-  { title: "للعائلة", labels: ["القصص"] },
+  { title: "للعائلة", labels: ["القصص", "الأطفال"] },
   { title: "على جهازك", labels: ["المحفوظات"] },
 ];

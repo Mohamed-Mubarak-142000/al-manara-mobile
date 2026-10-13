@@ -33,6 +33,8 @@ const HIDDEN = new Set([
   "tasmee",
   // Has its own play/pause pill in the page footer (AyahAudioPill).
   "mushaf",
+  // The kids garden has its own bottom tabs and companion there, and play buttons on every page.
+  "kids",
 ]);
 
 export function miniPlayerPlacement(segments: readonly string[]): MiniPlayerPlacement {
