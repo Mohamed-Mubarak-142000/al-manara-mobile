@@ -112,7 +112,7 @@ export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "على جهازك", labels: ["المحفوظات"] },
 ];
 
-/** Home's flat grid: the sections most people open, three rows of three; the rest are a tap away. */
+/** Home's flat grid: the sections most people open, four rows of three; the rest are a tap away. */
 export const HOME_SECTIONS: readonly string[] = [
   "المصحف",
   "الاستماع",
@@ -121,8 +121,11 @@ export const HOME_SECTIONS: readonly string[] = [
   "السبحة",
   "الرقية الشرعية",
   "الأحاديث",
-  "الإذاعة",
+  "الأربعون النووية",
   "الختمة",
+  "الإذاعة",
+  "أدعية",
+  "التقويم",
 ];
 
 /** The built sections for these labels, in order. */
