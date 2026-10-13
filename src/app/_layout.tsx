@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 
+import { AccountDisabledGate } from "@/features/account/AccountDisabledGate";
 import { useLastReadSync } from "@/features/account/useLastReadSync";
 import { AdhkarToaster } from "@/features/adhkar/AdhkarToaster";
 import { GlobalMiniPlayer } from "@/features/audio/MiniPlayer";
@@ -114,6 +115,7 @@ function RootLayout() {
       <ReadingStreakTracker />
       <GlobalMiniPlayer />
       <AdhkarToaster />
+      <AccountDisabledGate />
     </ThemeProvider>
   );
 }
