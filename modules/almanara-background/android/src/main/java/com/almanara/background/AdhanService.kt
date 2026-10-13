@@ -10,10 +10,12 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaSession
 
 @UnstableApi
 class AdhanService : Service() {
   private var player: ExoPlayer? = null
+  private var session: MediaSession? = null
   private var wake: PowerManager.WakeLock? = null
   private val handler = Handler(Looper.getMainLooper())
 
@@ -64,11 +66,15 @@ class AdhanService : Service() {
             stopSelf()
           }
           override fun onPlayWhenReadyChanged(ready: Boolean, reason: Int) {
-            if (!ready && reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS) stopSelf()
+            // Focus loss, or pause from a headset / Bluetooth button through the session.
+            if (!ready && (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS || reason == Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)) stopSelf()
           }
         })
         setMediaItem(item); prepare(); play()
       }
+      // Without an active session the volume keys move the ringer, not the alarm stream the adhan
+      // plays on, so people could not turn a playing adhan down. A playing session takes the keys.
+      session = MediaSession.Builder(this, player!!).setId("almanara-adhan").build()
       handler.postDelayed({ stopSelf() }, 10 * 60_000L)
     } catch (error: Exception) {
       BackgroundState.prefs(this).edit().putString("scheduleError", "تعذّر تشغيل الأذان: ${error.message}").apply()
@@ -79,6 +85,7 @@ class AdhanService : Service() {
 
   override fun onDestroy() {
     handler.removeCallbacksAndMessages(null)
+    session?.release(); session = null
     player?.release(); player = null
     wake?.let { if (it.isHeld) it.release() }; wake = null
     if (BackgroundState.adhanPlaying) {
