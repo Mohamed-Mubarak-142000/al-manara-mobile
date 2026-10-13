@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ChevronLeft, ChevronRight, ScrollText } from "lucide-react-native";
+import { ArrowLeft, ChevronRight, ScrollText, Sparkles } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { HadithDownloadAllCard, HadithPackButton } from "@/features/hadith/HadithPackControls";
+import { HadithPanel, HadithText } from "@/features/hadith/HadithPanel";
 import { getCategoriesOffline, getHadithOfTheDayOffline } from "@/features/hadith/offlineHadith";
 import { useAsync } from "@/features/hadith/useAsync";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
@@ -20,7 +21,6 @@ export default function HadithIndexScreen() {
   const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
   const gold = useThemeColor("gold-soft");
-  const muted = useThemeColor("fg-muted");
   const accent = useThemeColor("accent");
   const today = planDay();
   const daily = useAsync(today, () => getHadithOfTheDayOffline(today));
@@ -72,25 +72,28 @@ export default function HadithIndexScreen() {
 
       <View className="gap-4 px-4 pt-5">
         {daily.state.status === "ready" && (
-          <View className="gap-3 rounded-3xl border border-gold/40 bg-accent-soft p-5">
-            <Text className="font-sans-bold text-sm text-accent-strong">حديث اليوم</Text>
-            <Text className="font-sans-semibold text-lg leading-9 text-fg" numberOfLines={6}>
-              {daily.state.data.text}
-            </Text>
-            {daily.state.data.attribution ? <Text className="font-sans text-xs text-fg-muted">{daily.state.data.attribution}</Text> : null}
-            <Button
-              size="sm"
-              className="self-start"
-              onPress={() =>
-                daily.state.status === "ready" && router.push({ pathname: "/hadith/[id]", params: { id: daily.state.data.id } })
-              }
-            >
-              اقرأ الشرح
-            </Button>
-          </View>
+          <HadithPanel title="حديث اليوم" icon={Sparkles}>
+            <Text className="mb-3 font-sans-bold text-sm text-accent-strong">{daily.state.data.title}</Text>
+            <HadithText text={daily.state.data.text} numberOfLines={6} />
+            <View className="mt-5 flex-row flex-wrap items-center justify-between gap-3">
+              <Text className="shrink font-sans text-sm text-fg-muted">
+                {daily.state.data.attribution}
+                {daily.state.data.grade ? ` — ${daily.state.data.grade}` : ""}
+              </Text>
+              <Button
+                size="sm"
+                icon={ArrowLeft}
+                onPress={() =>
+                  daily.state.status === "ready" && router.push({ pathname: "/hadith/[id]", params: { id: daily.state.data.id } })
+                }
+              >
+                اقرأ الشرح
+              </Button>
+            </View>
+          </HadithPanel>
         )}
 
-        <Text className="mt-2 font-display-bold text-xl text-fg">الموضوعات</Text>
+        <Text className="mt-4 font-display-bold text-2xl text-primary-strong">الموضوعات</Text>
         {categories.state.status === "loading" ? (
           <StateMessage loading />
         ) : categories.state.status === "error" ? (
@@ -101,31 +104,31 @@ export default function HadithIndexScreen() {
             {topLevel.map((category) => {
               const children = childrenOf(category.id);
               return (
-                <View key={category.id} className="rounded-3xl border border-border bg-surface p-4 shadow-soft">
+                <View key={category.id} className="rounded-4xl border border-border bg-surface p-5 shadow-soft">
                   <View className="flex-row items-center gap-2">
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: category.id, title: category.title } })}
-                      className="flex-1 flex-row items-center justify-between"
+                      className="flex-1 flex-row items-center justify-between gap-3"
                     >
-                      <View className="flex-1">
-                        <Text className="font-display-bold text-base text-fg">{category.title}</Text>
-                        <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(category.count)} حديث</Text>
+                      <Text className="shrink font-sans-bold text-xl leading-9 text-primary-strong">{category.title}</Text>
+                      <View className="rounded-full bg-accent-soft px-3 py-1">
+                        <Text className="font-sans-bold text-sm text-accent-strong">{toArabicDigits(category.count)} حديث</Text>
                       </View>
-                      <ChevronLeft size={18} color={muted} />
                     </Pressable>
                     <HadithPackButton category={category} />
                   </View>
                   {children.length > 0 && (
-                    <View className="mt-3 flex-row flex-wrap gap-2">
+                    <View className="mt-4 flex-row flex-wrap gap-2">
                       {children.map((child) => (
                         <Pressable
                           key={child.id}
                           accessibilityRole="button"
                           onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: child.id, title: child.title } })}
-                          className="rounded-full border border-border bg-bg px-3 py-1.5"
+                          className="flex-row items-center gap-1.5 rounded-full border border-border bg-bg px-3 py-1.5"
                         >
-                          <Text className="font-sans-bold text-xs text-fg">{child.title}</Text>
+                          <Text className="font-sans-bold text-sm text-fg">{child.title}</Text>
+                          <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(child.count)}</Text>
                         </Pressable>
                       ))}
                     </View>

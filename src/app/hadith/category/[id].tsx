@@ -1,15 +1,16 @@
 import { FlashList } from "@shopify/flash-list";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { ArrowLeft, ChevronRight, ScrollText } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { HadithSummary } from "@/core/hadith/api";
+import type { HadithCategory, HadithSummary } from "@/core/hadith/api";
 import { toArabicDigits } from "@/core/text/arabic";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
-import { getCategoryHadithsOffline } from "@/features/hadith/offlineHadith";
+import { getCategoriesOffline, getCategoryHadithsOffline } from "@/features/hadith/offlineHadith";
+import { useAsync } from "@/features/hadith/useAsync";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 type Pages = { id: string; items: HadithSummary[]; page: number; lastPage: number; total: number; failed: boolean };
@@ -20,6 +21,7 @@ export default function HadithCategoryScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
+  const gold = useThemeColor("gold-soft");
   const muted = useThemeColor("fg-muted");
   const primary = useThemeColor("primary");
   const accent = useThemeColor("accent");
@@ -28,6 +30,15 @@ export default function HadithCategoryScreen() {
   const [attempt, setAttempt] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const current = pages?.id === id ? pages : null;
+  // The topic tree (cached, or from the downloaded packs) for the breadcrumb and the sub-topics.
+  const categories = useAsync("categories", async () => {
+    const list = await getCategoriesOffline();
+    return list.length ? list : null;
+  });
+  const all = categories.state.status === "ready" ? categories.state.data : [];
+  const category = all.find((entry) => entry.id === id);
+  const parent = all.find((entry) => entry.id === category?.parentId);
+  const children = all.filter((entry) => entry.parentId === id);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +70,10 @@ export default function HadithCategoryScreen() {
     setAttempt((value) => value + 1);
   }
 
+  function openCategory(target: HadithCategory) {
+    router.push({ pathname: "/hadith/category/[id]", params: { id: target.id, title: target.title } });
+  }
+
   async function loadMore() {
     if (!current || loadingMore || current.page >= current.lastPage) return;
     setLoadingMore(true);
@@ -77,7 +92,8 @@ export default function HadithCategoryScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={accent} colors={[accent]} />}
         contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
         ListHeaderComponent={
-          <View className="mb-4 rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
+          <View className="mb-5 gap-5">
+            <View className="rounded-b-4xl bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="رجوع"
@@ -87,26 +103,68 @@ export default function HadithCategoryScreen() {
             >
               <ChevronRight size={26} color={heroFg} />
             </Pressable>
-            <Text className="font-sans-bold text-sm text-gold-soft">الأحاديث</Text>
-            <Text className="mt-2 font-display-bold text-2xl leading-10 text-hero-fg">{title ?? "الموضوع"}</Text>
+            <View className="flex-row items-center gap-2">
+              <ScrollText size={16} color={gold} />
+              <Text className="font-sans-bold text-sm text-gold-soft">{parent?.title ?? "الأحاديث النبوية"}</Text>
+            </View>
+            <Text className="mt-2 font-display-bold text-2xl leading-10 text-hero-fg">{category?.title ?? title ?? "الأحاديث"}</Text>
             {current && !current.failed && (
               <Text className="mt-1 font-sans text-sm text-white/70">{toArabicDigits(current.total)} حديث مع الشرح والفوائد.</Text>
             )}
+            </View>
+            <View className="gap-4 px-4">
+              {/* The website's breadcrumb: الأحاديث / parent / this topic. */}
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Pressable accessibilityRole="link" onPress={() => router.dismissTo("/hadith")}>
+                  <Text className="font-sans-bold text-sm text-primary">الأحاديث</Text>
+                </Pressable>
+                {parent && (
+                  <>
+                    <Text className="font-sans text-sm text-fg-muted">/</Text>
+                    <Pressable accessibilityRole="link" onPress={() => openCategory(parent)}>
+                      <Text className="font-sans-bold text-sm text-primary">{parent.title}</Text>
+                    </Pressable>
+                  </>
+                )}
+                <Text className="font-sans text-sm text-fg-muted">/</Text>
+                <Text className="font-sans text-sm text-fg-muted">{category?.title ?? title}</Text>
+              </View>
+              {children.length > 0 && (
+                <View className="flex-row flex-wrap gap-2">
+                  {children.map((child) => (
+                    <Pressable
+                      key={child.id}
+                      accessibilityRole="button"
+                      onPress={() => openCategory(child)}
+                      className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5"
+                    >
+                      <Text className="font-sans-bold text-sm text-fg">{child.title}</Text>
+                      <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(child.count)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
           </View>
         }
         ListEmptyComponent={
           current?.failed ? <StateMessage message="تعذّر تحميل الأحاديث الآن، حاول بعد قليل." onRetry={retry} /> : <StateMessage loading />
         }
         ListFooterComponent={loadingMore ? <ActivityIndicator className="my-4" color={primary} /> : null}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push({ pathname: "/hadith/[id]", params: { id: item.id, category: title ?? "" } })}
+            onPress={() => router.push({ pathname: "/hadith/[id]", params: { id: item.id, category: category?.title ?? title ?? "" } })}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <View className="mx-4 mb-2.5 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
-              <Text className="flex-1 font-sans-semibold text-sm leading-7 text-fg">{item.title}</Text>
-              <ChevronLeft size={16} color={muted} />
+            <View className="mx-4 mb-3 flex-row items-start gap-4 rounded-3xl border border-border bg-surface p-4">
+              <View className="size-9 items-center justify-center rounded-full bg-accent-soft">
+                <Text className="font-display-bold text-sm text-accent-strong">{toArabicDigits(index + 1)}</Text>
+              </View>
+              <Text className="flex-1 font-sans text-lg leading-9 text-fg">{item.title}</Text>
+              <View className="mt-2.5">
+                <ArrowLeft size={16} color={muted} />
+              </View>
             </View>
           </Pressable>
         )}
