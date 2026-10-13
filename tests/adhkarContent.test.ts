@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { DUAS, DUA_CHAPTERS } from "@/core/adhkar/duasData";
+import { DUAS, DUA_CHAPTERS, duaAudioUrl } from "@/core/adhkar/duasData";
 
 /** The website's scripts/check-adhkar.mjs, so the ported Hisn al-Muslim snapshot keeps its fixes. */
 describe("Hisn al-Muslim content", () => {
@@ -38,5 +38,11 @@ describe("Hisn al-Muslim content", () => {
     expect(find("hisn-69-after-prayer-3").repeat).toBe(1);
     expect(find("hisn-66-after-prayer-0").repeat).toBe(3);
     expect(find("hisn-197-general").text).toBe("وَلَكَ");
+  });
+
+  it("plays each entry's own Hisn al-Muslim recording, shared by split cards", () => {
+    expect(duaAudioUrl(find("hisn-197-general"))).toBe("https://www.hisnmuslim.com/audio/ar/197.mp3");
+    expect(duaAudioUrl(find("hisn-66-after-prayer-0"))).toBe(duaAudioUrl(find("hisn-66-after-prayer-1")));
+    for (const dua of DUAS) expect(duaAudioUrl(dua)).toMatch(/^https:\/\/www\.hisnmuslim\.com\/audio\/ar\/\d+\.mp3$/);
   });
 });

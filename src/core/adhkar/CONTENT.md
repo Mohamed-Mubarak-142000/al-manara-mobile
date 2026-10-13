@@ -19,5 +19,9 @@ Corrections verified against Sunnah.com:
 - Entry 70: includes the source instruction to repeat three times after Fajr/Maghrib.
 - Entries 254, 255 and 258: do not apply a counter to the full explanatory hadith.
 
+Listening streams the source's own human recording of each entry
+(`https://www.hisnmuslim.com/audio/ar/<entry>.mp3`, all 267 present). Split cards of a composite
+entry share that entry's full recording.
+
 Run `node scripts/check-adhkar.mjs` to check coverage and counter/content regressions.
 This documents source provenance, not an independent hadith authentication review.

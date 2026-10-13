@@ -1,13 +1,13 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Bell, BellRing, Check, ChevronRight, ExternalLink, RotateCcw, Share2 } from "lucide-react-native";
+import { Bell, BellRing, Check, ChevronRight, ExternalLink, Pause, RotateCcw, Share2, Volume2 } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
+import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, duaAudioUrl, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { AdhkarCelebration, claimCelebration } from "@/features/adhkar/AdhkarCelebration";
@@ -15,6 +15,7 @@ import { countDhikr, getAdhkarCounts, resetDhikr, useAdhkarCounts } from "@/feat
 import { ChapterPicker } from "@/features/adhkar/ChapterPicker";
 import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
+import { audio, currentTrack, usePlayerValue, type Track } from "@/features/audio/playerStore";
 import { useScaledText } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
@@ -28,6 +29,39 @@ const CATEGORIES: DuaCategory[] = ["morning", "evening", "after-prayer", "sleep"
 function defaultCategory(): DuaCategory {
   const hour = new Date().getHours();
   return hour >= 4 && hour < 15 ? "morning" : "evening";
+}
+
+/** Split cards of one source entry share its recording, so the track is keyed by the entry. */
+function dhikrTrack(dua: Dua): Track {
+  return { id: `dhikr-${dua.id.split("-")[1]}`, title: dua.title, artist: "حصن المسلم", url: duaAudioUrl(dua) };
+}
+
+/** The card's human recording, through the app's player (the mini player shows it); tapped again, pause or resume. */
+function ListenButton({ dua }: { dua: Dua }) {
+  const primary = useThemeColor("primary");
+  const muted = useThemeColor("fg-muted");
+  const track = dhikrTrack(dua);
+  // Just this card's state, so the player's progress ticks don't re-render every card.
+  const listening = usePlayerValue((state) =>
+    currentTrack(state)?.id !== track.id ? null : state.playing ? "playing" : state.buffering ? "loading" : "paused",
+  );
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={listening === "playing" ? "إيقاف الاستماع مؤقتًا" : `استماع إلى ${dua.title}`}
+      onPress={() => (listening ? audio.toggle() : audio.playTrack(track))}
+      hitSlop={10}
+      className="p-1.5"
+    >
+      {listening === "loading" ? (
+        <ActivityIndicator size="small" color={primary} />
+      ) : listening === "playing" ? (
+        <Pause size={16} color={primary} fill={primary} />
+      ) : (
+        <Volume2 size={16} color={listening ? primary : muted} />
+      )}
+    </Pressable>
+  );
 }
 
 function DhikrCard({ dua, count, onCounted }: { dua: Dua; count: number; onCounted: () => void }) {
@@ -87,6 +121,7 @@ function DhikrCard({ dua, count, onCounted }: { dua: Dua; count: number; onCount
             <Text className="shrink font-sans text-xs text-fg-muted underline">{dua.source}</Text>
             <ExternalLink size={12} color={muted} />
           </Pressable>
+          <ListenButton dua={dua} />
           {count > 0 && (
             <Pressable
               accessibilityRole="button"

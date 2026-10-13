@@ -23,6 +23,10 @@ export interface Dua {
 }
 // Local snapshot: reading does not depend on the source API.
 export const DUAS = content as Dua[];
+/** Hisn al-Muslim's own recording (a human reciter) of the card's source entry. */
+export function duaAudioUrl(dua: Dua): string {
+  return `https://www.hisnmuslim.com/audio/ar/${dua.id.split("-")[1]}.mp3`;
+}
 export const DUA_CHAPTERS = Array.from(
   new Map(DUAS.filter((dua) => dua.category === "general").map((dua) => [dua.chapter, dua.title])),
   ([id, title]) => ({ id, title }),
