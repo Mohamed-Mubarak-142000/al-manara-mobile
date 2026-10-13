@@ -67,6 +67,17 @@
       --color-hero: #003e32;
       --color-hero-fg: #fbf8f1;
       --color-danger: #e0526b;
+
+      /* App-only (not synced): the section tiles' icon circles, one deep tone per section, cream icon. */
+      --color-tile-blue: #2c5a9a;
+      --color-tile-teal: #127e78;
+      --color-tile-clay: #b0603a;
+      --color-tile-purple: #6b4c9f;
+      --color-tile-green: #2e8549;
+      --color-tile-gold: #bb8a24;
+      --color-tile-rose: #b4475f;
+      --color-tile-sky: #2a84b8;
+      --color-tile-ink: #fffaf0;
     }
 
     /* The night palette grows out of the reader's night theme: deep emerald ground, warm ivory text. */
@@ -88,6 +99,17 @@
       --color-hero: #012a22;
       --color-hero-fg: #ede6d4;
       --color-danger: #ef7186;
+
+      /* Lifted a step so the circles stay bright on the dark tiles; the icons stay cream. */
+      --color-tile-blue: #3f72b8;
+      --color-tile-teal: #1d978f;
+      --color-tile-clay: #c2714a;
+      --color-tile-purple: #7f62b5;
+      --color-tile-green: #3b9a5a;
+      --color-tile-gold: #c79a35;
+      --color-tile-rose: #c35870;
+      --color-tile-sky: #3994c8;
+      --color-tile-ink: #fffaf0;
     }
   }
 }

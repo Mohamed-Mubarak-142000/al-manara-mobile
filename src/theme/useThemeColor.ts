@@ -18,7 +18,8 @@ export type ThemeColor =
   | "hero-fg"
   | "gold"
   | "gold-soft"
-  | "danger";
+  | "danger"
+  | "tile-ink";
 
 /** A design-system color for props that take a value rather than a className (icons, navigators, SVG). */
 export function useThemeColor(name: ThemeColor): string {

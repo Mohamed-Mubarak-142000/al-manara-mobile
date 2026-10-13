@@ -14,8 +14,8 @@ import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { OfflineNotice } from "@/features/home/OfflineNotice";
 import { SetupPrompt } from "@/features/settings/SetupPrompt";
 import { QuickActions } from "@/features/home/QuickActions";
-import { SectionGrid } from "@/features/home/SectionGrid";
-import { SECTION_GROUPS } from "@/features/home/sections";
+import { SectionTiles } from "@/features/home/SectionGrid";
+import { HOME_SECTIONS, sectionsFor } from "@/features/home/sections";
 import { SponsorCarousel } from "@/features/home/SponsorCard";
 import { SupportersStrip } from "@/features/home/SupportersStrip";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
@@ -31,8 +31,8 @@ function hijriLine(): string | null {
   }
 }
 
-/** Home keeps the everyday groups; every section (رحلتك، صوتيات، للعائلة too) is on the كل الأقسام screen. */
-const HOME_GROUPS = SECTION_GROUPS.slice(0, 2);
+/** Home keeps the most-used sections in one flat grid; every section is on the كل الأقسام screen. */
+const HOME_TILES = sectionsFor(HOME_SECTIONS);
 
 function AllSectionsLink() {
   const primary = useThemeColor("primary");
@@ -108,7 +108,7 @@ export default function HomeScreen() {
       <Section className="mt-6">
         <Text className="font-sans-bold text-sm text-accent-strong">أقسام المنارة</Text>
         <Text className="mb-4 mt-1 font-display-bold text-2xl text-fg">كل ما تحتاجه في يومك</Text>
-        <SectionGrid groups={HOME_GROUPS} />
+        <SectionTiles sections={HOME_TILES} />
         <AllSectionsLink />
       </Section>
 
