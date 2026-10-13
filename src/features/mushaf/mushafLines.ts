@@ -1,3 +1,4 @@
+import { joinSegments } from "@/core/quran/joinSegments";
 import type { TajweedSegment } from "@/core/quran/tajweedApi";
 
 import { getSurahs, mushafStarts } from "./mushaf";
@@ -119,7 +120,8 @@ export function getPageLines(page: number): MushafLine[] {
       const end = /^[٠-٩]+$/.test(text);
       const entry: LineWord = {
         text,
-        tajweed: tajweed ? parseTajweed(tajweed, rules) : null,
+        // Joined like the flowing reader's tajweed (tajweedStore), or Android breaks the word at each colour.
+        tajweed: tajweed ? joinSegments(parseTajweed(tajweed, rules)) : null,
         ayahId: (offset[surah] ?? 0) + ayah,
         surah,
         ayah,

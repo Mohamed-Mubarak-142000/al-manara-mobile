@@ -18,6 +18,12 @@ describe("joinSegments", () => {
     expect(out[3]!.text).toBe("مَٰلِكِ");
   });
 
+  it("joins a madd that opens on a tatweel to the letters on both sides", () => {
+    // Page 1's "ٱلرَّحۡمَٰنِ" in the line data: "رَّحۡمَ" + madd "ـٰ" + "نِ".
+    const out = joinSegments([seg("رَّحۡمَ"), seg("ـٰ", "madda_normal"), seg("نِ")]);
+    expect(out.map((s) => s.text)).toEqual([`رَّحۡمَ${ZWJ}`, `${ZWJ}ـٰ${ZWJ}`, `${ZWJ}نِ`]);
+  });
+
   it("keeps the colours of each segment", () => {
     const out = joinSegments([seg("بِسۡ"), seg("مِ", "ghunnah")]);
     expect(out.map((s) => s.ruleClass)).toEqual([null, "ghunnah"]);

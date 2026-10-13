@@ -18,6 +18,15 @@ describe("mushaf line layout", () => {
     expect(seen).toEqual(ids);
   });
 
+  it("joins the tajweed colours of a word, so Android doesn't break it apart", () => {
+    const zwj = String.fromCodePoint(0x200d);
+    // Page 1's ٱلرَّحۡمَٰنِ: its madd segment opens on a tatweel ("ـٰ").
+    const madd = words(1)
+      .flatMap((word) => word.tajweed ?? [])
+      .find((segment) => segment.ruleClass === "madda_normal" && segment.text.includes("ـ"));
+    expect(madd?.text).toBe(`${zwj}ـٰ${zwj}`);
+  });
+
   it("opens surahs with their frame and basmala", () => {
     const page2 = getPageLines(2);
     expect(page2[0]).toEqual({ kind: "surah", surah: 2 });

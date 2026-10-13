@@ -42,11 +42,12 @@ export function joinSegments(segments: readonly TajweedSegment[]): TajweedSegmen
     if (text) moved.push({ ...segment, text });
   }
 
-  // 2. A joiner on each side of a cut inside a word whose letter before the cut joins forward.
+  // 2. A joiner on each side of a cut inside a word whose letter before the cut joins forward (the next
+  // segment may open on a tatweel, as the madd in "رَّحۡمَ|ـٰ|نِ" does).
   for (let i = 0; i + 1 < moved.length; i += 1) {
     const before = lastLetter(moved[i]!.text);
     const after = moved[i + 1]!.text[0];
-    if (!before || !after || !LETTER.test(after) || RIGHT_JOINING.test(before)) continue;
+    if (!before || !after || !(LETTER.test(after) || after === TATWEEL) || RIGHT_JOINING.test(before)) continue;
     moved[i]!.text += ZWJ;
     moved[i + 1]!.text = ZWJ + moved[i + 1]!.text;
   }
