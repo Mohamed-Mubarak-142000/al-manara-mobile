@@ -14,6 +14,7 @@ import { AYAH_PILL_HEIGHT, AyahAudioPill } from "@/features/mushaf/AyahAudioPill
 import { AyahSheet } from "@/features/mushaf/AyahSheet";
 import { JumpSheet } from "@/features/mushaf/JumpSheet";
 import { ayahIdFromTrackId, hafsPages, pageOfAyahId, type PageSource } from "@/features/mushaf/jump";
+import { MushafFixedPage } from "@/features/mushaf/MushafFixedPage";
 import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
@@ -66,6 +67,11 @@ export default function MushafScreen() {
     [riwayaKey, riwayaState],
   );
   const riwayaLabel = RIWAYAT.find((entry) => entry.key === riwayaKey)?.label ?? "";
+  // Hafs at the normal size (and smaller) is laid out line for line as printed: 15 fixed lines a page,
+  // nothing scrolls. Larger sizes, and the other riwayat (no line layout), flow and scroll instead.
+  const fixedPages = riwayaKey === "hafs" && state.prefs.fontStep <= DEFAULT_FONT_STEP;
+  const [pagerHeight, setPagerHeight] = useState(0);
+  const pagerExtra = useMemo(() => ({ riwaya, fixedPages, pagerHeight }), [riwaya, fixedPages, pagerHeight]);
   // Last-read and bookmarks keep to the Hafs pages (other riwayat number their ayahs differently).
   const isHafs = useRef(riwayaKey === "hafs");
   useEffect(() => {
@@ -146,7 +152,7 @@ export default function MushafScreen() {
           ref={listRef}
           key={riwayaKey}
           data={PAGES}
-          extraData={riwaya}
+          extraData={pagerExtra}
           horizontal
           pagingEnabled
           keyExtractor={(item) => String(item)}
@@ -159,7 +165,25 @@ export default function MushafScreen() {
           showsHorizontalScrollIndicator={false}
           viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
           onViewableItemsChanged={onViewableItemsChanged}
-          renderItem={({ item }) => (
+          onLayout={(event) => setPagerHeight(event.nativeEvent.layout.height)}
+          renderItem={({ item }) =>
+            fixedPages ? (
+              pagerHeight === 0 ? (
+                <View style={{ width }} />
+              ) : (
+                <MushafFixedPage
+                  page={item}
+                  width={width}
+                  height={pagerHeight}
+                  theme={state.prefs.theme}
+                  selected={selected?.id ?? null}
+                  playingId={playingId}
+                  tajweed={state.prefs.tajweed}
+                  onTap={toggleChrome}
+                  onAyahLongPress={openAyah}
+                />
+              )
+            ) : (
             <MushafPageView
               page={item}
               width={width}
@@ -174,7 +198,8 @@ export default function MushafScreen() {
               onTap={toggleChrome}
               onAyahLongPress={openAyah}
             />
-          )}
+            )
+          }
         />
       )}
 

@@ -8,14 +8,15 @@ export type ReaderTheme = "light" | "sepia" | "night" | "emerald" | "dusk";
 /** The website reader's three themes (MushafReader.tsx THEMES), as plain values. */
 export const READER_THEMES: Record<
   ReaderTheme,
-  { label: string; shell: string; page: string; ink: string; frame: string; accent: string }
+  // jalala: Allah's name on the printed-style page, red like the mushafs it mirrors.
+  { label: string; shell: string; page: string; ink: string; frame: string; accent: string; jalala: string }
 > = {
-  light: { label: "فاتح", shell: "#fbf8f1", page: "#fffdf7", ink: "#1b2a24", frame: "#f1e7cc", accent: "#9c7a26" },
-  sepia: { label: "دافئ", shell: "#eadcb9", page: "#f6ead0", ink: "#3b2f1b", frame: "#e2cf9e", accent: "#8a6a1f" },
-  night: { label: "ليلي", shell: "#06110d", page: "#0d1d18", ink: "#ebe5d1", frame: "#132b24", accent: "#d9b35a" },
+  light: { label: "فاتح", shell: "#fbf8f1", page: "#fffdf7", ink: "#1b2a24", frame: "#f1e7cc", accent: "#9c7a26", jalala: "#c62828" },
+  sepia: { label: "دافئ", shell: "#eadcb9", page: "#f6ead0", ink: "#3b2f1b", frame: "#e2cf9e", accent: "#8a6a1f", jalala: "#b3261e" },
+  night: { label: "ليلي", shell: "#06110d", page: "#0d1d18", ink: "#ebe5d1", frame: "#132b24", accent: "#d9b35a", jalala: "#f07e72" },
   // Supporter pack themes (cosmetic only).
-  emerald: { label: "زمردي", shell: "#e3eee9", page: "#f2f8f5", ink: "#12302a", frame: "#cfe3da", accent: "#005544" },
-  dusk: { label: "غسقي", shell: "#16121f", page: "#1e1a2b", ink: "#ece6f5", frame: "#2b2540", accent: "#d9b35a" },
+  emerald: { label: "زمردي", shell: "#e3eee9", page: "#f2f8f5", ink: "#12302a", frame: "#cfe3da", accent: "#005544", jalala: "#c62828" },
+  dusk: { label: "غسقي", shell: "#16121f", page: "#1e1a2b", ink: "#ece6f5", frame: "#2b2540", accent: "#d9b35a", jalala: "#f08a7e" },
 };
 
 /** Page colours that come with the supporter pack. */
