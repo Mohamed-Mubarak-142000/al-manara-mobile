@@ -9,6 +9,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount } from "@/features/account/accountStore";
+import { KhatmDuas } from "@/features/khatmDua/KhatmDuas";
 import { CreateKhatmaForm, formatDay } from "@/features/khatma/CreateKhatmaForm";
 import { khatma, reloadKhatma, useKhatma } from "@/features/khatma/khatmaStore";
 import { SyncBadge } from "@/features/khatma/SyncBadge";
@@ -174,6 +175,15 @@ export default function KhatmaScreen() {
               >
                 {confirmArchive ? "اضغط مرة أخرى لتأكيد إنهاء الختمة" : "إنهاء هذه الختمة والبدء من جديد"}
               </Button>
+            )}
+            {/* Last, so the new-khatma button above stays in reach. */}
+            {view.status === "completed" && view.fullMushaf && (
+              <View className="mt-2 gap-4">
+                <Text accessibilityRole="header" className="font-display-bold text-2xl text-fg">
+                  دعاء ختم القرآن
+                </Text>
+                <KhatmDuas />
+              </View>
             )}
           </>
         )}

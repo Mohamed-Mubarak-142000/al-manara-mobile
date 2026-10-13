@@ -203,6 +203,7 @@ describe("website links", () => {
     expect(route("/kids/rewards?tab=shop")).toBe("/kids/rewards?tab=shop");
     expect(route("/tasbih")).toBe("/tasbih");
     expect(route("/ruqyah")).toBe("/ruqyah");
+    expect(route("/khatm-dua")).toBe("/khatm-dua");
     expect(route("/admin")).toBe("/");
   });
 });

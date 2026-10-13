@@ -22,6 +22,11 @@ export interface KhatmaPortion {
 
 export interface KhatmaView {
   status: "active" | "completed";
+  /**
+   * The whole mushaf (the website's scope "المصحف كاملًا"). The app only creates those; a range
+   * khatma made on the website carries start_ayah/end_ayah on its row.
+   */
+  fullMushaf: boolean;
   amount: string;
   daysLabel: string;
   readsToday: boolean;
@@ -35,6 +40,12 @@ export interface KhatmaView {
   streak: number;
   finished: number;
   portion: KhatmaPortion | null;
+}
+
+/** Not in the app's row type: the website's range columns, read when the account row has them. */
+function isFullMushaf(row: object): boolean {
+  const range = row as { start_ayah?: number | null; end_ayah?: number | null };
+  return (range.start_ayah ?? 0) === 0 && (range.end_ayah ?? TOTAL_AYAHS) === TOTAL_AYAHS;
 }
 
 export function buildKhatmaView(
@@ -56,6 +67,7 @@ export function buildKhatmaView(
 
   return {
     status: khatma.status === "completed" ? "completed" : "active",
+    fullMushaf: isFullMushaf(khatma),
     amount: `${amountLabel(khatma.unit, khatma.per_session)}${juzHint ? ` (${juzHint})` : ""}`,
     daysLabel: daysLabel(khatma.days),
     readsToday: khatma.days.includes(weekday(today)),

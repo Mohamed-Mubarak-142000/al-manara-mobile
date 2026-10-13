@@ -95,6 +95,11 @@
             {
               "scheme": "https",
               "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/khatm-dua"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
               "pathPrefix": "/ibtihalat"
             },
             {

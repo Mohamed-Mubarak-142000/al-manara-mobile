@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useKeepAwake } from "expo-keep-awake";
-import { ALargeSmall, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, Lock, Minus, Plus } from "lucide-react-native";
+import { ALargeSmall, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, HandHeart, Lock, Minus, Plus } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -252,6 +252,21 @@ export default function MushafScreen() {
           >
             <ALargeSmall size={24} color={theme.ink} />
           </Pressable>
+        </Animated.View>
+      )}
+
+      {/* The khatm: on the last page, with the reader chrome, so the fixed 15-line page is left untouched. */}
+      {chrome && page === TOTAL_PAGES && (
+        <Animated.View
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(180)}
+          pointerEvents="box-none"
+          className="absolute inset-x-0 items-center"
+          style={{ bottom: insets.bottom + footerSpace + 16 }}
+        >
+          <Button variant="gold" icon={HandHeart} onPress={() => router.push("/khatm-dua")}>
+            دعاء ختم القرآن
+          </Button>
         </Animated.View>
       )}
 
