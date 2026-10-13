@@ -34,6 +34,9 @@ export function websitePathToAppRoute(pathname: string, search: URLSearchParams)
     case "stories":
     case "exams":
       return second ? `/${first}/${encodeURIComponent(second)}` : `/${first}`;
+    case "nawawi":
+      // /nawawi, /nawawi/<number> and /nawawi/exam/<part>: the app's routes mirror the website's.
+      return `/${parts.map(encodeURIComponent).join("/")}`;
     case "kids": {
       // The kids routes mirror the website's, query and all (/kids/rewards?tab=shop, surah-match?surah=…).
       const query = search.toString();

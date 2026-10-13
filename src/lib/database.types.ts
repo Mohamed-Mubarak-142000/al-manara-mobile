@@ -318,6 +318,31 @@ export type CertificateRow = {
   issued_at: Timestamp;
   revoked_at: Timestamp | null;
 };
+export type NawawiAttemptRow = {
+  id: string;
+  learner_id: string;
+  /** 1–4: a part's exam; 5: the final exam. */
+  part: number;
+  questions: unknown;
+  answers: unknown;
+  score: number | null;
+  total: number;
+  status: ExamStatus;
+  started_at: Timestamp;
+  expires_at: Timestamp;
+  submitted_at: Timestamp | null;
+};
+export type NawawiCertificateRow = {
+  id: string;
+  learner_id: string;
+  holder_name: string;
+  score: number;
+  total: number;
+  attempt_id: string | null;
+  verification_code: string;
+  issued_at: Timestamp;
+  revoked_at: Timestamp | null;
+};
 
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -418,6 +443,12 @@ export type Database = {
         Optional<KhatmaRow, "id" | "mode" | "target_day" | "days" | "position" | "status" | "created_at" | "completed_at">
       >;
       khatma_log: TableDef<KhatmaLogRow, Optional<KhatmaLogRow, "done_at">>;
+      nawawi_attempts: TableDef<
+        NawawiAttemptRow,
+        Optional<NawawiAttemptRow, "id" | "answers" | "score" | "status" | "started_at" | "submitted_at">
+      >;
+      nawawi_answer_keys: TableDef<ExamAnswerKeyRow, ExamAnswerKeyRow>;
+      nawawi_certificates: TableDef<NawawiCertificateRow, Optional<NawawiCertificateRow, "id" | "attempt_id" | "issued_at" | "revoked_at">>;
     };
     Views: {
       public_supporters: { Row: PublicSupporterRow; Relationships: [] };
@@ -428,6 +459,10 @@ export type Database = {
       verify_certificate: {
         Args: { code: string };
         Returns: { holder_name: string; juz: number; score: number; total: number; issued_at: Timestamp; revoked: boolean }[];
+      };
+      verify_nawawi_certificate: {
+        Args: { code: string };
+        Returns: { holder_name: string; score: number; total: number; issued_at: Timestamp; revoked: boolean }[];
       };
     };
     Enums: { app_role: AppRole };

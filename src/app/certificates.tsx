@@ -7,8 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toArabicDigits } from "@/core/text/arabic";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount } from "@/features/account/accountStore";
+import { certificateSubject } from "@/features/exams/CertificateCard";
 import { getMyCertificates } from "@/features/exams/examData";
-import { juzOrdinal } from "@/features/exams/juzNames";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -69,7 +69,7 @@ export default function CertificatesScreen() {
             <ChevronRight size={26} color={heroFg} />
           </Pressable>
           <Text className="font-display-bold text-3xl text-hero-fg">شهاداتي</Text>
-          <Text className="mt-1 font-sans text-sm text-white/70">شهادات الأجزاء التي أتممتها، موثّقة برمز تحقق.</Text>
+          <Text className="mt-1 font-sans text-sm text-white/70">شهادات الأجزاء والأربعين النووية، موثّقة برمز تحقق.</Text>
         </View>
       }
       ListEmptyComponent={
@@ -86,7 +86,11 @@ export default function CertificatesScreen() {
         ) : list === null ? (
           <StateMessage message="تعذّر تحميل شهاداتك الآن، حاول بعد قليل." onRetry={retry} />
         ) : (
-          <StateMessage message="لا توجد شهادات بعد. اجتز اختبار أي جزء لتحصل على شهادته." />
+          <StateMessage
+            message="لا توجد شهادات بعد. اجتز اختبار أي جزء، أو أتمّ الأربعين النووية، لتحصل على أول شهادة."
+            actionLabel="الأربعون النووية"
+            onAction={() => router.push("/nawawi")}
+          />
         )
       }
       renderItem={({ item }) => (
@@ -98,7 +102,7 @@ export default function CertificatesScreen() {
           <View className="mx-4 mb-2.5 flex-row items-center gap-3 rounded-2xl border border-gold/40 bg-accent-soft px-4 py-3">
             <Award size={26} color={gold} />
             <View className="flex-1">
-              <Text className="font-display-bold text-base text-fg">الجزء {juzOrdinal(item.juz)}</Text>
+              <Text className="font-display-bold text-base text-fg">{certificateSubject(item.juz)}</Text>
               <Text className="font-sans text-xs text-fg-muted">
                 {item.holder_name} · {toArabicDigits(item.score)}/{toArabicDigits(item.total)}
               </Text>

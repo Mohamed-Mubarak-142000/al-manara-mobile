@@ -204,6 +204,9 @@ describe("website links", () => {
     expect(route("/tasbih")).toBe("/tasbih");
     expect(route("/ruqyah")).toBe("/ruqyah");
     expect(route("/khatm-dua")).toBe("/khatm-dua");
+    expect(route("/nawawi")).toBe("/nawawi");
+    expect(route("/nawawi/12")).toBe("/nawawi/12");
+    expect(route("/nawawi/exam/final")).toBe("/nawawi/exam/final");
     expect(route("/admin")).toBe("/");
   });
 });

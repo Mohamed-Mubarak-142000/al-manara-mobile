@@ -108,18 +108,42 @@ export const exams = {
   },
 };
 
-/** The account's certificates; `null` when they could not be loaded (offline, server error), [] when there are none. */
-export async function getMyCertificates(learnerIds: string[]) {
+export interface MyCertificate {
+  /** The juz, or null for the Forty Nawawi certificate. */
+  juz: number | null;
+  verification_code: string;
+  holder_name: string;
+  score: number;
+  total: number;
+  issued_at: string;
+  learner_id: string;
+}
+
+/**
+ * The account's certificates, the Forty Nawawi ones first then the juz ones, newest first (the
+ * website's certificates/mine); `null` when they could not be loaded (offline, server error), [] when
+ * there are none.
+ */
+export async function getMyCertificates(learnerIds: string[]): Promise<MyCertificate[] | null> {
   if (!supabase) return null;
   if (learnerIds.length === 0) return [];
   try {
-    const { data, error } = await supabase
-      .from("certificates")
-      .select("juz, verification_code, holder_name, score, total, issued_at, revoked_at, learner_id")
-      .in("learner_id", learnerIds)
-      .is("revoked_at", null)
-      .order("issued_at", { ascending: false });
-    return error ? null : (data ?? []);
+    const [juz, nawawi] = await Promise.all([
+      supabase
+        .from("certificates")
+        .select("juz, verification_code, holder_name, score, total, issued_at, learner_id")
+        .in("learner_id", learnerIds)
+        .is("revoked_at", null)
+        .order("issued_at", { ascending: false }),
+      supabase
+        .from("nawawi_certificates")
+        .select("verification_code, holder_name, score, total, issued_at, learner_id")
+        .in("learner_id", learnerIds)
+        .is("revoked_at", null),
+    ]);
+    if (juz.error) return null;
+    // A failed Nawawi read alone still shows the juz certificates.
+    return [...(nawawi.data ?? []).map((row) => ({ ...row, juz: null })), ...(juz.data ?? [])];
   } catch {
     return null;
   }

@@ -3,13 +3,15 @@ import { forwardRef } from "react";
 import { Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
+import { CERTIFICATE_QUOTE } from "@/core/nawawi/nawawiData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Divider } from "@/components/ui/Ornament";
 
 import { juzOrdinal } from "./juzNames";
 
 export interface CertificateData {
-  juz: number;
+  /** The juz, or null for the Forty Nawawi certificate. */
+  juz: number | null;
   holder_name: string;
   score: number;
   total: number;
@@ -31,11 +33,38 @@ function formatDate(iso: string, calendar: "gregory" | "islamic-umalqura"): stri
   }
 }
 
+/** "الجزء الأول" or "الأربعون النووية": what a certificate is for, in lists and titles. */
+export function certificateSubject(juz: number | null): string {
+  return juz === null ? "الأربعون النووية" : `الجزء ${juzOrdinal(juz)}`;
+}
+
+/** The wording that differs between a juz certificate and the Nawawi one (the website's courseText). */
+function courseText({ juz, score, total }: CertificateData) {
+  const result = `بدرجة ${toArabicDigits(score)} من ${toArabicDigits(total)}`;
+  if (juz === null) {
+    return {
+      title: "شهادة اجتياز اختبار",
+      badge: "الأربعون النووية" as string | null,
+      body: `قد اجتاز اختبار الأربعين النووية للإمام يحيى بن شرف النووي رحمه الله، حفظًا وفهمًا، ${result}، سائلين الله أن ينفعه بما تعلّم، وأن يرزقه العمل به.`,
+      quote: CERTIFICATE_QUOTE as { text: string; attribution: string } | null,
+      note: "الشهادة تقيس الحفظ والفهم، وليست إجازة في رواية الحديث" as string | null,
+    };
+  }
+  return {
+    title: "شهادة إتمام",
+    badge: null,
+    body: `قد أتم حفظ الجزء ${juzOrdinal(juz)} من القرآن الكريم، واجتاز اختباره ${result}.`,
+    quote: null,
+    note: null,
+  };
+}
+
 /**
- * The juz certificate in the website's parchment-and-gold design, drawn with fixed colours (not the
+ * The juz or Forty Nawawi certificate in the website's parchment-and-gold design, drawn with fixed colours (not the
  * theme) because it is saved and shared as an image. The QR code opens the website's verification page.
  */
 export const CertificateCard = forwardRef<View, { certificate: CertificateData }>(function CertificateCard({ certificate }, ref) {
+  const text = courseText(certificate);
   const verifyUrl = SITE_URL ? `${SITE_URL}/certificates/${certificate.verification_code}` : certificate.verification_code;
   return (
     <View ref={ref} collapsable={false} style={{ backgroundColor: "#fbf8f1" }} className="rounded-[28px] p-2">
@@ -45,8 +74,15 @@ export const CertificateCard = forwardRef<View, { certificate: CertificateData }
           منصة المنارة لتعليم القرآن الكريم
         </Text>
         <Text className="mt-4 font-display-black text-3xl" style={{ color: "#003e32" }}>
-          شهادة إتمام
+          {text.title}
         </Text>
+        {text.badge && (
+          <View className="mt-2 rounded-full px-4 py-1" style={{ backgroundColor: "#003e32" }}>
+            <Text className="font-display-bold text-base" style={{ color: "#e8d7a6" }}>
+              {text.badge}
+            </Text>
+          </View>
+        )}
         <View className="my-4 w-2/3">
           <Divider />
         </View>
@@ -57,9 +93,17 @@ export const CertificateCard = forwardRef<View, { certificate: CertificateData }
           {certificate.holder_name}
         </Text>
         <Text className="mt-3 text-center font-sans text-base leading-8" style={{ color: "#183d34" }}>
-          قد أتم حفظ الجزء {juzOrdinal(certificate.juz)} من القرآن الكريم، واجتاز اختباره بدرجة {toArabicDigits(certificate.score)} من{" "}
-          {toArabicDigits(certificate.total)}.
+          {text.body}
         </Text>
+        {text.quote && (
+          // Amiri Quran, one style for the whole saying: no font change inside a word.
+          <Text className="mt-3 text-center font-quran-fallback text-lg leading-9" style={{ color: "#003e32" }}>
+            «{text.quote.text}»{" "}
+            <Text className="font-sans text-xs" style={{ color: "#68766e" }}>
+              — {text.quote.attribution}
+            </Text>
+          </Text>
+        )}
         <Text className="mt-3 font-sans text-xs" style={{ color: "#68766e" }}>
           {formatDate(certificate.issued_at, "islamic-umalqura")} · {formatDate(certificate.issued_at, "gregory")}
         </Text>
@@ -77,6 +121,11 @@ export const CertificateCard = forwardRef<View, { certificate: CertificateData }
             <Text className="font-sans text-[10px]" style={{ color: "#68766e" }}>
               امسح الرمز للتحقق من الشهادة
             </Text>
+            {text.note && (
+              <Text className="mt-1 max-w-44 font-sans text-[10px]" style={{ color: "#68766e" }}>
+                {text.note}
+              </Text>
+            )}
           </View>
         </View>
       </View>

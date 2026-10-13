@@ -17,6 +17,7 @@ import {
   Mic,
   MicVocal,
   MoonStar,
+  NotebookText,
   Radio,
   ScrollText,
   ShieldCheck,
@@ -44,6 +45,7 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "الاستماع", icon: Headphones, tone: "purple", description: "تلاوات لأكثر من مئتي قارئ", href: "/listen" },
   { label: "الإذاعة", icon: Radio, tone: "sky", description: "إذاعة القرآن الكريم بث مباشر", href: "/radio" },
   { label: "الأحاديث", icon: ScrollText, tone: "rose", description: "أحاديث نبوية مع شرحها وفوائدها", href: "/hadith" },
+  { label: "الأربعون النووية", icon: NotebookText, tone: "teal", description: "الأحاديث الأربعون بشرحها، باختبار وشهادة", href: "/nawawi" },
   {
     label: "ابتهالات",
     icon: MoonStar,
@@ -103,7 +105,7 @@ export interface SectionGroup {
 /** The "كل الأقسام" screen, one titled grid per group. Every built section appears exactly once. */
 export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "القرآن", labels: ["المصحف", "الاستماع", "الإذاعة", "التسميع"] },
-  { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "الأحاديث", "التقويم"] },
+  { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "الأحاديث", "الأربعون النووية", "التقويم"] },
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "أدعية وابتهالات", labels: ["ابتهالات", "تواشيح", "أدعية", "دعاء ختم القرآن", "الرقية الشرعية", "أذان"] },
   { title: "للعائلة", labels: ["القصص", "الأطفال"] },

@@ -25,13 +25,23 @@ export default function CertificateScreen() {
   const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
-    if (!supabase) return;
-    supabase
-      .from("certificates")
-      .select("juz, holder_name, score, total, issued_at, verification_code, revoked_at")
-      .eq("verification_code", code)
-      .maybeSingle()
-      .then(({ data }) => setCertificate(data && !data.revoked_at ? data : null));
+    const client = supabase;
+    if (!client) return;
+    // A juz certificate, else a Forty Nawawi one (both share the code format), like the website.
+    (async () => {
+      const { data: juz } = await client
+        .from("certificates")
+        .select("juz, holder_name, score, total, issued_at, verification_code, revoked_at")
+        .eq("verification_code", code)
+        .maybeSingle();
+      if (juz) return setCertificate(juz.revoked_at ? null : juz);
+      const { data: nawawi } = await client
+        .from("nawawi_certificates")
+        .select("holder_name, score, total, issued_at, verification_code, revoked_at")
+        .eq("verification_code", code)
+        .maybeSingle();
+      setCertificate(nawawi && !nawawi.revoked_at ? { ...nawawi, juz: null } : null);
+    })().catch(() => setCertificate(null));
   }, [code]);
 
   async function share() {

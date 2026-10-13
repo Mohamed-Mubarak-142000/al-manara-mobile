@@ -100,6 +100,11 @@
             {
               "scheme": "https",
               "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/nawawi"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
               "pathPrefix": "/ibtihalat"
             },
             {
