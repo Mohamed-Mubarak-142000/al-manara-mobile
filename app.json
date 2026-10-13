@@ -90,6 +90,11 @@
             {
               "scheme": "https",
               "host": "eslami-platform.vercel.app",
+              "pathPrefix": "/ruqyah"
+            },
+            {
+              "scheme": "https",
+              "host": "eslami-platform.vercel.app",
               "pathPrefix": "/ibtihalat"
             },
             {

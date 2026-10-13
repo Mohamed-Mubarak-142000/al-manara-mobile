@@ -43,6 +43,7 @@ export function websitePathToAppRoute(pathname: string, search: URLSearchParams)
     case "calendar":
     case "adhkar":
     case "tasbih":
+    case "ruqyah":
     case "khatma":
     case "plan":
     case "tasmee":
