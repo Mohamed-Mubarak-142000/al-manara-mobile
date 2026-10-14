@@ -11,7 +11,8 @@ import { useReaderState } from "./readerPrefs";
 /** "Continue where you stopped" — shown only once the user has read something. */
 export function ContinueReadingCard() {
   const { lastRead } = useReaderState();
-  const gold = useThemeColor("gold-soft");
+  const primary = useThemeColor("primary");
+  const muted = useThemeColor("fg-muted");
   if (!lastRead) return null;
 
   return (
@@ -20,18 +21,18 @@ export function ContinueReadingCard() {
       onPress={() => router.push({ pathname: "/mushaf", params: { page: String(lastRead.page) } })}
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
-      <View className="flex-row items-center gap-3 rounded-3xl bg-hero p-4 shadow-lift">
-        <View className="size-12 items-center justify-center rounded-2xl bg-white/10">
-          <BookOpenText size={24} color={gold} />
+      <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
+        <View className="size-12 items-center justify-center rounded-2xl bg-primary-soft">
+          <BookOpenText size={24} color={primary} />
         </View>
         <View className="flex-1">
-          <Text className="font-sans-bold text-xs text-gold-soft">تابع القراءة</Text>
-          <Text className="font-display-bold text-base text-hero-fg">
+          <Text className="font-sans-bold text-xs text-primary">تابع القراءة</Text>
+          <Text className="font-sans-bold text-base text-fg">
             سورة {getSurah(lastRead.surah)?.name} · الآية {toArabicDigits(lastRead.ayah)}
           </Text>
-          <Text className="font-sans text-xs text-white/60">صفحة {toArabicDigits(lastRead.page)}</Text>
+          <Text className="font-sans text-xs text-fg-muted">صفحة {toArabicDigits(lastRead.page)}</Text>
         </View>
-        <ChevronLeft size={20} color={gold} />
+        <ChevronLeft size={20} color={muted} />
       </View>
     </Pressable>
   );

@@ -22,12 +22,15 @@ export function NawawiResult({ result, part }: { result: SubmitResult; part: num
   const passed = result.status === "passed";
   const percent = result.total ? Math.round((result.score / result.total) * 100) : 0;
   const danger = useThemeColor("danger");
+  const night = useThemeColor("emerald-night");
   return (
-    <View className={`items-center rounded-[32px] p-6 ${passed ? "bg-hero" : "border border-border bg-surface"}`}>
+    <View
+      className={`items-center rounded-3xl border p-6 ${passed ? "border-primary/30 bg-primary-soft" : "border-border bg-surface shadow-card"}`}
+    >
       <View className={`size-20 items-center justify-center rounded-full ${passed ? "bg-gold" : "bg-danger/15"}`}>
-        {passed ? <Award size={40} color="#012a22" /> : <X size={40} color={danger} />}
+        {passed ? <Award size={40} color={night} /> : <X size={40} color={danger} />}
       </View>
-      <Text className={`mt-5 text-center font-display-bold text-2xl ${passed ? "text-hero-fg" : "text-fg"}`}>
+      <Text className={`mt-5 text-center font-sans-bold text-2xl text-fg`}>
         {passed
           ? part === FINAL_PART
             ? "مبارك! أتممت الأربعين النووية"
@@ -36,7 +39,7 @@ export function NawawiResult({ result, part }: { result: SubmitResult; part: num
             ? "انتهى وقت الاختبار"
             : "لم تبلغ درجة النجاح هذه المرة"}
       </Text>
-      <Text className={`mt-2 text-center font-sans text-base ${passed ? "text-white/80" : "text-fg-muted"}`}>
+      <Text className={`mt-2 text-center font-sans text-base text-fg-muted`}>
         درجتك {toArabicDigits(result.score)} من {toArabicDigits(result.total)} ({toArabicDigits(percent)}٪) — درجة النجاح{" "}
         {toArabicDigits(result.passPercent)}٪
       </Text>
@@ -63,7 +66,7 @@ export function NawawiResult({ result, part }: { result: SubmitResult; part: num
           </Button>
         )}
         <Button
-          variant={passed ? "light" : "primary"}
+          variant={passed ? "secondary" : "primary"}
           icon={BookOpen}
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/nawawi"))}
         >
@@ -125,7 +128,7 @@ export function NawawiExamRunner({ attempt, onDone }: { attempt: ActiveNawawiAtt
         </Text>
         <View className={`flex-row items-center gap-1.5 rounded-full px-3 py-1 ${left < 120 ? "bg-danger/15" : "bg-primary-soft"}`}>
           <Clock size={14} color={left < 120 ? danger : primary} />
-          <Text className={`font-display-bold text-sm ${left < 120 ? "text-danger" : "text-primary"}`}>{formatDuration(left)}</Text>
+          <Text className={`font-sans-bold text-sm ${left < 120 ? "text-danger" : "text-primary"}`}>{formatDuration(left)}</Text>
         </View>
       </View>
       <View className="px-4 pt-2">
@@ -134,7 +137,7 @@ export function NawawiExamRunner({ attempt, onDone }: { attempt: ActiveNawawiAtt
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text className="font-sans-bold text-base text-accent-strong">{QUESTION_TITLES[question.type]}</Text>
-        <View className="rounded-3xl border border-gold/30 bg-surface p-5">
+        <View className="rounded-3xl border border-border bg-surface p-5 shadow-card">
           {/* Amiri Quran: the hadith text has Arabic commas, which the Hafs face draws as dotted circles. */}
           <Text className="text-center font-quran-fallback text-fg" style={promptText}>
             «{question.prompt}»
@@ -152,7 +155,7 @@ export function NawawiExamRunner({ attempt, onDone }: { attempt: ActiveNawawiAtt
                 Haptics.selectionAsync().catch(() => {});
                 setAnswers((current) => current.map((answer, position) => (position === index ? optionIndex : answer)));
               }}
-              className={`rounded-2xl border-2 p-4 ${chosen ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+              className={`rounded-2xl border-[1.5px] p-4 ${chosen ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
             >
               <Text
                 className={`${question.type === "narrator" ? "font-sans-bold text-base" : "font-quran-fallback text-xl leading-10"} ${chosen ? "text-primary" : "text-fg"}`}
@@ -170,11 +173,11 @@ export function NawawiExamRunner({ attempt, onDone }: { attempt: ActiveNawawiAtt
               accessibilityLabel={`السؤال ${position + 1}${answers[position]! >= 0 ? " (تمت الإجابة)" : ""}`}
               onPress={() => setIndex(position)}
               className={`size-9 items-center justify-center rounded-xl ${
-                position === index ? "bg-hero" : answers[position]! >= 0 ? "bg-primary-soft" : "border border-border bg-surface"
+                position === index ? "bg-primary" : answers[position]! >= 0 ? "bg-primary-soft" : "border border-border bg-surface"
               }`}
             >
               <Text
-                className={`font-sans-bold text-sm ${position === index ? "text-hero-fg" : answers[position]! >= 0 ? "text-primary" : "text-fg-muted"}`}
+                className={`font-sans-bold text-sm ${position === index ? "text-on-primary" : answers[position]! >= 0 ? "text-primary" : "text-fg-muted"}`}
               >
                 {toArabicDigits(position + 1)}
               </Text>
@@ -191,7 +194,7 @@ export function NawawiExamRunner({ attempt, onDone }: { attempt: ActiveNawawiAtt
           </Text>
         )}
         <View className="flex-row items-center gap-3">
-          <Button variant="outline" icon={ChevronRight} disabled={index === 0} onPress={() => setIndex(index - 1)}>
+          <Button variant="secondary" icon={ChevronRight} disabled={index === 0} onPress={() => setIndex(index - 1)}>
             السابق
           </Button>
           <View className="flex-1" />

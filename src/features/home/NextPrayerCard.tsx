@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { MapPin } from "lucide-react-native";
 import { Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
@@ -15,29 +16,38 @@ function countdown(ms: number): string {
   return toArabicDigits(`${pad2(Math.floor(total / 3600))}:${pad2(Math.floor((total % 3600) / 60))}:${pad2(total % 60)}`);
 }
 
-/** The website's hero next-prayer card: a gold ring filling up towards the next prayer, with a live countdown. */
+/**
+ * The next prayer, as Home's emerald accent card in the page gutter: a gold ring filling up towards the
+ * next prayer, with a live countdown.
+ */
 export function NextPrayerCard() {
   const { location, now, state } = usePrayerDay();
   const gold = useThemeColor("gold");
   const goldSoft = useThemeColor("gold-soft");
+  // The brand's emerald in both themes, like the daily-hadith banner.
+  const deep = useThemeColor("emerald-deep");
+  const night = useThemeColor("emerald-night");
   const span = state.status === "ready" ? getPrayerWindow(state.day.times, now) : null;
   const progress = span
     ? Math.min(1, Math.max(0, (now.getTime() - span.previous.at.getTime()) / (span.next.at.getTime() - span.previous.at.getTime())))
     : 0;
 
   return (
-    <View className="rounded-[32px] border border-white/15 bg-white/10 p-5">
+    <View className="overflow-hidden rounded-4xl p-5">
+      <LinearGradient colors={[deep, night]} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", inset: 0 }} />
+      <View className="absolute -inset-e-12 -top-14 size-40 rounded-full bg-gold/10" />
+
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-1.5">
           <MapPin size={14} color={goldSoft} />
           <Text className="font-sans-bold text-xs text-gold-soft">{location.label}</Text>
         </View>
-        <Text className="font-display-bold text-xl text-white" style={{ fontVariant: ["tabular-nums"] }}>
+        <Text className="font-sans-bold text-xl text-white" style={{ fontVariant: ["tabular-nums"] }}>
           {toArabicDigits(`${pad2(now.getHours() % 12 || 12)}:${pad2(now.getMinutes())}`)}
         </Text>
       </View>
 
-      <View className="mt-4 flex-row items-center gap-4 rounded-3xl bg-emerald-night/60 p-4">
+      <View className="mt-4 flex-row items-center gap-4 rounded-3xl bg-white/5 p-4">
         <View className="size-24">
           <Svg viewBox="0 0 100 100" width="100%" height="100%" style={{ transform: [{ rotate: "-90deg" }] }}>
             <Circle cx="50" cy="50" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={7} />
@@ -54,14 +64,14 @@ export function NextPrayerCard() {
             />
           </Svg>
           <View className="absolute inset-0 items-center justify-center">
-            <Text className="font-display-bold text-lg text-white">{span ? span.next.label : "…"}</Text>
+            <Text className="font-sans-bold text-lg text-white">{span ? span.next.label : "…"}</Text>
           </View>
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-xs text-white/60">الصلاة القادمة</Text>
           {state.status === "ready" && span ? (
             <>
-              <Text className="mt-0.5 font-display-bold text-2xl text-white">
+              <Text className="mt-0.5 font-sans-bold text-2xl text-white">
                 {span.next.label}{" "}
                 <Text className="text-base text-gold-soft">{toArabicDigits(formatPrayerClock(state.day.times[span.next.key]))}</Text>
               </Text>

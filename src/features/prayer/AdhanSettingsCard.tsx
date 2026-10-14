@@ -50,13 +50,13 @@ export function AdhanSettingsCard() {
   const track = { false: border, true: primary };
 
   return (
-    <View className="mt-5 rounded-3xl border border-border bg-surface p-4 shadow-soft">
+    <View className="mt-5 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-3">
         <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
           {settings.enabled ? <Bell size={20} color={primary} /> : <BellOff size={20} color={primary} />}
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">تنبيه الأذان</Text>
+          <Text className="font-sans-bold text-base text-fg">تنبيه الأذان</Text>
           <Text className="font-sans text-xs text-fg-muted">إشعار عند دخول وقت كل صلاة، حتى والتطبيق مغلق.</Text>
         </View>
         <Switch disabled={busy} value={settings.enabled} onValueChange={toggleEnabled} trackColor={track} thumbColor={surface} />
@@ -64,9 +64,7 @@ export function AdhanSettingsCard() {
 
       {denied && (
         <Pressable onPress={() => Linking.openSettings()} className="mt-3 rounded-2xl bg-accent-soft p-3">
-          <Text className="font-sans text-sm text-accent-strong">
-            اسمح للمنارة بالإشعارات من إعدادات الجهاز، ثم فعّل الأذان مرة أخرى.
-          </Text>
+          <Text className="font-sans text-sm text-accent-strong">اسمح للمنارة بالإشعارات من إعدادات الجهاز، ثم فعّل الأذان مرة أخرى.</Text>
         </Pressable>
       )}
 
@@ -79,7 +77,9 @@ export function AdhanSettingsCard() {
               }}
               className="mt-3 rounded-2xl bg-accent-soft p-3"
             >
-              <Text className="font-sans text-sm text-accent-strong">الأذان يعمل، وقد يتأخر دقائق قليلة. اضغط للسماح بالمنبهات ليصل في وقته بالضبط.</Text>
+              <Text className="font-sans text-sm text-accent-strong">
+                الأذان يعمل، وقد يتأخر دقائق قليلة. اضغط للسماح بالمنبهات ليصل في وقته بالضبط.
+              </Text>
             </Pressable>
           )}
           <BackgroundAccessHint />
@@ -105,7 +105,7 @@ export function AdhanSettingsCard() {
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push("/adhan-voice")}
-            className="mt-3 flex-row items-center justify-between rounded-2xl bg-bg px-4 py-3"
+            className="mt-3 flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3"
           >
             <View className="flex-1">
               <Text className="font-sans-bold text-sm text-fg">صوت الأذان</Text>
@@ -124,7 +124,7 @@ export function AdhanSettingsCard() {
                   key={minutes}
                   accessibilityRole="button"
                   onPress={() => writeAdhanSettings({ reminderMinutes: minutes })}
-                  className={`rounded-full border px-4 py-1.5 ${active ? "border-primary bg-primary" : "border-border bg-bg"}`}
+                  className={`rounded-full border px-4 py-1.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
                 >
                   <Text className={`font-sans-bold text-xs ${active ? "text-on-primary" : "text-fg"}`}>
                     {minutes === 0 ? "بدون" : `${toArabicDigits(minutes)} د`}

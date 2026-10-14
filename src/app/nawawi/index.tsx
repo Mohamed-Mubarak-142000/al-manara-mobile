@@ -1,13 +1,15 @@
 import { router, useFocusEffect } from "expo-router";
-import { Award, CheckCircle2, ChevronRight, GraduationCap, Lock, NotebookText, PlayCircle } from "lucide-react-native";
+import { Award, CheckCircle2, GraduationCap, Lock, NotebookText, PlayCircle } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FINAL_PART, NAWAWI, NAWAWI_PARTS, partSlug, partTitle, type NawawiHadith } from "@/core/nawawi/nawawiData";
 import { partsPassed } from "@/core/nawawi/overview";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { PageHeader, enterSoft } from "@/components/ui/PageHeader";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { getNawawiOverview, type NawawiOverview } from "@/features/nawawi/nawawiExam";
@@ -53,9 +55,9 @@ function HadithRow({ hadith }: { hadith: NawawiHadith }) {
       onPress={() => router.push({ pathname: "/nawawi/[number]", params: { number: String(hadith.number) } })}
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
-      <View className="flex-row items-start gap-3 rounded-3xl border border-border bg-surface p-4">
-        <View className="size-10 items-center justify-center rounded-2xl bg-accent-soft">
-          <Text className="font-display-bold text-base text-accent-strong">{toArabicDigits(hadith.number)}</Text>
+      <View className="flex-row items-start gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
+        <View className="size-10 items-center justify-center rounded-xl bg-accent-soft">
+          <Text className="font-sans-bold text-base text-accent-strong">{toArabicDigits(hadith.number)}</Text>
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-base leading-7 text-fg">{hadith.title}</Text>
@@ -70,9 +72,8 @@ function HadithRow({ hadith }: { hadith: NawawiHadith }) {
 export default function NawawiScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold");
-  const goldSoft = useThemeColor("gold-soft");
+  const accent = useThemeColor("accent-strong");
+  const muted = useThemeColor("fg-muted");
   const learnerId = activeLearnerId(useAccount());
   const [loaded, setLoaded] = useState<{ learnerId: string; overview: NawawiOverview | null } | null>(null);
 
@@ -95,34 +96,23 @@ export default function NawawiScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <NotebookText size={16} color={goldSoft} />
-          <Text className="font-sans-bold text-sm text-gold-soft">الأربعون النووية</Text>
-        </View>
-        <Text className="mt-2 font-display-bold text-3xl leading-[46px] text-hero-fg">جوامع الكلم في اثنين وأربعين حديثًا</Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-white/75">
-          الأحاديث التي جمعها الإمام النووي رحمه الله، كل حديث بشرحه وفوائده. اقرأ مرحلة ثم اختبر نفسك فيها، وأتمّ المراحل الأربع لتدخل
-          الاختبار النهائي وتنال الشهادة.
-        </Text>
-      </View>
+      <PageHeader
+        back
+        icon={NotebookText}
+        kicker="الأربعون النووية"
+        title="جوامع الكلم في اثنين وأربعين حديثًا"
+        description="الأحاديث التي جمعها الإمام النووي رحمه الله، كل حديث بشرحه وفوائده. اقرأ مرحلة ثم اختبر نفسك فيها، وأتمّ المراحل الأربع لتدخل الاختبار النهائي وتنال الشهادة."
+      />
 
-      <View className="gap-8 px-4 pt-5">
-        <View className="gap-3 rounded-[28px] bg-hero p-5 shadow-lift">
-          <View className="flex-row items-center gap-2">
-            <Award size={22} color={gold} />
-            <Text className="font-display-bold text-lg text-hero-fg">{partTitle(FINAL_PART)} والشهادة</Text>
+      <View className="gap-8 px-4">
+        <Animated.View entering={enterSoft(3)} className="gap-3 rounded-3xl border border-accent/40 bg-accent-soft p-5">
+          <View className="flex-row items-center gap-3">
+            <View className="size-10 items-center justify-center rounded-xl bg-surface">
+              <Award size={22} color={accent} />
+            </View>
+            <Text className="flex-1 font-sans-bold text-base text-fg">{partTitle(FINAL_PART)} والشهادة</Text>
           </View>
-          <Text className="font-sans text-sm leading-6 text-white/75">
+          <Text className="font-sans text-sm leading-6 text-fg-muted">
             {!learnerId
               ? "سجّل الدخول ليُحفظ تقدّمك وتنال شهادتك."
               : overview?.certificate
@@ -145,22 +135,22 @@ export default function NawawiScreen() {
               ادخل الاختبار النهائي
             </Button>
           ) : learnerId ? (
-            <View className="flex-row items-center gap-2 self-start rounded-full bg-white/10 px-4 py-2">
-              <Lock size={16} color={goldSoft} />
-              <Text className="font-sans-bold text-sm text-gold-soft">مغلق حتى تُتمّ المراحل</Text>
+            <View className="flex-row items-center gap-2 self-start rounded-full border border-border bg-surface px-4 py-2">
+              <Lock size={16} color={muted} />
+              <Text className="font-sans-bold text-sm text-fg-muted">مغلق حتى تُتمّ المراحل</Text>
             </View>
           ) : (
             <Button variant="gold" className="self-start" onPress={() => router.push("/login")}>
               تسجيل الدخول
             </Button>
           )}
-        </View>
+        </Animated.View>
 
         {NAWAWI_PARTS.map((part) => (
           <View key={part.id} className="gap-3">
             <View className="flex-row flex-wrap items-center justify-between gap-2">
               <View>
-                <Text accessibilityRole="header" className="font-display-bold text-xl text-fg">
+                <Text accessibilityRole="header" className="font-sans-bold text-base text-fg">
                   {part.title}
                 </Text>
                 <Text className="font-sans text-xs text-fg-muted">

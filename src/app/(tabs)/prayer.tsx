@@ -53,24 +53,22 @@ export default function PrayerScreen() {
         title={location.label}
         description={`حسب ${calcMethodInfo(calc.method).label}.`}
         actions={
-          <Button variant="light" size="sm" icon={LocateFixed} onPress={locate} disabled={locating}>
+          <Button variant="secondary" size="sm" icon={LocateFixed} onPress={locate} disabled={locating}>
             {locating ? "جارٍ التحديد…" : "استخدم موقعي"}
           </Button>
         }
       />
       <Section className="mt-5">
         {geoMessage && <Text className="mb-3 font-sans text-sm text-danger">{geoMessage}</Text>}
-        <View className="mb-3 flex-row items-center justify-between rounded-3xl border border-border bg-surface px-5 py-4 shadow-soft">
+        <View className="mb-3 flex-row items-center justify-between rounded-3xl border border-border bg-surface px-5 py-4 shadow-card">
           <View className="flex-1">
-            <Text className="font-sans-bold text-xs text-fg-muted">
-              {span ? `الصلاة القادمة: ${span.next.label}` : "الصلاة القادمة"}
-            </Text>
-            <Text className="mt-0.5 font-display-bold text-2xl text-primary" style={{ fontVariant: ["tabular-nums"] }}>
+            <Text className="font-sans-bold text-xs text-fg-muted">{span ? `الصلاة القادمة: ${span.next.label}` : "الصلاة القادمة"}</Text>
+            <Text className="mt-0.5 font-sans-bold text-2xl text-primary" style={{ fontVariant: ["tabular-nums"] }}>
               {span ? countdown(span.next.at.getTime() - now.getTime()) : "…"}
             </Text>
           </View>
           <View className="items-end">
-            <Text className="font-display-bold text-base text-fg">
+            <Text className="font-sans-bold text-base text-fg">
               {toArabicDigits(hijri.day)} {hijri.monthName}
             </Text>
             <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(hijri.year)} هـ</Text>
@@ -81,10 +79,12 @@ export default function PrayerScreen() {
             {state.day.source === "device" && (
               <View className="mb-3 flex-row items-center gap-2 rounded-2xl bg-accent-soft px-4 py-2.5">
                 <WifiOff size={14} color={accentStrong} />
-                <Text className="flex-1 font-sans text-xs text-accent-strong">لا يوجد اتصال؛ المواقيت محسوبة على جهازك بنفس الإعدادات.</Text>
+                <Text className="flex-1 font-sans text-xs text-accent-strong">
+                  لا يوجد اتصال؛ المواقيت محسوبة على جهازك بنفس الإعدادات.
+                </Text>
               </View>
             )}
-            <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-soft">
+            <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
               {PRAYER_ORDER.map((key, index) => {
                 const isNext = key === next;
                 return (
@@ -93,7 +93,7 @@ export default function PrayerScreen() {
                     className={`flex-row items-center justify-between px-5 py-4 ${index > 0 ? "border-t border-border" : ""} ${isNext ? "bg-primary-soft" : ""}`}
                   >
                     <View className="flex-row items-center gap-2">
-                      <Text className={`font-display-bold text-lg ${isNext ? "text-primary" : "text-fg"}`}>{PRAYER_LABELS[key]}</Text>
+                      <Text className={`font-sans-bold text-lg ${isNext ? "text-primary" : "text-fg"}`}>{PRAYER_LABELS[key]}</Text>
                       {isNext && (
                         <View className="rounded-full bg-gold px-2 py-0.5">
                           <Text className="font-sans-bold text-[10px] text-emerald-night">القادمة</Text>
@@ -101,7 +101,7 @@ export default function PrayerScreen() {
                       )}
                       {key === current && !isNext && <Text className="font-sans text-xs text-fg-muted">الآن</Text>}
                     </View>
-                    <Text className={`font-display-bold text-lg ${isNext ? "text-primary" : "text-fg"}`}>
+                    <Text className={`font-sans-bold text-lg ${isNext ? "text-primary" : "text-fg"}`}>
                       {toArabicDigits(formatPrayerClock(state.day.times[key]))}
                     </Text>
                   </View>

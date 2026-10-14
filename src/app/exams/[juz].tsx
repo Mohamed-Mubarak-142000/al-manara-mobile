@@ -1,12 +1,15 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
-import { Award, ChevronLeft, ChevronRight, Clock, Send, X } from "lucide-react-native";
+import { Award, ChevronLeft, ChevronRight, Clock, GraduationCap, Info, Send, X } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatDuration, toArabicDigits } from "@/core/text/arabic";
+import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { PageHeader, enterSoft } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { exams, getAttempt, getExamSettings, type ActiveAttempt, type ExamSettings, type SubmitResult } from "@/features/exams/examData";
@@ -17,40 +20,23 @@ import { useScaledText } from "@/theme/textScale";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-function Header({ title, subtitle }: { title: string; subtitle?: string }) {
-  const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
-  return (
-    <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="رجوع"
-        onPress={() => router.back()}
-        hitSlop={12}
-        className="mb-3 self-start p-1"
-      >
-        <ChevronRight size={26} color={heroFg} />
-      </Pressable>
-      <Text className="font-display-bold text-3xl text-hero-fg">{title}</Text>
-      {subtitle ? <Text className="mt-1 font-sans text-sm leading-6 text-white/70">{subtitle}</Text> : null}
-    </View>
-  );
-}
-
 function Result({ result }: { result: SubmitResult }) {
   const passed = result.status === "passed";
   const percent = result.total ? Math.round((result.score / result.total) * 100) : 0;
-  const gold = useThemeColor("gold");
+  const gold = useThemeColor("accent-strong");
   const danger = useThemeColor("danger");
   return (
-    <View className={`items-center rounded-[32px] p-6 ${passed ? "bg-hero" : "border border-border bg-surface"}`}>
-      <View className={`size-20 items-center justify-center rounded-full ${passed ? "bg-gold" : "bg-danger/15"}`}>
-        {passed ? <Award size={40} color="#012a22" /> : <X size={40} color={danger} />}
+    <Animated.View
+      entering={enterSoft(0)}
+      className={`items-center rounded-3xl border p-6 shadow-card ${passed ? "border-accent bg-accent-soft" : "border-border bg-surface"}`}
+    >
+      <View className={`size-20 items-center justify-center rounded-full ${passed ? "bg-surface" : "bg-danger/15"}`}>
+        {passed ? <Award size={40} color={gold} /> : <X size={40} color={danger} />}
       </View>
-      <Text className={`mt-5 text-center font-display-bold text-2xl ${passed ? "text-hero-fg" : "text-fg"}`}>
+      <Text className="mt-5 text-center font-sans-bold text-2xl text-fg">
         {passed ? "مبارك! اجتزت اختبار الجزء" : result.status === "expired" ? "انتهى وقت الاختبار" : "لم تبلغ درجة النجاح هذه المرة"}
       </Text>
-      <Text className={`mt-2 text-center font-sans text-base ${passed ? "text-white/80" : "text-fg-muted"}`}>
+      <Text className="mt-2 text-center font-sans text-base text-fg-muted">
         درجتك {toArabicDigits(result.score)} من {toArabicDigits(result.total)} ({toArabicDigits(percent)}٪) — درجة النجاح{" "}
         {toArabicDigits(result.passPercent)}٪
       </Text>
@@ -64,7 +50,6 @@ function Result({ result }: { result: SubmitResult }) {
       {passed && result.certificateCode ? (
         <Button
           className="mt-6"
-          variant="gold"
           size="lg"
           icon={Award}
           onPress={() => router.replace({ pathname: "/certificate/[code]", params: { code: result.certificateCode! } })}
@@ -72,11 +57,9 @@ function Result({ result }: { result: SubmitResult }) {
           عرض الشهادة
         </Button>
       ) : (
-        <Text className="mt-6 text-center font-sans text-sm" style={{ color: passed ? gold : undefined }}>
-          راجع حفظك، ويمكنك إعادة الاختبار بعد مهلة قصيرة.
-        </Text>
+        <Text className="mt-6 text-center font-sans text-sm text-fg-muted">راجع حفظك، ويمكنك إعادة الاختبار بعد مهلة قصيرة.</Text>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -123,14 +106,16 @@ function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: 
   }, [attempt.expiresAt]);
 
   return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 12 }}>
+    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 10, paddingBottom: insets.bottom + miniPlayer + 12 }}>
       <View className="flex-row items-center justify-between px-4">
-        <Text className="font-sans-bold text-sm text-fg-muted">
+        <Text className="font-sans-bold text-base text-fg">
           السؤال {toArabicDigits(index + 1)} من {toArabicDigits(attempt.questions.length)}
         </Text>
-        <View className={`flex-row items-center gap-1.5 rounded-full px-3 py-1 ${left < 60 ? "bg-danger/15" : "bg-primary-soft"}`}>
+        <View
+          className={`flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 ${left < 60 ? "border-danger/40 bg-danger/10" : "border-border bg-surface"}`}
+        >
           <Clock size={14} color={left < 60 ? danger : primary} />
-          <Text className={`font-display-bold text-sm ${left < 60 ? "text-danger" : "text-primary"}`}>{formatDuration(left)}</Text>
+          <Text className={`font-sans-bold text-sm ${left < 60 ? "text-danger" : "text-primary"}`}>{formatDuration(left)}</Text>
         </View>
       </View>
       <View className="px-4 pt-2">
@@ -139,7 +124,7 @@ function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: 
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text className="font-sans-bold text-base text-accent-strong">{QUESTION_TITLES[question.type]}</Text>
-        <View className="rounded-3xl border border-gold/30 bg-surface p-5">
+        <View className="rounded-3xl border border-border bg-surface p-5 shadow-card">
           <Text className="font-quran text-fg" style={promptText}>
             {question.prompt}
           </Text>
@@ -156,10 +141,11 @@ function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: 
                 Haptics.selectionAsync().catch(() => {});
                 setAnswers((current) => current.map((answer, position) => (position === index ? optionIndex : answer)));
               }}
-              className={`rounded-2xl border-2 p-4 ${chosen ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+              className={`rounded-2xl p-4 ${chosen ? "border-2 border-primary bg-primary-soft" : "border border-border bg-surface"}`}
+              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
             >
               <Text
-                className={`${question.type === "surah" ? "font-display-bold text-lg" : "font-quran text-xl leading-10"} ${chosen ? "text-primary" : "text-fg"}`}
+                className={`${question.type === "surah" ? "font-sans-bold text-lg" : "font-quran text-xl leading-10"} ${chosen ? "text-primary" : "text-fg"}`}
               >
                 {option}
               </Text>
@@ -170,27 +156,31 @@ function Runner({ attempt, onDone }: { attempt: ActiveAttempt; onDone: (result: 
 
       <View className="gap-3 px-4">
         {error ? <Text className="font-sans text-sm text-danger">{error}</Text> : null}
-        {confirm && unanswered > 0 && (
-          <Text className="font-sans text-sm text-accent-strong">
-            بقي {toArabicDigits(unanswered)} سؤالًا دون إجابة. اضغط تسليم مرة أخرى للتأكيد.
-          </Text>
-        )}
         <View className="flex-row items-center gap-3">
-          <Button variant="outline" icon={ChevronRight} disabled={index === 0} onPress={() => setIndex(index - 1)}>
+          <Button className="flex-1" variant="secondary" icon={ChevronRight} disabled={index === 0} onPress={() => setIndex(index - 1)}>
             السابق
           </Button>
-          <View className="flex-1" />
           {index + 1 < attempt.questions.length ? (
-            <Button icon={ChevronLeft} onPress={() => setIndex(index + 1)}>
+            <Button className="flex-1" icon={ChevronLeft} onPress={() => setIndex(index + 1)}>
               التالي
             </Button>
           ) : (
-            <Button variant="gold" icon={Send} disabled={busy} onPress={() => (unanswered > 0 && !confirm ? setConfirm(true) : submit())}>
+            <Button className="flex-1" icon={Send} disabled={busy} onPress={() => (unanswered > 0 ? setConfirm(true) : submit())}>
               {busy ? "جارٍ التسليم…" : "تسليم"}
             </Button>
           )}
         </View>
       </View>
+
+      <ConfirmSheet
+        visible={confirm}
+        title="تسليم الاختبار"
+        message={`بقي ${toArabicDigits(unanswered)} سؤالًا دون إجابة. هل تريد التسليم الآن؟`}
+        confirmLabel="سلّم الاختبار"
+        cancelLabel="أكمل الإجابة"
+        onConfirm={() => void submit()}
+        onClose={() => setConfirm(false)}
+      />
     </View>
   );
 }
@@ -201,6 +191,7 @@ export default function JuzExamScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
   const learnerId = activeLearnerId(useAccount());
+  const primary = useThemeColor("primary");
   const [settings, setSettings] = useState<ExamSettings | null>(null);
   const [attempt, setAttempt] = useState<ActiveAttempt | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
@@ -230,20 +221,29 @@ export default function JuzExamScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
-      <Header title={`اختبار الجزء ${juzOrdinal(juz)}`} subtitle="اختبار حفظ من آيات الجزء، وشهادة موثّقة باسمك عند النجاح." />
-      <View className="gap-4 px-4 pt-5">
+      <PageHeader
+        back
+        kicker="اختبارات الأجزاء"
+        icon={GraduationCap}
+        title={`اختبار الجزء ${juzOrdinal(juz)}`}
+        description="اختبار حفظ من آيات الجزء، وشهادة موثّقة باسمك عند النجاح."
+      />
+      <View className="gap-4 px-4">
         {result ? (
           <Result result={result} />
         ) : (
           <>
-            <View className="gap-2 rounded-3xl border border-border bg-surface p-5">
-              <Text className="font-display-bold text-lg text-fg">قبل أن تبدأ</Text>
+            <Animated.View entering={enterSoft(3)} className="gap-2 rounded-3xl border border-border bg-surface p-5 shadow-card">
+              <View className="flex-row items-center gap-2">
+                <Info size={16} color={primary} />
+                <Text className="font-sans-bold text-base text-fg">قبل أن تبدأ</Text>
+              </View>
               <Text className="font-sans text-sm leading-7 text-fg-muted">
                 • {toArabicDigits(settings?.exam_question_count ?? 20)} سؤالًا خلال {toArabicDigits(settings?.exam_minutes ?? 30)} دقيقة.
                 {"\n"}• درجة النجاح {toArabicDigits(settings?.exam_pass_percent ?? 80)}٪.{"\n"}• يفتح الاختبار بعد حفظ الجزء كاملًا وتسميعه.
                 {"\n"}• عند انتهاء الوقت يُسلَّم الاختبار تلقائيًا.
               </Text>
-            </View>
+            </Animated.View>
             {error ? <Text className="font-sans text-sm leading-6 text-danger">{error}</Text> : null}
             {learnerId ? (
               <Button size="lg" onPress={start} disabled={busy}>

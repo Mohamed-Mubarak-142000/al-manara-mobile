@@ -1,6 +1,6 @@
 import { Pause, Play, X } from "lucide-react-native";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 
 import { audio, currentTrack, usePlayer } from "@/features/audio/playerStore";
 import { TrackDownloadButton } from "@/features/downloads/TrackDownloadButton";
@@ -22,14 +22,14 @@ export function AyahAudioPill({ theme, bottom }: { theme: ReaderTheme; bottom: n
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(220)}
-      exiting={FadeOutDown.duration(180)}
+      entering={FadeInDown.duration(360).easing(Easing.bezier(0.22, 1, 0.36, 1))}
+      exiting={FadeOutDown.duration(260)}
       className="absolute inset-x-0 items-center"
       style={{ bottom }}
       pointerEvents="box-none"
     >
       <View
-        className="max-w-[80%] flex-row items-center gap-2 rounded-full border ps-1.5 pe-3 shadow-lift"
+        className="max-w-[80%] flex-row items-center gap-2 rounded-full border ps-1.5 pe-3 shadow-card"
         style={{ height: AYAH_PILL_HEIGHT, backgroundColor: colors.frame, borderColor: colors.accent }}
       >
         <Pressable

@@ -1,9 +1,10 @@
 import { router, usePathname } from "expo-router";
 import { Check, ChevronDown, Gem, Home, Star, Users, Volume2, VolumeX } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { gemBalance } from "@/core/kids/rewards";
 import { computeStars } from "@/core/kids/stars";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -15,7 +16,17 @@ import { KidsText } from "./KidsPanel";
 import { KIDS, PANEL_SHADOW } from "./kidsStyles";
 import { go, kidsHref } from "./nav";
 
-function Pill({ children, onPress, label, bg = "rgba(255,255,255,0.95)" }: { children: ReactNode; onPress: () => void; label: string; bg?: string }) {
+function Pill({
+  children,
+  onPress,
+  label,
+  bg = "rgba(255,255,255,0.95)",
+}: {
+  children: ReactNode;
+  onPress: () => void;
+  label: string;
+  bg?: string;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -57,49 +68,52 @@ function LearnerSwitcher() {
         </Text>
         <ChevronDown size={16} color={KIDS.deep} />
       </Pill>
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: "rgba(1,42,34,0.35)", justifyContent: "center", padding: 24 }} onPress={() => setOpen(false)}>
-          <View style={[{ backgroundColor: KIDS.white, borderRadius: 28, padding: 10 }, PANEL_SHADOW]}>
-            <KidsText size={18} bold center className="my-2">
-              اختر الملف
-            </KidsText>
-            {learners.map((learner) => {
-              const selected = learner.id === activeLearner.id;
-              return (
-                <Pressable
-                  key={learner.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  onPress={() => {
-                    account.chooseLearner(learner.id);
-                    setOpen(false);
+      <BottomSheet visible={open} onClose={() => setOpen(false)} title="اختر الملف" icon={Users}>
+        {/* The kids' own look inside the sheet: rounded rows, the kids font, the garden colours. */}
+        <View style={{ gap: 4 }}>
+          {learners.map((learner) => {
+            const selected = learner.id === activeLearner.id;
+            return (
+              <Pressable
+                key={learner.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => {
+                  account.chooseLearner(learner.id);
+                  setOpen(false);
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  borderRadius: 18,
+                  padding: 10,
+                  backgroundColor: selected ? KIDS.mist : "transparent",
+                }}
+              >
+                <View
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: learner.kind === "self" ? KIDS.siteGold : "rgba(47,155,214,0.15)",
                   }}
-                  style={{ flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, padding: 10, backgroundColor: selected ? KIDS.mist : "transparent" }}
                 >
-                  <View
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 17,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: learner.kind === "self" ? KIDS.siteGold : "rgba(47,155,214,0.15)",
-                    }}
-                  >
-                    <Text className="font-display-bold" style={{ color: learner.kind === "self" ? KIDS.night : KIDS.siteSky }}>
-                      {learner.display_name.slice(0, 1)}
-                    </Text>
-                  </View>
-                  <KidsText size={16} bold className="flex-1">
-                    {learner.kind === "self" ? `أنا (${learner.display_name})` : learner.display_name}
-                  </KidsText>
-                  {selected && <Check size={18} color={KIDS.emerald} />}
-                </Pressable>
-              );
-            })}
-          </View>
-        </Pressable>
-      </Modal>
+                  <Text className="font-kids-bold" style={{ color: learner.kind === "self" ? KIDS.night : KIDS.siteSky }}>
+                    {learner.display_name.slice(0, 1)}
+                  </Text>
+                </View>
+                <KidsText size={16} bold className="flex-1">
+                  {learner.kind === "self" ? `أنا (${learner.display_name})` : learner.display_name}
+                </KidsText>
+                {selected && <Check size={18} color={KIDS.emerald} />}
+              </Pressable>
+            );
+          })}
+        </View>
+      </BottomSheet>
     </>
   );
 }
@@ -116,7 +130,9 @@ export function KidsHeader({ showChrome }: { showChrome: boolean }) {
   const gems = gemBalance(state);
 
   return (
-    <View style={{ paddingTop: insets.top + 6, paddingHorizontal: 10, paddingBottom: 6, flexDirection: "row", alignItems: "center", gap: 6 }}>
+    <View
+      style={{ paddingTop: insets.top + 6, paddingHorizontal: 10, paddingBottom: 6, flexDirection: "row", alignItems: "center", gap: 6 }}
+    >
       <Pill
         label={leave ? "العودة للتطبيق" : "رحلتي"}
         onPress={() => {

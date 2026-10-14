@@ -1,9 +1,8 @@
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
-import { router } from "expo-router";
-import { ChevronRight, Compass, MapPin, Settings } from "lucide-react-native";
+import { Compass, MapPin, Settings } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { AppState, Linking, Pressable, Text, View } from "react-native";
+import { AppState, Linking, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
@@ -11,6 +10,7 @@ import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
 import { distanceToKaaba, qiblaBearing } from "@/core/prayer/qibla";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { ScreenHeader } from "@/components/ui/PageHeader";
 import { requestPreciseLocation } from "@/features/prayer/locationStore";
 import { usePrayerDay } from "@/features/prayer/usePrayerDay";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -111,17 +111,12 @@ export default function QiblaScreen() {
   const center = SIZE / 2;
 
   return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}>
-      <View className="flex-row items-center gap-2 px-3">
-        <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
-          <ChevronRight size={26} color={fg} />
-        </Pressable>
-        <Text className="font-display-bold text-xl text-fg">اتجاه القبلة</Text>
-      </View>
+    <View className="flex-1 bg-bg" style={{ paddingBottom: insets.bottom + 16 }}>
+      <ScreenHeader title="اتجاه القبلة" />
 
       <View className="flex-1 items-center justify-center gap-6 px-6">
-        <View className="flex-row items-center gap-1.5">
-          <MapPin size={14} color={muted} />
+        <View className="flex-row items-center gap-1.5 rounded-full border border-border px-3 py-1.5">
+          <MapPin size={14} color={primary} />
           <Text className="font-sans text-sm text-fg-muted">{location.label}</Text>
         </View>
 
@@ -162,7 +157,7 @@ export default function QiblaScreen() {
                     y={center + (center - 40) * Math.sin(a) + 6}
                     fill={angle === 0 ? gold : fg}
                     fontSize={18}
-                    fontFamily="Cairo_700Bold"
+                    fontFamily="IBMPlexSansArabic_700Bold"
                     textAnchor="middle"
                   >
                     {label}
@@ -205,7 +200,7 @@ export default function QiblaScreen() {
           <Text className="font-sans text-sm text-fg-muted">جارٍ تحديد موقعك…</Text>
         ) : (
           <View className="items-center gap-1">
-            <Text className={`font-display-bold text-2xl ${aligned ? "text-primary" : "text-fg"}`}>
+            <Text className={`font-sans-bold text-2xl ${aligned ? "text-primary" : "text-fg"}`}>
               {aligned
                 ? "أنت تتجه إلى القبلة"
                 : offset !== null

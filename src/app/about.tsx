@@ -3,10 +3,11 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { ChevronLeft, FileText, Globe, Info, Mail, Share2, ShieldCheck, type LucideIcon } from "lucide-react-native";
 import { Linking, Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { CONTACT_EMAIL, missionText } from "@/core/legal/legalContent";
 import { toArabicDigits } from "@/core/text/arabic";
+import { enterSoft } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { BackHeader } from "@/features/legal/BackHeader";
 import { CrashReport } from "@/features/legal/CrashReport";
@@ -16,17 +17,29 @@ import { useThemeColor } from "@/theme/useThemeColor";
 
 const PROMISES = ["مجاني بالكامل", "بلا إعلانات", "القرآن دون إنترنت"];
 
-function Row({ icon: Icon, title, hint, onPress, last }: { icon: LucideIcon; title: string; hint?: string; onPress: () => void; last?: boolean }) {
+function Row({
+  icon: Icon,
+  title,
+  hint,
+  onPress,
+  last,
+}: {
+  icon: LucideIcon;
+  title: string;
+  hint?: string;
+  onPress: () => void;
+  last?: boolean;
+}) {
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   return (
-    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-      <View className={`flex-row items-center gap-3 px-4 py-3.5 ${last ? "" : "border-b border-border"}`}>
-        <View className="size-9 items-center justify-center rounded-xl bg-primary-soft">
+    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+      <View className={`flex-row items-center gap-3 px-4 py-4 ${last ? "" : "border-b border-border"}`}>
+        <View className="size-10 items-center justify-center rounded-2xl bg-primary-soft">
           <Icon size={18} color={primary} />
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-[15px] text-fg">{title}</Text>
+          <Text className="font-sans-bold text-[15px] text-fg">{title}</Text>
           {hint && <Text className="font-sans text-xs text-fg-muted">{hint}</Text>}
         </View>
         <ChevronLeft size={18} color={muted} />
@@ -43,9 +56,8 @@ export default function AboutScreen() {
   return (
     <Screen bleed>
       <BackHeader kicker="عن المنارة" icon={Info} title="المنارة" description="علمٌ ينير قلبك، ومعرفةٌ ترافق يومك.">
-        <Animated.View entering={ZoomIn.duration(700)} className="mb-5 self-center">
-          <View className="absolute -inset-4 rounded-full bg-gold/20" />
-          <View className="size-28 items-center justify-center rounded-[32px] border border-gold/40 bg-white/10 shadow-gold">
+        <Animated.View entering={FadeIn.duration(400)} className="mb-5 self-center">
+          <View className="size-28 items-center justify-center rounded-4xl border border-border bg-primary-soft">
             <Image
               source={require("@/assets/images/brand/logo.png")}
               style={{ width: 88, height: 88 }}
@@ -56,8 +68,8 @@ export default function AboutScreen() {
         </Animated.View>
       </BackHeader>
 
-      <Section className="mt-6 gap-4">
-        <Animated.View entering={FadeIn.duration(600).delay(200)} className="gap-4 rounded-3xl border border-gold/40 bg-accent-soft p-5">
+      <Section className="mt-2 gap-4">
+        <Animated.View entering={enterSoft(3)} className="gap-4 rounded-3xl border border-gold/40 bg-accent-soft p-5">
           <Text className="font-sans-bold text-sm text-accent-strong">رسالتنا</Text>
           <Text className="font-sans text-fg" style={mission}>
             {missionText()}
@@ -71,7 +83,7 @@ export default function AboutScreen() {
           </View>
         </Animated.View>
 
-        <View className="overflow-hidden rounded-3xl border border-border bg-surface">
+        <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
           <Row icon={ShieldCheck} title="سياسة الخصوصية" onPress={() => router.push("/privacy")} />
           <Row icon={FileText} title="شروط الاستخدام" onPress={() => router.push("/terms")} />
           {SITE_URL ? <Row icon={Globe} title="موقع المنارة" hint="كل الأقسام على الويب" onPress={() => openSitePage("/")} /> : null}
@@ -87,9 +99,7 @@ export default function AboutScreen() {
 
         <CrashReport />
 
-        {version && (
-          <Text className="mt-2 text-center font-sans text-xs text-fg-muted">المنارة · الإصدار {toArabicDigits(version)}</Text>
-        )}
+        {version && <Text className="mt-2 text-center font-sans text-xs text-fg-muted">المنارة · الإصدار {toArabicDigits(version)}</Text>}
       </Section>
     </Screen>
   );

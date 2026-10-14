@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { ChevronRight, KeyRound, Pencil, Plus, Trash2, UserRound } from "lucide-react-native";
+import { KeyRound, Pencil, Plus, Trash2, UserRound } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { KeyboardAvoidingView, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { PageHeader, ScreenHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount, type Learner } from "@/features/account/accountStore";
 import { AuthField } from "@/features/account/AuthLayout";
@@ -15,9 +16,9 @@ import { useThemeColor } from "@/theme/useThemeColor";
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <View className="gap-3 rounded-3xl border border-border bg-surface p-5">
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
       <View>
-        <Text className="font-display-bold text-lg text-fg">{title}</Text>
+        <Text className="font-sans-bold text-lg text-fg">{title}</Text>
         {description ? <Text className="mt-1 font-sans text-xs leading-5 text-fg-muted">{description}</Text> : null}
       </View>
       {children}
@@ -34,7 +35,8 @@ function Feedback({ result }: { result: SettingsResult | null }) {
 
 /** One child: shown, edited in place, or confirming deletion (it removes all their progress). */
 function ChildRow({ child }: { child: Learner }) {
-  const muted = useThemeColor("fg-muted");
+  const fg = useThemeColor("fg");
+  const danger = useThemeColor("danger");
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const [name, setName] = useState(child.display_name);
   const [year, setYear] = useState(child.birth_year ? String(child.birth_year) : "");
@@ -50,7 +52,7 @@ function ChildRow({ child }: { child: Learner }) {
   }
 
   return (
-    <View className="gap-2 rounded-2xl bg-bg p-3">
+    <View className="gap-2 rounded-2xl border border-border bg-surface p-3">
       {mode === "edit" ? (
         <>
           <AuthField label="اسم الطفل" value={name} onChangeText={setName} autoCapitalize="words" />
@@ -67,17 +69,29 @@ function ChildRow({ child }: { child: Learner }) {
       ) : (
         <View className="flex-row items-center gap-3">
           <View className="size-10 items-center justify-center rounded-full bg-primary-soft">
-            <Text className="font-display-bold text-base text-primary">{child.display_name.slice(0, 1)}</Text>
+            <Text className="font-sans-bold text-base text-primary">{child.display_name.slice(0, 1)}</Text>
           </View>
           <View className="flex-1">
-            <Text className="font-display-bold text-base text-fg">{child.display_name}</Text>
+            <Text className="font-sans-bold text-base text-fg">{child.display_name}</Text>
             {child.birth_year ? <Text className="font-sans text-xs text-fg-muted">مواليد {toArabicDigits(child.birth_year)}</Text> : null}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="تعديل" onPress={() => setMode("edit")} hitSlop={8} className="p-2">
-            <Pencil size={17} color={muted} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="تعديل"
+            onPress={() => setMode("edit")}
+            hitSlop={6}
+            className="size-10 items-center justify-center rounded-xl border border-border bg-surface"
+          >
+            <Pencil size={17} color={fg} strokeWidth={1.8} />
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="حذف" onPress={() => setMode("delete")} hitSlop={8} className="p-2">
-            <Trash2 size={17} color={muted} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="حذف"
+            onPress={() => setMode("delete")}
+            hitSlop={6}
+            className="size-10 items-center justify-center rounded-xl border border-border bg-surface"
+          >
+            <Trash2 size={17} color={danger} strokeWidth={1.8} />
           </Pressable>
         </View>
       )}
@@ -107,7 +121,6 @@ function ChildRow({ child }: { child: Learner }) {
 /** The website's /account: profile, children, password, email preferences, and account deletion. */
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
   const primary = useThemeColor("primary");
   const border = useThemeColor("border");
   const surface = useThemeColor("surface");
@@ -140,7 +153,8 @@ export default function AccountScreen() {
 
   if (state.status !== "signed-in") {
     return (
-      <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8 }}>
+      <View className="flex-1 bg-bg">
+        <ScreenHeader title="حسابي" />
         {state.status === "loading" ? (
           <StateMessage loading />
         ) : (
@@ -158,24 +172,17 @@ export default function AccountScreen() {
   return (
     <KeyboardAvoidingView className="flex-1 bg-bg" behavior="padding">
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
-        <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
-            onPress={() => router.back()}
-            hitSlop={12}
-            className="mb-3 self-start p-1"
-          >
-            <ChevronRight size={26} color={heroFg} />
-          </Pressable>
-          <Text className="font-sans-bold text-sm text-gold-soft">حسابي</Text>
-          <Text className="mt-2 font-display-bold text-3xl text-hero-fg">أهلًا {profile?.full_name || "بك"}</Text>
-          <Text className="mt-1 font-sans text-sm text-white/75">بياناتك، وملفات أطفالك، وكلمة المرور.</Text>
-        </View>
+        <PageHeader
+          back
+          kicker="حسابي"
+          icon={UserRound}
+          title={`أهلًا ${profile?.full_name || "بك"}`}
+          description="بياناتك، وملفات أطفالك، وكلمة المرور."
+        />
 
-        <View className="gap-4 px-4 pt-5">
+        <View className="gap-4 px-4">
           <Section title="بياناتي" description="الاسم على الشهادات يُثبَّت في كل شهادة لحظة إصدارها.">
-            <View className="flex-row items-center gap-2 rounded-2xl bg-bg px-4 py-3">
+            <View className="flex-row items-center gap-2 rounded-2xl bg-surface-alt px-4 py-3">
               <UserRound size={16} color={primary} />
               <Text className="font-sans text-sm text-fg-muted">{state.email}</Text>
             </View>
@@ -196,7 +203,7 @@ export default function AccountScreen() {
               <ChildRow key={child.id} child={child} />
             ))}
             {adding ? (
-              <View className="gap-2 rounded-2xl bg-bg p-3">
+              <View className="gap-2 rounded-2xl border border-border bg-surface p-3">
                 <AuthField label="اسم الطفل" value={childName} onChangeText={setChildName} autoCapitalize="words" />
                 <AuthField
                   label="سنة الميلاد (اختياري)"

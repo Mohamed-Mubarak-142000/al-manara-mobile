@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { Award, ChevronRight, Clock, GraduationCap, Lock } from "lucide-react-native";
+import { Award, Clock, GraduationCap, Lock } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { getExamOverview, getExamSettings, type JuzExamStatus } from "@/features/exams/examData";
@@ -30,8 +31,7 @@ function statusLine(status: JuzExamStatus | undefined): { text: string; tone: "d
 export default function ExamsScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const gold = useThemeColor("accent-strong");
   const primary = useThemeColor("primary");
   const account = useAccount();
   const learnerId = activeLearnerId(account);
@@ -60,30 +60,20 @@ export default function ExamsScreen() {
       columnWrapperStyle={{ gap: 10, paddingHorizontal: 16 }}
       contentContainerStyle={{ gap: 10, paddingBottom: insets.bottom + miniPlayer + 32 }}
       ListHeaderComponent={
-        <View className="mb-3 rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
-            onPress={() => router.back()}
-            hitSlop={12}
-            className="mb-3 self-start p-1"
-          >
-            <ChevronRight size={26} color={heroFg} />
-          </Pressable>
-          <View className="flex-row items-center gap-2">
-            <GraduationCap size={16} color={gold} />
-            <Text className="font-sans-bold text-sm text-gold-soft">اختبارات الأجزاء</Text>
-          </View>
-          <Text className="mt-2 font-display-bold text-3xl text-hero-fg">اختبر حفظك</Text>
-          <Text className="mt-1 font-sans text-sm leading-6 text-white/70">
-            {learnerId ? `حصلت على ${toArabicDigits(certified)} من ٣٠ شهادة.` : "اختبار لكل جزء، وشهادة موثّقة عند النجاح."}
-          </Text>
-          {learnerId && (
-            <Button className="mt-4 self-start" variant="light" size="sm" icon={Award} onPress={() => router.push("/certificates")}>
-              شهاداتي
-            </Button>
-          )}
-        </View>
+        <PageHeader
+          back
+          kicker="اختبارات الأجزاء"
+          icon={GraduationCap}
+          title="اختبر حفظك"
+          description={learnerId ? `حصلت على ${toArabicDigits(certified)} من ٣٠ شهادة.` : "اختبار لكل جزء، وشهادة موثّقة عند النجاح."}
+          actions={
+            learnerId ? (
+              <Button variant="secondary" size="sm" icon={Award} onPress={() => router.push("/certificates")}>
+                شهاداتي
+              </Button>
+            ) : undefined
+          }
+        />
       }
       ListEmptyComponent={
         !learnerId ? (
@@ -110,10 +100,10 @@ export default function ExamsScreen() {
             style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
           >
             <View
-              className={`rounded-3xl border p-4 ${line.tone === "done" ? "border-gold/50 bg-accent-soft" : "border-border bg-surface"}`}
+              className={`rounded-3xl border p-4 ${line.tone === "done" ? "border-accent bg-accent-soft" : "border-border bg-surface"}`}
             >
               <View className="flex-row items-center justify-between">
-                <Text className="font-display-bold text-2xl text-fg">{toArabicDigits(juz)}</Text>
+                <Text className="font-sans-bold text-2xl text-fg">{toArabicDigits(juz)}</Text>
                 {line.tone === "done" ? (
                   <Award size={20} color={gold} />
                 ) : line.tone === "live" || line.tone === "wait" ? (

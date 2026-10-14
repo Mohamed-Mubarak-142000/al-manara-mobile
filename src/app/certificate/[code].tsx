@@ -1,24 +1,24 @@
 import * as Sharing from "expo-sharing";
-import { router, useLocalSearchParams } from "expo-router";
-import { ChevronRight, Share2 } from "lucide-react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Share2 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { captureRef } from "react-native-view-shot";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { CertificateCard, type CertificateData } from "@/features/exams/CertificateCard";
 import { supabase } from "@/lib/supabase";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
-import { useThemeColor } from "@/theme/useThemeColor";
 
 /** One of the user's certificates, ready to share as an image. */
 export default function CertificateScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const fg = useThemeColor("fg");
   const card = useRef<View>(null);
   // Without Supabase there is nothing to look up: start at "not found" instead of loading.
   const [certificate, setCertificate] = useState<CertificateData | null | undefined>(supabase ? undefined : null);
@@ -56,34 +56,28 @@ export default function CertificateScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 32, paddingHorizontal: 16 }}
-    >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="رجوع"
-        onPress={() => router.back()}
-        hitSlop={12}
-        className="mb-3 self-start p-1"
+    <View className="flex-1 bg-bg">
+      <ScreenHeader title="الشهادة" />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingTop: 8, paddingBottom: insets.bottom + miniPlayer + 32, paddingHorizontal: 16 }}
       >
-        <ChevronRight size={26} color={fg} />
-      </Pressable>
-      {certificate === undefined ? (
-        <StateMessage loading />
-      ) : certificate === null ? (
-        <StateMessage message="لم نجد هذه الشهادة في حسابك." />
-      ) : (
-        <View className="gap-5">
-          <CertificateCard ref={card} certificate={certificate} />
-          <Button variant="gold" size="lg" icon={Share2} onPress={share} disabled={sharing}>
-            {sharing ? "جارٍ التجهيز…" : "مشاركة الشهادة"}
-          </Button>
-          <Text className="text-center font-sans text-xs leading-5 text-fg-muted">
-            يمكن لأي شخص التحقق من الشهادة بمسح الرمز أو من موقع المنارة.
-          </Text>
-        </View>
-      )}
-    </ScrollView>
+        {certificate === undefined ? (
+          <StateMessage loading />
+        ) : certificate === null ? (
+          <StateMessage message="لم نجد هذه الشهادة في حسابك." />
+        ) : (
+          <Animated.View entering={enterSoft(0)} className="gap-5">
+            <CertificateCard ref={card} certificate={certificate} />
+            <Button size="lg" icon={Share2} onPress={share} disabled={sharing}>
+              {sharing ? "جارٍ التجهيز…" : "مشاركة الشهادة"}
+            </Button>
+            <Text className="text-center font-sans text-xs leading-5 text-fg-muted">
+              يمكن لأي شخص التحقق من الشهادة بمسح الرمز أو من موقع المنارة.
+            </Text>
+          </Animated.View>
+        )}
+      </ScrollView>
+    </View>
   );
 }

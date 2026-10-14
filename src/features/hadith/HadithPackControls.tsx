@@ -1,9 +1,11 @@
 import { Check, CloudDownload, Download, RotateCcw, X } from "lucide-react-native";
-import { Alert, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
 import type { HadithCategory } from "@/core/hadith/api";
 import { toArabicDigits } from "@/core/text/arabic";
+import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -14,11 +16,33 @@ export function megabytes(bytes: number): string {
   return `${toArabicDigits((bytes / (1024 * 1024)).toFixed(1))} م.ب`;
 }
 
-export function confirmRemovePack(id: string, title: string) {
-  Alert.alert("حذف الأحاديث المنزّلة", `حذف «${title}» من الجهاز؟ ستبقى متاحة عبر الإنترنت.`, [
-    { text: "إلغاء", style: "cancel" },
-    { text: "حذف", style: "destructive", onPress: () => hadithPacks.remove(id) },
-  ]);
+/**
+ * "حذف الأحاديث المنزّلة؟" as a sheet: `ask(id, title)` opens it, and `sheet` is rendered next to the control.
+ * The asked topic is kept while the sheet slides away, so its text doesn't blank mid-animation.
+ */
+export function useConfirmRemovePack() {
+  const [target, setTarget] = useState<{ id: string; title: string } | null>(null);
+  const [open, setOpen] = useState(false);
+  const sheet = (
+    <ConfirmSheet
+      visible={open}
+      title="حذف الأحاديث المنزّلة"
+      message={target ? `حذف «${target.title}» من الجهاز؟ ستبقى متاحة عبر الإنترنت.` : ""}
+      confirmLabel="حذف"
+      destructive
+      onConfirm={() => {
+        if (target) hadithPacks.remove(target.id);
+      }}
+      onClose={() => setOpen(false)}
+    />
+  );
+  return {
+    ask: (id: string, title: string) => {
+      setTarget({ id, title });
+      setOpen(true);
+    },
+    sheet,
+  };
 }
 
 const R = 15;
@@ -32,6 +56,7 @@ export function HadithPackButton({ category }: { category: HadithCategory }) {
   const gold = useThemeColor("gold");
   const border = useThemeColor("border");
   const danger = useThemeColor("danger");
+  const confirmRemove = useConfirmRemovePack();
 
   if (state.status === "downloading") {
     return (
@@ -66,31 +91,40 @@ export function HadithPackButton({ category }: { category: HadithCategory }) {
 
   if (state.status === "ready") {
     return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${category.title} محفوظ على الجهاز (${megabytes(state.bytes)})، اضغط مطولًا للحذف`}
-        hitSlop={8}
-        onLongPress={() => confirmRemovePack(category.id, category.title)}
-        delayLongPress={350}
-        className="flex-row items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1.5"
-      >
-        <Check size={14} color={primary} />
-        <Text className="font-sans-bold text-[11px] text-primary">{megabytes(state.bytes)}</Text>
-      </Pressable>
+      <>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${category.title} محفوظ على الجهاز (${megabytes(state.bytes)})، اضغط مطولًا للحذف`}
+          hitSlop={8}
+          onLongPress={() => confirmRemove.ask(category.id, category.title)}
+          delayLongPress={350}
+          className="flex-row items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1.5"
+        >
+          <Check size={14} color={primary} />
+          <Text className="font-sans-bold text-[11px] text-primary">{megabytes(state.bytes)}</Text>
+        </Pressable>
+        {confirmRemove.sheet}
+      </>
     );
   }
 
   const failed = state.status === "failed";
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={failed ? `إعادة محاولة تنزيل ${category.title}. ${state.message}` : `تنزيل ${category.title} للقراءة دون إنترنت`}
-      hitSlop={8}
-      onPress={() => hadithPacks.download(category.id)}
-      className="size-9 items-center justify-center"
-    >
-      {failed ? <RotateCcw size={19} color={danger} /> : <Download size={20} color={muted} />}
-    </Pressable>
+    <>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          failed ? `إعادة محاولة تنزيل ${category.title}. ${state.message}` : `تنزيل ${category.title} للقراءة دون إنترنت`
+        }
+        hitSlop={8}
+        onPress={() => hadithPacks.download(category.id)}
+        className="size-9 items-center justify-center rounded-xl border border-border"
+      >
+        {failed ? <RotateCcw size={19} color={danger} /> : <Download size={18} color={muted} />}
+      </Pressable>
+      {/* Still here after a delete, so the sheet finishes sliding away. */}
+      {confirmRemove.sheet}
+    </>
   );
 }
 
@@ -110,13 +144,13 @@ export function HadithDownloadAllCard({ roots }: { roots: HadithCategory[] }) {
   const failed = roots.find((root) => states[root.id]?.status === "failed");
 
   return (
-    <View className="gap-3 rounded-3xl border border-border bg-surface p-4 shadow-soft">
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-3">
-        <View className="size-10 items-center justify-center rounded-full bg-accent-soft">
+        <View className="size-11 items-center justify-center rounded-2xl bg-accent-soft">
           {allReady ? <Check size={20} color={accent} /> : <CloudDownload size={20} color={accent} />}
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">
+          <Text className="font-sans-bold text-base text-fg">
             {allReady ? "كل الأحاديث محفوظة على الجهاز" : "تنزيل كل الأحاديث للاستخدام بدون إنترنت"}
           </Text>
           <Text className="font-sans text-xs leading-5 text-fg-muted">
@@ -140,7 +174,7 @@ export function HadithDownloadAllCard({ roots }: { roots: HadithCategory[] }) {
             إيقاف التنزيل
           </Button>
         ) : (
-          <Button size="sm" variant="gold" icon={Download} className="self-start" onPress={() => void hadithPacks.downloadAll()}>
+          <Button size="sm" variant="secondary" icon={Download} className="self-start" onPress={() => void hadithPacks.downloadAll()}>
             {readyCount ? "تنزيل الباقي" : "تنزيل الكل"}
           </Button>
         ))}

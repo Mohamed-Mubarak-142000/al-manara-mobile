@@ -4,7 +4,7 @@ import Storage from "expo-sqlite/kv-store";
 import { ExternalLink, HandHeart } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, AppState, FlatList, Linking, Text, View, type ViewToken } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { Button } from "@/components/ui/Button";
 import { supabase } from "@/lib/supabase";
@@ -110,7 +110,7 @@ function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: numb
   return (
     <View
       style={height ? { height } : undefined}
-      className={`${height ? "flex-1 " : ""}overflow-hidden rounded-3xl border border-border bg-surface shadow-soft`}
+      className={`${height ? "flex-1 " : ""}overflow-hidden rounded-3xl border border-border bg-surface shadow-card`}
     >
       <View className="items-center justify-center overflow-hidden bg-accent-soft" style={{ height: IMAGE_HEIGHT }}>
         {sponsor.logo_url ? (
@@ -138,7 +138,7 @@ function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: numb
         )}
       </View>
       <View className="flex-1 gap-1.5 p-4">
-        <Text className="font-display-bold text-lg leading-8 text-fg" numberOfLines={2}>
+        <Text className="font-sans-bold text-lg leading-8 text-fg" numberOfLines={2}>
           {sponsor.name}
         </Text>
         <Text className="font-sans text-sm leading-6 text-fg-muted" numberOfLines={height ? 2 : undefined}>
@@ -165,10 +165,10 @@ function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: numb
 function Dot({ active }: { active: boolean }) {
   const progress = useSharedValue(active ? 1 : 0);
   useEffect(() => {
-    progress.value = withTiming(active ? 1 : 0, { duration: 300 });
+    progress.set(withTiming(active ? 1 : 0, { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) }));
   }, [active, progress]);
-  const box = useAnimatedStyle(() => ({ width: 6 + progress.value * 14 }));
-  const fill = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const box = useAnimatedStyle(() => ({ width: 6 + progress.get() * 14 }));
+  const fill = useAnimatedStyle(() => ({ opacity: progress.get() }));
   return (
     <Animated.View className="h-1.5 overflow-hidden rounded-full bg-border" style={box}>
       <Animated.View className="absolute inset-0 rounded-full bg-gold" style={fill} />
@@ -295,7 +295,7 @@ export function SponsorCarousel({ className }: { className?: string }) {
   if (!sponsors.length) return null;
   return (
     <View className={`gap-2 ${className ?? ""}`}>
-      <Text className="font-sans-bold text-xs text-fg-muted">برعاية</Text>
+      <Text className="font-sans-bold text-sm text-fg-muted">برعاية</Text>
       {sponsors.length === 1 ? <SponsorSlide sponsor={sponsors[0]} /> : <SponsorPager sponsors={sponsors} />}
     </View>
   );

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ChevronLeft, ChevronRight, Headphones, Save, Settings2, UserRound } from "lucide-react-native";
+import { ChevronLeft, Headphones, Save, Settings2, UserRound } from "lucide-react-native";
 import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,7 +27,7 @@ function Group({ title, hint, children }: { title: string; hint?: string; childr
   return (
     <View className="gap-3">
       <View className="mt-4 px-1">
-        <Text className="font-display-bold text-lg text-fg">{title}</Text>
+        <Text className="font-sans-bold text-base text-fg">{title}</Text>
         {hint && <Text className="font-sans text-xs leading-5 text-fg-muted">{hint}</Text>}
       </View>
       {children}
@@ -39,13 +39,13 @@ function LinkCard({ icon: Icon, title, hint, onPress }: { icon: typeof Headphone
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   return (
-    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-      <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4">
+    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+      <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
         <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
           <Icon size={22} color={primary} />
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">{title}</Text>
+          <Text className="font-sans-bold text-base text-fg">{title}</Text>
           <Text className="font-sans text-xs text-fg-muted">{hint}</Text>
         </View>
         <ChevronLeft size={18} color={muted} />
@@ -61,7 +61,6 @@ function LinkCard({ icon: Icon, title, hint, onPress }: { icon: typeof Headphone
  */
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
   const account = useAccount();
   const userId = account.status === "signed-in" ? account.userId : null;
   const complete = useSetupComplete(userId);
@@ -76,6 +75,8 @@ export default function SettingsScreen() {
     <View className="flex-1 bg-bg">
       <Screen bleed>
         <PageHeader
+          back
+          onBack={() => (router.canGoBack() ? router.back() : router.replace("/more"))}
           kicker="الإعدادات"
           icon={Settings2}
           title="إعداداتك في مكان واحد"
@@ -109,23 +110,20 @@ export default function SettingsScreen() {
           </Group>
 
           {userId ? (
-            <LinkCard icon={UserRound} title="الحساب" hint="اسمك، وأطفالك، وكلمة المرور، ورسائل البريد" onPress={() => router.push("/account")} />
+            <LinkCard
+              icon={UserRound}
+              title="الحساب"
+              hint="اسمك، وأطفالك، وكلمة المرور، ورسائل البريد"
+              onPress={() => router.push("/account")}
+            />
           ) : null}
         </Section>
       </Screen>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="رجوع"
-        onPress={() => (router.canGoBack() ? router.back() : router.replace("/more"))}
-        hitSlop={12}
-        className="absolute end-3 size-10 items-center justify-center rounded-full bg-white/10"
-        style={{ top: insets.top + 12 }}
+      <View
+        className="absolute inset-x-0 bottom-0 border-t border-border bg-surface px-4 pt-3"
+        style={{ paddingBottom: insets.bottom + 12 }}
       >
-        <ChevronRight size={24} color={heroFg} />
-      </Pressable>
-
-      <View className="absolute inset-x-0 bottom-0 border-t border-border bg-surface px-4 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
         <Button size="lg" icon={Save} variant={saved ? "outline" : "primary"} onPress={save}>
           {saved ? (userId ? "حُفظت في حسابك ✓" : "حُفظت على هذا الجهاز ✓") : complete ? "حفظ التغييرات" : "حفظ الإعدادات"}
         </Button>

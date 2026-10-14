@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { Award, BookOpenCheck, CalendarRange, ChevronRight, Flame, GraduationCap, Lock, Medal, Mic, Repeat } from "lucide-react-native";
+import { Award, BookOpenCheck, CalendarRange, Flame, GraduationCap, Lock, Medal, Mic, Repeat, Route } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
@@ -29,8 +30,10 @@ function Stat({ icon: Icon, value, label }: { icon: typeof Flame; value: number;
   const primary = useThemeColor("primary");
   return (
     <View className="w-[48.5%] items-center rounded-3xl border border-border bg-surface p-4">
-      <Icon size={22} color={primary} />
-      <Text className="mt-1 font-display-bold text-2xl text-fg">{toArabicDigits(value)}</Text>
+      <View className="size-10 items-center justify-center rounded-2xl bg-primary-soft">
+        <Icon size={20} color={primary} />
+      </View>
+      <Text className="mt-2 font-sans-bold text-2xl text-fg">{toArabicDigits(value)}</Text>
       <Text className="text-center font-sans text-xs text-fg-muted">{label}</Text>
     </View>
   );
@@ -39,7 +42,6 @@ function Stat({ icon: Icon, value, label }: { icon: typeof Flame; value: number;
 /** The website's /dashboard ("رحلتي"): memorization per juz, reviews due, tasmee and certificates. */
 export default function JourneyScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
   const primary = useThemeColor("primary");
   const account = useAccount();
   const learnerId = activeLearnerId(account);
@@ -59,26 +61,15 @@ export default function JourneyScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <Text className="font-sans-bold text-sm text-gold-soft">رحلتي</Text>
-        <Text className="mt-2 font-display-bold text-3xl leading-[46px] text-hero-fg">
-          {name ? `رحلة ${name} مع القرآن` : "رحلتك مع القرآن"}
-        </Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-white/75">
-          ما حفظته في كل جزء، ومكان قراءتك، وتسميعك، واختباراتك وشهاداتك — محفوظة في حسابك.
-        </Text>
-      </View>
+      <PageHeader
+        back
+        kicker="رحلتي"
+        icon={Route}
+        title={name ? `رحلة ${name} مع القرآن` : "رحلتك مع القرآن"}
+        description="ما حفظته في كل جزء، ومكان قراءتك، وتسميعك، واختباراتك وشهاداتك — محفوظة في حسابك."
+      />
 
-      <View className="gap-4 px-4 pt-5">
+      <View className="gap-4 px-4">
         {/* Kept on the phone, so guests see it too. */}
         <StreakCard />
         {!learnerId ? (
@@ -105,17 +96,20 @@ export default function JourneyScreen() {
             <ContinueReadingCard />
 
             <View className="flex-row gap-3">
-              <Button variant="outline" icon={CalendarRange} className="flex-1" onPress={() => router.push("/plan")}>
+              <Button variant="secondary" icon={CalendarRange} className="flex-1" onPress={() => router.push("/plan")}>
                 خطة الحفظ
               </Button>
-              <Button variant="outline" icon={Mic} className="flex-1" onPress={() => router.push("/tasmee")}>
+              <Button variant="secondary" icon={Mic} className="flex-1" onPress={() => router.push("/tasmee")}>
                 سمّع لنفسك
               </Button>
             </View>
 
-            <View className="gap-3 rounded-3xl border border-border bg-surface p-4">
+            <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
               <View className="flex-row items-center justify-between">
-                <Text className="font-display-bold text-lg text-fg">مراجعة اليوم</Text>
+                <View className="flex-row items-center gap-2">
+                  <Repeat size={16} color={primary} />
+                  <Text className="font-sans-bold text-base text-fg">مراجعة اليوم</Text>
+                </View>
                 {due.length > 0 && (
                   <Text className="font-sans-bold text-xs text-accent-strong">
                     {toArabicDigits(due.length)} {due.length > 2 ? "سور" : "سورة"}
@@ -137,9 +131,9 @@ export default function JourneyScreen() {
                 due.map((row) => {
                   const late = Math.floor((now - new Date(row.due_at).getTime()) / DAY_MS);
                   return (
-                    <View key={row.surah} className="gap-2 rounded-2xl bg-bg p-3">
+                    <View key={row.surah} className="gap-3 rounded-2xl border border-border bg-surface p-4">
                       <View className="flex-row items-center justify-between">
-                        <Text className="font-display-bold text-base text-fg">سورة {getSurah(row.surah)?.name}</Text>
+                        <Text className="font-sans-bold text-base text-fg">سورة {getSurah(row.surah)?.name}</Text>
                         <Text className="font-sans text-xs text-fg-muted">
                           المراجعة {toArabicDigits(row.interval_index + 1)} من {toArabicDigits(REVIEW_INTERVALS_DAYS.length)}
                           {late >= 1 ? ` · متأخرة ${inDays(late)}` : ""}
@@ -173,8 +167,11 @@ export default function JourneyScreen() {
               )}
             </View>
 
-            <Text className="mt-2 font-display-bold text-lg text-fg">حفظك في الأجزاء الثلاثين</Text>
-            <View className="flex-row flex-wrap justify-between gap-y-2.5">
+            <View className="mt-2 flex-row items-center gap-2">
+              <BookOpenCheck size={16} color={primary} />
+              <Text className="font-sans-bold text-base text-fg">حفظك في الأجزاء الثلاثين</Text>
+            </View>
+            <View className="flex-row flex-wrap justify-between gap-y-3">
               {journey.juz.map((juz) => (
                 <Pressable
                   key={juz.juz}
@@ -185,12 +182,13 @@ export default function JourneyScreen() {
                       : router.push({ pathname: "/exams/[juz]", params: { juz: String(juz.juz) } })
                   }
                   className="w-[48.5%]"
+                  style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
                 >
                   <View
-                    className={`gap-1.5 rounded-2xl border p-3 ${juz.certificateCode ? "border-gold/50 bg-accent-soft" : "border-border bg-surface"}`}
+                    className={`gap-1.5 rounded-2xl border p-3.5 ${juz.certificateCode ? "border-accent bg-accent-soft" : "border-border bg-surface"}`}
                   >
                     <View className="flex-row items-center justify-between">
-                      <Text className="font-display-bold text-sm text-fg">الجزء {toArabicDigits(juz.juz)}</Text>
+                      <Text className="font-sans-bold text-sm text-fg">الجزء {toArabicDigits(juz.juz)}</Text>
                       {juz.certificateCode ? (
                         <Award size={16} color={primary} />
                       ) : juz.lastFailed ? (
@@ -208,13 +206,16 @@ export default function JourneyScreen() {
               ))}
             </View>
 
-            <View className="gap-2 rounded-3xl border border-border bg-surface p-4">
-              <Text className="font-display-bold text-base text-fg">آخر جلسات التسميع</Text>
+            <View className="gap-3 rounded-3xl border border-border bg-surface p-5">
+              <View className="flex-row items-center gap-2">
+                <Mic size={16} color={primary} />
+                <Text className="font-sans-bold text-base text-fg">آخر جلسات التسميع</Text>
+              </View>
               {journey.tasmee.length === 0 ? (
                 <Text className="font-sans text-sm text-fg-muted">لم تسمّع بعد.</Text>
               ) : (
                 journey.tasmee.map((session) => (
-                  <View key={session.id} className="flex-row items-center justify-between border-t border-border pt-2">
+                  <View key={session.id} className="flex-row items-center justify-between border-t border-border pt-3">
                     <Text className="font-sans-bold text-sm text-fg">
                       سورة {getSurah(session.surah)?.name} {toArabicDigits(session.ayah_from)}–{toArabicDigits(session.ayah_to)}
                     </Text>

@@ -22,13 +22,13 @@ export function TextSizeCard() {
   const primary = useThemeColor("primary");
   const scale = useTextScale();
   return (
-    <View className="gap-3 rounded-3xl border border-border bg-surface p-4">
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-3">
         <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
           <ALargeSmall size={22} color={primary} />
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">حجم الخط</Text>
+          <Text className="font-sans-bold text-base text-fg">حجم الخط</Text>
           <Text className="font-sans text-xs text-fg-muted">لنصوص التطبيق كلها، وللمصحف حجم خاص في الأسفل.</Text>
         </View>
       </View>
@@ -41,7 +41,7 @@ export function TextSizeCard() {
               accessibilityRole="radio"
               accessibilityState={{ selected: active }}
               onPress={() => setTextScale(option.value)}
-              className={`flex-1 items-center rounded-2xl border py-2 ${active ? "border-primary bg-primary" : "border-border bg-bg"}`}
+              className={`flex-1 items-center rounded-2xl border py-2.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
             >
               <Text className={`font-sans-bold ${active ? "text-on-primary" : "text-fg"}`} style={{ fontSize: 14 * option.value }}>
                 {option.label}
@@ -62,12 +62,12 @@ export function AdhkarToastCard() {
   const surface = useThemeColor("surface");
   const enabled = useAdhkarToastEnabled();
   return (
-    <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4">
+    <View className="flex-row items-center gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
         <Sparkles size={22} color={primary} />
       </View>
       <View className="flex-1">
-        <Text className="font-display-bold text-base text-fg">ذكّر قلبك داخل التطبيق</Text>
+        <Text className="font-sans-bold text-base text-fg">ذكّر قلبك داخل التطبيق</Text>
         <Text className="font-sans text-xs leading-5 text-fg-muted">ذكر قصير كل ١٠ دقائق وأنت تتصفح التطبيق.</Text>
       </View>
       <Switch value={enabled} onValueChange={setAdhkarToastEnabled} trackColor={{ false: border, true: primary }} thumbColor={surface} />
@@ -97,13 +97,13 @@ export function SpecialDaysCard() {
   }
 
   return (
-    <View className="gap-3 rounded-3xl border border-border bg-surface p-4">
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-3">
         <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
           <CalendarHeart size={22} color={primary} />
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">تذكيرات الأيام المميزة</Text>
+          <Text className="font-sans-bold text-base text-fg">تذكيرات الأيام المميزة</Text>
           <Text className="font-sans text-xs leading-5 text-fg-muted">
             صباح الجمعة بسورة الكهف، وليلة أيام الصيام، ومواسم الخير — إشعارًا على هاتفك ورسالة على بريدك.
           </Text>
@@ -128,7 +128,9 @@ export function SpecialDaysCard() {
             </View>
           ))}
           {result ? (
-            <Text className={`font-sans text-sm ${result.ok ? "text-primary" : "text-danger"}`}>{result.ok ? result.message : result.error}</Text>
+            <Text className={`font-sans text-sm ${result.ok ? "text-primary" : "text-danger"}`}>
+              {result.ok ? result.message : result.error}
+            </Text>
           ) : null}
         </>
       )}
@@ -182,7 +184,7 @@ export function NotificationPermissionCard() {
       <View className="flex-row items-center gap-3">
         <BellOff size={22} color={primary} />
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">الإشعارات متوقفة</Text>
+          <Text className="font-sans-bold text-base text-fg">الإشعارات متوقفة</Text>
           <Text className="font-sans text-xs leading-5 text-fg-muted">لن يصلك الأذان ولا تذكير الأذكار حتى تسمح بها مرة واحدة.</Text>
         </View>
       </View>
@@ -208,11 +210,14 @@ export function AdhkarRemindersCard() {
   const surface = useThemeColor("surface");
   const [denied, setDenied] = useState(false);
   return (
-    <View className="rounded-3xl border border-border bg-surface px-4">
+    <View className="rounded-3xl border border-border bg-surface px-4 shadow-card">
       {REMINDER_ROWS.map((row, index) => (
-        <View key={row.kind} className={`flex-row items-center gap-3 py-3.5 ${index < REMINDER_ROWS.length - 1 ? "border-b border-border" : ""}`}>
+        <View
+          key={row.kind}
+          className={`flex-row items-center gap-3 py-3.5 ${index < REMINDER_ROWS.length - 1 ? "border-b border-border" : ""}`}
+        >
           <View className="flex-1">
-            <Text className="font-display-bold text-[15px] text-fg">{row.title}</Text>
+            <Text className="font-sans-bold text-[15px] text-fg">{row.title}</Text>
             <Text className="font-sans text-xs text-fg-muted">{row.hint}</Text>
           </View>
           <Switch
@@ -242,11 +247,11 @@ export function LocationCard() {
   const [locating, setLocating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   return (
-    <View className="gap-3 rounded-3xl bg-hero p-4">
-      <Text className="font-sans text-xs text-white/70">المواقيت والأذان حسب</Text>
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-4 shadow-card">
+      <Text className="font-sans-bold text-sm text-fg-muted">المواقيت والأذان حسب</Text>
       <CityDropdown value={location.source === "timezone" ? location.city : null} label={location.label} onChange={chooseCity} />
       <Button
-        variant="light"
+        variant="secondary"
         icon={LocateFixed}
         disabled={locating}
         onPress={async () => {
@@ -254,12 +259,13 @@ export function LocationCard() {
           setMessage(null);
           const result = await requestPreciseLocation().catch(() => "error" as const);
           setLocating(false);
-          if (result !== "ok") setMessage(result === "denied" ? "لم نحصل على إذن الموقع، اختر مدينتك من القائمة." : "تعذّر تحديد موقعك الآن.");
+          if (result !== "ok")
+            setMessage(result === "denied" ? "لم نحصل على إذن الموقع، اختر مدينتك من القائمة." : "تعذّر تحديد موقعك الآن.");
         }}
       >
         {locating ? "جارٍ التحديد…" : "استخدم موقعي الحالي"}
       </Button>
-      {message && <Text className="font-sans text-xs text-gold-soft">{message}</Text>}
+      {message && <Text className="font-sans text-xs text-danger">{message}</Text>}
     </View>
   );
 }
@@ -272,17 +278,22 @@ export function ReadingCard() {
   const border = useThemeColor("border");
   const surface = useThemeColor("surface");
   return (
-    <View className="gap-4 rounded-3xl border border-border bg-surface p-4">
+    <View className="gap-4 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-3">
         <BookOpen size={20} color={primary} />
-        <Text className="flex-1 font-display-bold text-base text-fg">المصحف</Text>
+        <Text className="flex-1 font-sans-bold text-base text-fg">المصحف</Text>
       </View>
       <View className="flex-row items-center gap-3">
         <View className="flex-1">
           <Text className="font-sans-bold text-sm text-fg">ألوان التجويد</Text>
           <Text className="font-sans text-xs text-fg-muted">تلوين أحكام التجويد في رواية حفص</Text>
         </View>
-        <Switch value={prefs.tajweed} onValueChange={reader.setTajweed} trackColor={{ false: border, true: primary }} thumbColor={surface} />
+        <Switch
+          value={prefs.tajweed}
+          onValueChange={reader.setTajweed}
+          trackColor={{ false: border, true: primary }}
+          thumbColor={surface}
+        />
       </View>
       <View className="gap-2">
         <Text className="font-sans-bold text-sm text-fg">حجم خط المصحف</Text>
@@ -296,7 +307,7 @@ export function ReadingCard() {
                 accessibilityLabel={`حجم ${step + 1}`}
                 accessibilityState={{ selected: active }}
                 onPress={() => reader.setFontStep(step)}
-                className={`flex-1 items-center rounded-2xl border py-2 ${active ? "border-primary bg-primary" : "border-border bg-bg"}`}
+                className={`flex-1 items-center rounded-2xl border py-2.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
               >
                 <Text className={`font-quran ${active ? "text-on-primary" : "text-fg"}`} style={{ fontSize: 14 + step * 3 }}>
                   ق

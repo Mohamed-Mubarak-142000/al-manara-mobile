@@ -1,7 +1,7 @@
 import { router, useSegments } from "expo-router";
 import { Pause, Play, RotateCcw, SkipBack, X } from "lucide-react-native";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TrackDownloadButton } from "@/features/downloads/TrackDownloadButton";
@@ -10,7 +10,6 @@ import { useThemeColor } from "@/theme/useThemeColor";
 import { miniPlayerLayout, miniPlayerPlacement, useMiniPlayerLayout, type MiniPlayerPlacement } from "./miniPlayerLayout";
 import { audio, currentTrack, useHasTrack, usePlayer, type PlayerState } from "./playerStore";
 
-const NIGHT = "#012a22";
 /** The stock bottom tab bar before it has been measured. */
 const TAB_BAR_FALLBACK = 49;
 
@@ -20,9 +19,10 @@ function usePlacement(): MiniPlayerPlacement {
 
 /** The play button's face: a spinner while loading, retry after a failure. */
 function PlayIcon({ state, size }: { state: PlayerState; size: number }) {
-  if (state.error) return <RotateCcw size={size - 2} color={NIGHT} />;
-  if (state.buffering && !state.playing) return <ActivityIndicator color={NIGHT} size="small" />;
-  return state.playing ? <Pause size={size} color={NIGHT} fill={NIGHT} /> : <Play size={size} color={NIGHT} fill={NIGHT} />;
+  const onPrimary = useThemeColor("on-primary");
+  if (state.error) return <RotateCcw size={size - 2} color={onPrimary} />;
+  if (state.buffering && !state.playing) return <ActivityIndicator color={onPrimary} size="small" />;
+  return state.playing ? <Pause size={size} color={onPrimary} fill={onPrimary} /> : <Play size={size} color={onPrimary} fill={onPrimary} />;
 }
 
 function playLabel(state: PlayerState): string {
@@ -32,8 +32,8 @@ function playLabel(state: PlayerState): string {
 /** The bar shown while something is loaded; tapping it opens the full player. */
 function MiniPlayerBar({ state }: { state: PlayerState }) {
   const track = currentTrack(state);
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold");
+  const fg = useThemeColor("fg");
+  const primary = useThemeColor("primary");
   if (!track) return null;
 
   const progress = state.duration > 0 ? Math.min(1, state.currentTime / state.duration) : 0;
@@ -43,44 +43,46 @@ function MiniPlayerBar({ state }: { state: PlayerState }) {
       accessibilityRole="button"
       accessibilityLabel={`مشغّل: ${track.title}`}
       onPress={() => router.push("/player")}
-      className="overflow-hidden rounded-2xl bg-hero shadow-lift"
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
-      <View className="flex-row items-center gap-3 px-3 py-2.5">
-        <View className="flex-1">
-          <Text numberOfLines={1} className="font-display-bold text-sm text-hero-fg">
-            {track.title}
-          </Text>
-          {state.error ? (
-            <Text numberOfLines={1} accessibilityRole="alert" className="font-sans-bold text-xs text-gold-soft">
-              تعذّر التشغيل — اضغط لإعادة المحاولة
+      <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
+        <View className="flex-row items-center gap-3 px-3 py-2.5">
+          <View className="flex-1">
+            <Text numberOfLines={1} className="font-sans-bold text-sm text-fg">
+              {track.title}
             </Text>
-          ) : (
-            <Text numberOfLines={1} className="font-sans text-xs text-white/65">
-              {track.artist}
-            </Text>
+            {state.error ? (
+              <Text numberOfLines={1} accessibilityRole="alert" className="font-sans-bold text-xs text-danger">
+                تعذّر التشغيل — اضغط لإعادة المحاولة
+              </Text>
+            ) : (
+              <Text numberOfLines={1} className="font-sans text-xs text-fg-muted">
+                {track.artist}
+              </Text>
+            )}
+          </View>
+          <TrackDownloadButton track={track} />
+          {!track.live && (
+            <Pressable accessibilityRole="button" accessibilityLabel="السابق" hitSlop={8} onPress={audio.previous} className="p-1.5">
+              <SkipBack size={20} color={fg} />
+            </Pressable>
           )}
-        </View>
-        <TrackDownloadButton track={track} tone="light" />
-        {!track.live && (
-          <Pressable accessibilityRole="button" accessibilityLabel="السابق" hitSlop={8} onPress={audio.previous} className="p-1.5">
-            <SkipBack size={20} color={heroFg} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={playLabel(state)}
+            hitSlop={8}
+            onPress={audio.toggle}
+            className="size-10 items-center justify-center rounded-full bg-primary"
+          >
+            <PlayIcon state={state} size={18} />
           </Pressable>
-        )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={playLabel(state)}
-          hitSlop={8}
-          onPress={audio.toggle}
-          className="size-10 items-center justify-center rounded-full bg-gold"
-        >
-          <PlayIcon state={state} size={20} />
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="إغلاق المشغّل" hitSlop={8} onPress={audio.stop} className="p-1.5">
-          <X size={18} color={heroFg} />
-        </Pressable>
-      </View>
-      <View className="h-0.5 bg-white/10">
-        <View style={{ width: `${progress * 100}%`, backgroundColor: gold }} className="h-full" />
+          <Pressable accessibilityRole="button" accessibilityLabel="إغلاق المشغّل" hitSlop={8} onPress={audio.stop} className="p-1.5">
+            <X size={18} color={fg} />
+          </Pressable>
+        </View>
+        <View className="h-0.5 bg-border">
+          <View style={{ width: `${progress * 100}%`, backgroundColor: primary }} className="h-full" />
+        </View>
       </View>
     </Pressable>
   );
@@ -102,8 +104,8 @@ export function GlobalMiniPlayer() {
   const bottom = placement === "tabs" ? tabBarHeight || TAB_BAR_FALLBACK + insets.bottom : insets.bottom;
   return (
     <Animated.View
-      entering={FadeInDown.duration(300)}
-      exiting={FadeOutDown.duration(200)}
+      entering={FadeInDown.duration(360).easing(Easing.bezier(0.22, 1, 0.36, 1))}
+      exiting={FadeOutDown.duration(260)}
       onLayout={(event) => miniPlayerLayout.setPlayerHeight(event.nativeEvent.layout.height)}
       className="absolute inset-x-0 px-3 pb-2"
       style={{ bottom }}

@@ -1,11 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, ChevronRight, ExternalLink, Lightbulb, NotebookText } from "lucide-react-native";
+import { BookOpenText, ChevronLeft, ChevronRight, ExternalLink, Lightbulb, NotebookText } from "lucide-react-native";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { NAWAWI, narratorLine } from "@/core/nawawi/nawawiData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { useScaledText } from "@/theme/textScale";
@@ -21,8 +23,7 @@ export default function NawawiHadithScreen() {
   const { number } = useLocalSearchParams<{ number: string }>();
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const primary = useThemeColor("primary");
   const accent = useThemeColor("accent-strong");
   const muted = useThemeColor("fg-muted");
   const hadithText = useScaledText(22, 46);
@@ -32,35 +33,26 @@ export default function NawawiHadithScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace("/nawawi"))}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <NotebookText size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">
-            الأربعون النووية{hadith ? ` · الحديث ${toArabicDigits(hadith.number)}` : ""}
-          </Text>
-        </View>
-        {hadith && (
-          <>
-            <Text className="mt-2 font-display-bold text-2xl leading-[42px] text-hero-fg">{hadith.title}</Text>
-            <Text className="mt-1 font-sans text-sm leading-6 text-white/75">{narratorLine(hadith)}</Text>
-          </>
-        )}
-      </View>
+      <ScreenHeader
+        title="الأربعون النووية"
+        subtitle={hadith ? `الحديث ${toArabicDigits(hadith.number)} من ${toArabicDigits(NAWAWI.length)}` : undefined}
+        onBack={() => (router.canGoBack() ? router.back() : router.replace("/nawawi"))}
+      />
 
       {!hadith ? (
         <StateMessage message="لم نجد هذا الحديث." actionLabel="كل الأحاديث" onAction={() => router.replace("/nawawi")} />
       ) : (
-        <View className="gap-6 px-4 pt-5">
-          <View className="rounded-[28px] border border-border bg-surface p-5 shadow-soft">
+        <View className="gap-6 px-4 pt-2">
+          <Animated.View entering={enterSoft(0)}>
+            <View className="flex-row items-center gap-2">
+              <NotebookText size={16} color={primary} />
+              <Text className="font-sans-bold text-sm text-primary">الحديث {toArabicDigits(hadith.number)}</Text>
+            </View>
+            <Text className="mt-2 font-sans-bold text-2xl leading-10.5 text-fg">{hadith.title}</Text>
+            <Text className="mt-1 font-sans text-sm leading-6 text-fg-muted">{narratorLine(hadith)}</Text>
+          </Animated.View>
+
+          <Animated.View entering={enterSoft(1)} className="rounded-3xl border border-border bg-surface p-5 shadow-card">
             {/* Amiri Quran rather than the Hafs face, which draws the Arabic comma as a dotted circle. */}
             <Text className="font-quran-fallback text-fg" style={hadithText}>
               {hadith.hadith}
@@ -71,12 +63,15 @@ export default function NawawiHadithScreen() {
               </View>
               <Text className="flex-1 font-sans text-xs leading-5 text-fg-muted">{hadith.attribution}</Text>
             </View>
-          </View>
+          </Animated.View>
 
           <View className="gap-3">
-            <Text accessibilityRole="header" className="font-display-bold text-xl text-fg">
-              الشرح
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <BookOpenText size={18} color={primary} />
+              <Text accessibilityRole="header" className="font-sans-bold text-base text-fg">
+                الشرح
+              </Text>
+            </View>
             {hadith.explanation.split(/\n+/).map((paragraph, index) => (
               <Text key={index} className="font-sans text-base leading-8 text-fg">
                 {paragraph}
@@ -85,10 +80,10 @@ export default function NawawiHadithScreen() {
           </View>
 
           {hadith.lessons.length > 0 && (
-            <View className="rounded-[28px] border border-accent/40 bg-accent-soft p-5">
+            <View className="rounded-3xl border border-accent/40 bg-accent-soft p-5">
               <View className="flex-row items-center gap-2">
-                <Lightbulb size={20} color={accent} />
-                <Text accessibilityRole="header" className="font-display-bold text-xl text-fg">
+                <Lightbulb size={18} color={accent} />
+                <Text accessibilityRole="header" className="font-sans-bold text-base text-fg">
                   من فوائد الحديث
                 </Text>
               </View>
@@ -116,7 +111,7 @@ export default function NawawiHadithScreen() {
 
           <View className="flex-row items-center justify-between gap-3 border-t border-border pt-5">
             {previous ? (
-              <Button variant="outline" icon={ChevronRight} onPress={() => goTo(previous.number)}>
+              <Button variant="secondary" icon={ChevronRight} onPress={() => goTo(previous.number)}>
                 {`الحديث ${toArabicDigits(previous.number)}`}
               </Button>
             ) : (

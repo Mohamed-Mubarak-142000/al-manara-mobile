@@ -1,5 +1,3 @@
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { HandHeart } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -11,7 +9,6 @@ import Animated, {
   SlideInLeft,
   SlideInRight,
   type ExitAnimationsValues,
-  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
@@ -123,14 +120,6 @@ export default function OnboardingScreen() {
     [busy, isRTL, move],
   );
 
-  // The scene stays bright behind the welcome text and dims under the setup cards.
-  const dim = useSharedValue(step === 0 ? 0 : 1);
-  useEffect(() => {
-    const target = step === 0 ? 0 : 1;
-    dim.set(reduceMotion ? target : withTiming(target, { duration: 500 }));
-  }, [dim, reduceMotion, step]);
-  const dimStyle = useAnimatedStyle(() => ({ opacity: dim.get() }));
-
   async function finish(then?: "support") {
     if (finishing.current) return;
     finishing.current = true;
@@ -170,29 +159,13 @@ export default function OnboardingScreen() {
   }
 
   const edges = slideEdges(direction, isRTL);
-  const entering = reduceMotion
-    ? FadeIn.duration(150)
-    : (edges.enterFrom === "left" ? SlideInLeft : SlideInRight).duration(SLIDE_MS);
+  const entering = reduceMotion ? FadeIn.duration(150) : (edges.enterFrom === "left" ? SlideInLeft : SlideInRight).duration(SLIDE_MS);
   const exiting = reduceMotion ? FadeOut.duration(120) : exitSlide;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={swipe}>
-        <View className="flex-1 bg-emerald-night">
-          <Image source={require("@/assets/images/scenes/quran-terrace.webp")} contentFit="cover" style={StyleSheet.absoluteFill} />
-          <LinearGradient
-            colors={["rgba(1,42,34,0.15)", "rgba(1,42,34,0.7)", "#012a22"]}
-            locations={[0, 0.42, 0.8]}
-            style={StyleSheet.absoluteFill}
-          />
-          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, dimStyle]}>
-            <LinearGradient
-              colors={["rgba(1,42,34,0.55)", "rgba(1,42,34,0.94)", "#012a22"]}
-              locations={[0, 0.3, 0.6]}
-              style={StyleSheet.absoluteFill}
-            />
-          </Animated.View>
-
+        <View className="flex-1 bg-bg">
           {id === "welcome" ? (
             <Animated.View key="welcome" exiting={reduceMotion ? undefined : FadeOut.duration(250)} style={StyleSheet.absoluteFill}>
               <WelcomeStep reduceMotion={reduceMotion} onStart={() => move(1)} onSkip={skipAll} />
@@ -228,17 +201,17 @@ export default function OnboardingScreen() {
                     <Button variant="gold" size="lg" icon={HandHeart} disabled={busy} onPress={() => finish("support")}>
                       {busy ? "لحظة…" : "ادعم الآن"}
                     </Button>
-                    <Button variant="light" size="lg" disabled={busy} onPress={() => finish()}>
+                    <Button variant="outline" size="lg" disabled={busy} onPress={() => finish()}>
                       ربما لاحقًا
                     </Button>
                   </>
                 ) : id === "account" && !signedIn ? (
                   // While a fresh sign-in loads the account, "continue as guest" would be the wrong button.
-                  <Button variant="light" size="lg" disabled={accountState.status === "loading"} onPress={next}>
+                  <Button variant="outline" size="lg" disabled={accountState.status === "loading"} onPress={next}>
                     {accountState.status === "loading" ? "لحظة…" : "متابعة كضيف"}
                   </Button>
                 ) : (
-                  <Button variant="gold" size="lg" disabled={busy || !canGoNext(step, count)} onPress={next}>
+                  <Button size="lg" disabled={busy || !canGoNext(step, count)} onPress={next}>
                     {id === "wird" ? "متابعة" : "التالي"}
                   </Button>
                 )}

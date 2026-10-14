@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TOAST_ADHKAR, type ToastDhikr } from "@/core/adhkar/toastAdhkar";
 import { useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
+import { useThemeColor } from "@/theme/useThemeColor";
 
 /** In-app fallback; Android's native overlay owns delivery when enabled. */
 const INTERVAL_MS = 10 * 60_000;
@@ -89,6 +90,7 @@ function Countdown() {
 /** Mounted once in the root layout, above every screen. */
 export function AdhkarToaster() {
   const insets = useSafeAreaInsets();
+  const gold = useThemeColor("gold");
   const pathname = usePathname();
   const on = useAdhkarToastEnabled();
   const { status } = useBackgroundStatus();
@@ -135,7 +137,7 @@ export function AdhkarToaster() {
     >
       <View accessibilityRole="alert" className="overflow-hidden rounded-3xl border border-gold/30 bg-emerald-deep p-4 shadow-lift">
         <View className="flex-row gap-3">
-          <Sparkles size={18} color="#cda23e" />
+          <Sparkles size={18} color={gold} />
           <View className="flex-1">
             <Text className="font-sans-bold text-xs text-gold-soft">ذكّر قلبك</Text>
             <Text className="mt-1 font-quran-fallback text-lg leading-9 text-white">{current.text}</Text>

@@ -14,12 +14,7 @@ function Runs({ runs }: { runs: LegalRun[] }) {
   return runs.map((run, index) => {
     if (typeof run !== "string") {
       return (
-        <Text
-          key={index}
-          accessibilityRole="link"
-          onPress={() => router.push(run.route)}
-          className="font-sans-bold text-primary underline"
-        >
+        <Text key={index} accessibilityRole="link" onPress={() => router.push(run.route)} className="font-sans-bold text-primary underline">
           {run.text}
         </Text>
       );
@@ -49,11 +44,11 @@ export function LegalDocument({ document, icon }: { document: LegalDocumentData;
   return (
     <Screen bleed>
       <BackHeader kicker={document.kicker} icon={icon} title={document.title} description={document.description} />
-      <Section className="mt-6 gap-4">
+      <Section className="mt-2 gap-4">
         <Text className="font-sans text-sm text-fg-muted">آخر تحديث: {toArabicDigits(document.updated)}</Text>
         {document.sections.map((section, index) => (
-          <View key={section.title} className="gap-2 rounded-3xl border border-border bg-surface p-5">
-            <Text accessibilityRole="header" className="font-display-bold text-primary-strong" style={heading}>
+          <View key={section.title} className="gap-2 rounded-3xl border border-border bg-surface p-5 shadow-card">
+            <Text accessibilityRole="header" className="font-sans-bold text-fg" style={heading}>
               {toArabicDigits(index + 1)}. {section.title}
             </Text>
             {section.body && (

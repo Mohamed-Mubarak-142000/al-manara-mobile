@@ -2,10 +2,11 @@ import { router, useIsFocused } from "expo-router";
 import Storage from "expo-sqlite/kv-store";
 import { Bell, BookOpen, Clock, Settings2 } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
+import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 
-import { Button } from "@/components/ui/Button";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { enterSoft } from "@/components/ui/PageHeader";
 import { useAccount } from "@/features/account/accountStore";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -48,7 +49,7 @@ export function SetupPrompt() {
   const userId = account.status === "signed-in" ? account.userId : null;
   const complete = useSetupComplete(userId);
   const focused = useIsFocused();
-  const gold = useThemeColor("gold-soft");
+  const primary = useThemeColor("primary");
   const [due, setDue] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -65,41 +66,39 @@ export function SetupPrompt() {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={later} statusBarTranslucent>
-      <Animated.View entering={FadeIn.duration(200)} className="flex-1 items-center justify-center bg-black/55 px-6">
-        <Pressable accessibilityLabel="لاحقًا" onPress={later} className="absolute inset-0" />
-        <Animated.View entering={ZoomIn.duration(260)} accessibilityRole="alert" className="w-full max-w-sm rounded-4xl bg-hero p-6 shadow-lift">
-          <View className="size-14 items-center justify-center self-center rounded-full bg-gold/20">
-            <Settings2 size={28} color={gold} />
-          </View>
-          <Text className="mt-4 text-center font-display-bold text-xl text-hero-fg">أكمل إعداداتك</Text>
-          <Text className="mt-2 text-center font-sans text-sm leading-6 text-white/75">
-            دقيقة واحدة لتستفيد من كل شيء في المنارة{userId ? "، وتُحفظ في حسابك على أي جهاز." : "."}
-          </Text>
-          <View className="mt-4 gap-2.5">
-            {ITEMS.map(({ icon: Icon, text }) => (
-              <View key={text} className="flex-row items-center gap-3 rounded-2xl bg-white/8 px-3 py-2.5">
-                <Icon size={18} color={gold} />
-                <Text className="flex-1 font-sans text-sm text-white/85">{text}</Text>
+    <BottomSheet
+      visible={visible}
+      onClose={later}
+      title="أكمل إعداداتك"
+      icon={Settings2}
+      secondary={{ label: "لاحقًا", onPress: later }}
+      primary={{
+        label: "أكمل الإعدادات",
+        onPress: () => {
+          setDismissed(true);
+          router.push("/settings");
+        },
+      }}
+    >
+      <View accessibilityRole="alert">
+        <Text className="font-sans text-base leading-7 text-fg-muted">
+          دقيقة واحدة لتستفيد من كل شيء في المنارة{userId ? "، وتُحفظ في حسابك على أي جهاز." : "."}
+        </Text>
+        <View className="mt-4 gap-3">
+          {ITEMS.map(({ icon: Icon, text }, index) => (
+            <Animated.View
+              key={text}
+              entering={enterSoft(index + 1)}
+              className="flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5"
+            >
+              <View className="size-10 items-center justify-center rounded-xl bg-primary-soft">
+                <Icon size={20} color={primary} />
               </View>
-            ))}
-          </View>
-          <Button
-            className="mt-5"
-            variant="gold"
-            size="lg"
-            onPress={() => {
-              setDismissed(true);
-              router.push("/settings");
-            }}
-          >
-            أكمل الإعدادات
-          </Button>
-          <Pressable accessibilityRole="button" onPress={later} hitSlop={8} className="mt-3 self-center py-1">
-            <Text className="font-sans-bold text-sm text-white/70">لاحقًا</Text>
-          </Pressable>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+              <Text className="flex-1 font-sans-semibold text-sm text-fg">{text}</Text>
+            </Animated.View>
+          ))}
+        </View>
+      </View>
+    </BottomSheet>
   );
 }

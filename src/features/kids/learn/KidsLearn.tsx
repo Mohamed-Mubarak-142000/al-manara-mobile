@@ -13,7 +13,7 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeInLeft,
@@ -27,6 +27,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { isSurahUnlocked } from "@/core/kids/levels";
 import type { Surah } from "@/core/quran/api";
 import type { Ayah } from "@/core/quran/textApi";
@@ -105,7 +106,19 @@ function BouncingPointer() {
   );
 }
 
-function Chip({ active, onPress, icon, children, gold }: { active: boolean; onPress: () => void; icon: React.ReactNode; children: string; gold?: boolean }) {
+function Chip({
+  active,
+  onPress,
+  icon,
+  children,
+  gold,
+}: {
+  active: boolean;
+  onPress: () => void;
+  icon: React.ReactNode;
+  children: string;
+  gold?: boolean;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -131,7 +144,19 @@ function Chip({ active, onPress, icon, children, gold }: { active: boolean; onPr
   );
 }
 
-function PlayButton({ tone, label, caption, state, onPress }: { tone: "emerald" | "sky"; label: string; caption: string; state: { playing: boolean; loading: boolean }; onPress: () => void }) {
+function PlayButton({
+  tone,
+  label,
+  caption,
+  state,
+  onPress,
+}: {
+  tone: "emerald" | "sky";
+  label: string;
+  caption: string;
+  state: { playing: boolean; loading: boolean };
+  onPress: () => void;
+}) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={{ flex: 1 }}>
       {({ pressed }) => (
@@ -285,7 +310,17 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           accessibilityLabel={`تعلّم سورة ${surah.name}`}
           onPress={() => setSwitcherOpen(true)}
           style={[
-            { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 999, backgroundColor: KIDS.white, paddingHorizontal: 28, paddingVertical: 6, borderWidth: 4, borderColor: KIDS.surahRing },
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 999,
+              backgroundColor: KIDS.white,
+              paddingHorizontal: 28,
+              paddingVertical: 6,
+              borderWidth: 4,
+              borderColor: KIDS.surahRing,
+            },
             PANEL_SHADOW,
           ]}
         >
@@ -310,13 +345,15 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           </View>
         </Pressable>
       </View>
-      <Modal visible={switcherOpen} transparent animationType="fade" onRequestClose={() => setSwitcherOpen(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: "rgba(1,42,34,0.35)", justifyContent: "center", padding: 24 }} onPress={() => setSwitcherOpen(false)}>
-          <View style={[{ backgroundColor: KIDS.white, borderRadius: 28, padding: 12, maxHeight: "75%" }, PANEL_SHADOW]}>
-            <KidsScrollList current={surah.id} onPick={() => setSwitcherOpen(false)} />
-          </View>
-        </Pressable>
-      </Modal>
+      <BottomSheet
+        visible={switcherOpen}
+        onClose={() => setSwitcherOpen(false)}
+        title="اختر سورة لتتعلّمها"
+        icon={BookOpen}
+        maxHeight={0.75}
+      >
+        <KidsSurahGrid current={surah.id} onPick={() => setSwitcherOpen(false)} />
+      </BottomSheet>
 
       {/* Ayah steps */}
       <View accessibilityLabel="آيات السورة" className="mt-8 flex-row items-center justify-center gap-2">
@@ -326,7 +363,15 @@ export function KidsLearn({ surahId }: { surahId: number }) {
             accessibilityLabel="الآيات السابقة"
             disabled={group === 0}
             onPress={() => goTo(Math.max(0, (group - 1) * STEP_GROUP))}
-            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.9)", alignItems: "center", justifyContent: "center", opacity: group === 0 ? 0.3 : 1 }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "rgba(255,255,255,0.9)",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: group === 0 ? 0.3 : 1,
+            }}
           >
             <ChevronRight size={20} color={KIDS.deep} />
           </Pressable>
@@ -374,7 +419,15 @@ export function KidsLearn({ surahId }: { surahId: number }) {
             accessibilityLabel="الآيات التالية"
             disabled={group === groups - 1}
             onPress={() => goTo(Math.min(ayahs.length - 1, (group + 1) * STEP_GROUP))}
-            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.9)", alignItems: "center", justifyContent: "center", opacity: group === groups - 1 ? 0.3 : 1 }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "rgba(255,255,255,0.9)",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: group === groups - 1 ? 0.3 : 1,
+            }}
           >
             <ChevronLeft size={20} color={KIDS.deep} />
           </Pressable>
@@ -385,12 +438,27 @@ export function KidsLearn({ surahId }: { surahId: number }) {
       <View className="mt-10">
         <View
           style={[
-            { borderRadius: 44, backgroundColor: "rgba(255,255,255,0.95)", paddingHorizontal: 18, paddingTop: 26, paddingBottom: 28, borderWidth: 4, borderColor: "rgba(255,255,255,0.7)", overflow: "hidden" },
+            {
+              borderRadius: 44,
+              backgroundColor: "rgba(255,255,255,0.95)",
+              paddingHorizontal: 18,
+              paddingTop: 26,
+              paddingBottom: 28,
+              borderWidth: 4,
+              borderColor: "rgba(255,255,255,0.7)",
+              overflow: "hidden",
+            },
             PANEL_SHADOW,
           ]}
         >
-          <View style={{ position: "absolute", end: -40, top: -40, width: 112, height: 112, borderRadius: 56, backgroundColor: KIDS.blush }} />
-          <Animated.View key={ayah.number} entering={direction >= 0 ? FadeInLeft.duration(300) : FadeInRight.duration(300)} style={{ alignItems: "center" }}>
+          <View
+            style={{ position: "absolute", end: -40, top: -40, width: 112, height: 112, borderRadius: 56, backgroundColor: KIDS.blush }}
+          />
+          <Animated.View
+            key={ayah.number}
+            entering={direction >= 0 ? FadeInLeft.duration(300) : FadeInRight.duration(300)}
+            style={{ alignItems: "center" }}
+          >
             <View style={{ borderRadius: 999, backgroundColor: KIDS.soft, paddingHorizontal: 16, paddingVertical: 2 }}>
               <KidsText size={13} bold tone="muted">
                 الآية {toArabicDigits(ayah.numberInSurah)}
@@ -407,7 +475,11 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           </Animated.View>
 
           <View className="mt-6 flex-row flex-wrap justify-center gap-2">
-            <Chip active={panel === "tafsir"} onPress={() => setPanel((current) => (current === "tafsir" ? null : "tafsir"))} icon={<BookOpen size={16} color={KIDS.muted} />}>
+            <Chip
+              active={panel === "tafsir"}
+              onPress={() => setPanel((current) => (current === "tafsir" ? null : "tafsir"))}
+              icon={<BookOpen size={16} color={KIDS.muted} />}
+            >
               تفسير الآية (للكبار)
             </Chip>
             <Chip
@@ -428,7 +500,11 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           </View>
 
           {panel === "tafsir" && (
-            <Animated.View entering={FadeIn} exiting={FadeOut} style={{ marginTop: 16, borderRadius: 24, backgroundColor: KIDS.ivory, padding: 16 }}>
+            <Animated.View
+              entering={FadeIn}
+              exiting={FadeOut}
+              style={{ marginTop: 16, borderRadius: 24, backgroundColor: KIDS.ivory, padding: 16 }}
+            >
               <Text className="font-sans-bold" style={{ fontSize: 12, color: KIDS.goldDeep }}>
                 التفسير الميسّر
               </Text>
@@ -438,7 +514,11 @@ export function KidsLearn({ surahId }: { surahId: number }) {
             </Animated.View>
           )}
           {panel === "settings" && (
-            <Animated.View entering={FadeIn} exiting={FadeOut} style={{ marginTop: 16, borderRadius: 24, backgroundColor: KIDS.ivory, padding: 16, gap: 16 }}>
+            <Animated.View
+              entering={FadeIn}
+              exiting={FadeOut}
+              style={{ marginTop: 16, borderRadius: 24, backgroundColor: KIDS.ivory, padding: 16, gap: 16 }}
+            >
               <View>
                 <KidsText size={14} bold>
                   كم مرة تتكرر الآية؟
@@ -450,7 +530,13 @@ export function KidsLearn({ surahId }: { surahId: number }) {
                       accessibilityRole="button"
                       accessibilityState={{ selected: settings.repeat === count }}
                       onPress={() => setSettings((current) => ({ ...current, repeat: count }))}
-                      style={{ flex: 1, borderRadius: 16, paddingVertical: 8, alignItems: "center", backgroundColor: settings.repeat === count ? KIDS.emerald : KIDS.white }}
+                      style={{
+                        flex: 1,
+                        borderRadius: 16,
+                        paddingVertical: 8,
+                        alignItems: "center",
+                        backgroundColor: settings.repeat === count ? KIDS.emerald : KIDS.white,
+                      }}
                     >
                       <KidsText size={15} bold style={{ color: settings.repeat === count ? KIDS.white : KIDS.muted }}>
                         {toArabicDigits(count)} {count === 1 ? "مرة" : "مرات"}
@@ -463,14 +549,36 @@ export function KidsLearn({ surahId }: { surahId: number }) {
                 accessibilityRole="switch"
                 accessibilityState={{ checked: settings.autoAdvance }}
                 onPress={() => setSettings((current) => ({ ...current, autoAdvance: !current.autoAdvance }))}
-                style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 16, backgroundColor: KIDS.white, padding: 12 }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderRadius: 16,
+                  backgroundColor: KIDS.white,
+                  padding: 12,
+                }}
               >
                 <KidsText size={15} bold>
                   انتقل للآية التالية تلقائيًا
                 </KidsText>
-                <View style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: settings.autoAdvance ? KIDS.emerald : KIDS.line, justifyContent: "center", paddingHorizontal: 4 }}>
+                <View
+                  style={{
+                    width: 48,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: settings.autoAdvance ? KIDS.emerald : KIDS.line,
+                    justifyContent: "center",
+                    paddingHorizontal: 4,
+                  }}
+                >
                   <View
-                    style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: KIDS.white, alignSelf: settings.autoAdvance ? "flex-end" : "flex-start" }}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: KIDS.white,
+                      alignSelf: settings.autoAdvance ? "flex-end" : "flex-start",
+                    }}
                   />
                 </View>
               </Pressable>
@@ -478,18 +586,49 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           )}
 
           {/* The listening box */}
-          <View style={{ marginTop: 28, borderRadius: 32, backgroundColor: KIDS.softer, paddingHorizontal: 14, paddingBottom: 18, paddingTop: 36 }}>
+          <View
+            style={{
+              marginTop: 28,
+              borderRadius: 32,
+              backgroundColor: KIDS.softer,
+              paddingHorizontal: 14,
+              paddingBottom: 18,
+              paddingTop: 36,
+            }}
+          >
             <View
               style={[
-                { position: "absolute", top: -28, alignSelf: "center", width: 56, height: 56, borderRadius: 28, backgroundColor: KIDS.white, alignItems: "center", justifyContent: "center" },
+                {
+                  position: "absolute",
+                  top: -28,
+                  alignSelf: "center",
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: KIDS.white,
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
                 PANEL_SHADOW,
               ]}
             >
               <BookOpen size={28} color={KIDS.sky} />
             </View>
             <View className="flex-row gap-3">
-              <PlayButton tone="emerald" label="الشيخ مع التكرار" caption="الحصري — المصحف المعلّم" state={modeState("muallim")} onPress={() => playMode("muallim")} />
-              <PlayButton tone="sky" label="الشيخ فقط" caption="الحصري — تلاوة" state={modeState("plain")} onPress={() => playMode("plain")} />
+              <PlayButton
+                tone="emerald"
+                label="الشيخ مع التكرار"
+                caption="الحصري — المصحف المعلّم"
+                state={modeState("muallim")}
+                onPress={() => playMode("muallim")}
+              />
+              <PlayButton
+                tone="sky"
+                label="الشيخ فقط"
+                caption="الحصري — تلاوة"
+                state={modeState("plain")}
+                onPress={() => playMode("plain")}
+              />
             </View>
             {teaching && (
               <KidsButton
@@ -522,7 +661,21 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           accessibilityLabel="الآية السابقة"
           disabled={index === 0}
           onPress={() => goTo(index - 1)}
-          style={[{ position: "absolute", start: -6, top: 70, width: 44, height: 44, borderRadius: 22, backgroundColor: KIDS.white, alignItems: "center", justifyContent: "center", opacity: index === 0 ? 0 : 1 }, PANEL_SHADOW]}
+          style={[
+            {
+              position: "absolute",
+              start: -6,
+              top: 70,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: KIDS.white,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: index === 0 ? 0 : 1,
+            },
+            PANEL_SHADOW,
+          ]}
         >
           <ChevronRight size={24} color={KIDS.deep} />
         </Pressable>
@@ -532,7 +685,18 @@ export function KidsLearn({ surahId }: { surahId: number }) {
           disabled={index === ayahs.length - 1}
           onPress={() => goTo(index + 1)}
           style={[
-            { position: "absolute", end: -6, top: 70, width: 44, height: 44, borderRadius: 22, backgroundColor: KIDS.white, alignItems: "center", justifyContent: "center", opacity: index === ayahs.length - 1 ? 0 : 1 },
+            {
+              position: "absolute",
+              end: -6,
+              top: 70,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: KIDS.white,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: index === ayahs.length - 1 ? 0 : 1,
+            },
             PANEL_SHADOW,
           ]}
         >
@@ -564,12 +728,12 @@ export function KidsLearn({ surahId }: { surahId: number }) {
   );
 }
 
-/** The switcher's list: the surahs open to this child. */
-function KidsScrollList({ current, onPick }: { current: number; onPick: () => void }) {
+/** The switcher's grid: the surahs open to this child (the sheet scrolls it). */
+function KidsSurahGrid({ current, onPick }: { current: number; onPick: () => void }) {
   const { state } = useKidsProgress();
   const open = getKidsSurahs().filter((entry) => isSurahUnlocked(state, entry.id));
   return (
-    <Animated.ScrollView contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {open.map((entry) => (
         <Pressable
           key={entry.id}
@@ -578,13 +742,21 @@ function KidsScrollList({ current, onPick }: { current: number; onPick: () => vo
             onPick();
             if (entry.id !== current) router.replace(kidsHref(`/kids/learn/${entry.id}`));
           }}
-          style={{ width: "48%", borderRadius: 16, paddingVertical: 8, alignItems: "center", backgroundColor: entry.id === current ? KIDS.emerald : KIDS.mist }}
+          accessibilityState={{ selected: entry.id === current }}
+          style={({ pressed }) => ({
+            width: "48%",
+            borderRadius: 16,
+            paddingVertical: 10,
+            alignItems: "center",
+            backgroundColor: entry.id === current ? KIDS.emerald : KIDS.mist,
+            transform: [{ scale: pressed ? 0.97 : 1 }],
+          })}
         >
           <KidsText size={16} bold style={{ color: entry.id === current ? KIDS.white : KIDS.deep }}>
             {entry.name}
           </KidsText>
         </Pressable>
       ))}
-    </Animated.ScrollView>
+    </View>
   );
 }

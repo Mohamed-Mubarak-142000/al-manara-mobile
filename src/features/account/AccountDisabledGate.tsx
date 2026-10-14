@@ -28,7 +28,7 @@ export function AccountDisabledGate() {
       <View className="size-16 items-center justify-center rounded-3xl bg-danger/10">
         <ShieldOff size={32} color={danger} />
       </View>
-      <Text className="mt-6 text-center font-display-bold text-3xl text-primary-strong">هذا الحساب موقوف</Text>
+      <Text className="mt-6 text-center font-sans-bold text-[28px] text-fg">هذا الحساب موقوف</Text>
       <Text className="mt-3 text-center font-sans text-base leading-7 text-fg-muted">
         أوقفت إدارة المنصة هذا الحساب. يمكنك الاستمرار في استخدام التطبيق كزائر، وسيبقى تقدّمك محفوظًا إن أُعيد تفعيل الحساب.
       </Text>

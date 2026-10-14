@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { Bookmark, BookmarkCheck, Headphones, ImageIcon, NotebookPen, Repeat, Share2, X } from "lucide-react-native";
+import { Bookmark, BookmarkCheck, BookOpenText, Headphones, ImageIcon, NotebookPen, Repeat, Share2 } from "lucide-react-native";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Share, Text, TextInput, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, Share, Text, TextInput, View } from "react-native";
 
 import { AYAH_VOICES } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Button } from "@/components/ui/Button";
 import { audio, type Track } from "@/features/audio/playerStore";
 import { AyahPackButton } from "@/features/downloads/AyahPackButton";
 import { ayahSource } from "@/features/downloads/ayahPacks";
@@ -21,6 +22,8 @@ const VOICES: Record<Voice, { label: string }> = {
   alafasy: AYAH_VOICES.alafasy,
 };
 const PACK_VOICES: readonly Voice[] = ["husary", "alafasy"];
+
+const pressScale = ({ pressed }: { pressed: boolean }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] });
 
 /** Ayah tracks from `ayah` to the end of its surah, so "listen" keeps reciting the way the reader reads. */
 function tracksFrom(ayah: MushafAyah, voice: Voice): Track[] {
@@ -41,67 +44,72 @@ function tracksFrom(ayah: MushafAyah, voice: Voice): Track[] {
  * extras (recitation, tafsir, the image card, bookmarks) are left out rather than shown misaligned.
  */
 export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; riwaya: string | null; onClose: () => void }) {
-  const insets = useSafeAreaInsets();
   const state = useReaderState();
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
-  const name = ayah ? getSurah(ayah.surah)?.name : "";
-  const marked = ayah ? isBookmarked(state, ayah.surah, ayah.ayah) : false;
-  const note = ayah ? noteFor(state, ayah.surah, ayah.ayah) : undefined;
   const fg = useThemeColor("fg");
+  const onPrimary = useThemeColor("on-primary");
+  // The sheet glides out after `ayah` is cleared: it keeps showing the last ayah meanwhile.
+  const [shown, setShown] = useState(ayah);
+  if (ayah && ayah !== shown) setShown(ayah);
+  const current = ayah ?? shown;
+  const name = current ? getSurah(current.surah)?.name : "";
+  const marked = current ? isBookmarked(state, current.surah, current.ayah) : false;
+  const note = current ? noteFor(state, current.surah, current.ayah) : undefined;
   const [noteDraft, setNoteDraft] = useState<{ id: number; text: string } | null>(null);
-  const editing = ayah !== null && noteDraft?.id === ayah.id;
+  const editing = current !== null && noteDraft?.id === current.id;
   // Bundled with the app, so it is there offline from the first launch.
-  const tafsirText = ayah && !riwaya ? tafsirFor(ayah.id) : undefined;
+  const tafsirText = current && !riwaya ? tafsirFor(current.id) : undefined;
 
   return (
-    <Modal visible={ayah !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable className="flex-1 bg-black/40" onPress={onClose} accessibilityLabel="إغلاق" />
-      {ayah && (
-        <View className="max-h-[78%] rounded-t-[32px] bg-surface px-5 pt-3" style={{ paddingBottom: insets.bottom + 16 }}>
-          <View className="mb-3 h-1.5 w-12 self-center rounded-full bg-border" />
-          <View className="flex-row items-center justify-between">
-            <Text className="font-display-bold text-lg text-fg">
-              سورة {name} · الآية {toArabicDigits(ayah.ayah)}
-            </Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="إغلاق" onPress={onClose} hitSlop={10}>
-              <X size={22} color={muted} />
-            </Pressable>
-          </View>
-
-          <View className="mt-4 flex-row gap-2">
+    <BottomSheet
+      visible={ayah !== null}
+      onClose={onClose}
+      title={current ? `سورة ${name} · الآية ${toArabicDigits(current.ayah)}` : ""}
+      maxHeight={0.85}
+    >
+      {current && (
+        <View className="gap-3">
+          <View className="flex-row gap-2">
             {!riwaya &&
               (Object.keys(VOICES) as Voice[]).map((voice) => (
                 <Pressable
                   key={voice}
                   accessibilityRole="button"
                   onPress={() => {
-                    audio.playQueue(tracksFrom(ayah, voice), 0);
+                    audio.playQueue(tracksFrom(current, voice), 0);
                     onClose();
                   }}
-                  className="flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl bg-primary py-2.5"
+                  className="flex-1"
+                  style={pressScale}
                 >
-                  <Headphones size={16} color="#fbf8f1" />
-                  <Text className="font-sans-bold text-sm text-on-primary">{VOICES[voice].label}</Text>
+                  <View className="h-12 flex-row items-center justify-center gap-1.5 rounded-xl bg-primary">
+                    <Headphones size={16} color={onPrimary} />
+                    <Text className="font-sans-bold text-sm text-on-primary">{VOICES[voice].label}</Text>
+                  </View>
                 </Pressable>
               ))}
             {!riwaya && (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={marked ? "إزالة العلامة" : "حفظ علامة"}
-                onPress={() => reader.toggleBookmark({ surah: ayah.surah, ayah: ayah.ayah, page: ayah.page })}
-                className="size-11 items-center justify-center rounded-2xl border border-border"
+                onPress={() => reader.toggleBookmark({ surah: current.surah, ayah: current.ayah, page: current.page })}
+                className={`size-12 items-center justify-center rounded-2xl border ${marked ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+                style={pressScale}
               >
-                {marked ? <BookmarkCheck size={20} color={primary} /> : <Bookmark size={20} color={muted} />}
+                {marked ? <BookmarkCheck size={20} color={primary} /> : <Bookmark size={20} color={fg} strokeWidth={1.8} />}
               </Pressable>
             )}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="مشاركة"
-              onPress={() => Share.share({ message: `${ayah.text} ﴿${toArabicDigits(ayah.ayah)}﴾\n[سورة ${name}]\n\nمن تطبيق المنارة` })}
-              className="size-11 items-center justify-center rounded-2xl border border-border"
+              onPress={() =>
+                Share.share({ message: `${current.text} ﴿${toArabicDigits(current.ayah)}﴾\n[سورة ${name}]\n\nمن تطبيق المنارة` })
+              }
+              className="size-12 items-center justify-center rounded-2xl border border-border bg-surface"
+              style={pressScale}
             >
-              <Share2 size={20} color={muted} />
+              <Share2 size={20} color={fg} strokeWidth={1.8} />
             </Pressable>
             {!riwaya && (
               <Pressable
@@ -109,92 +117,89 @@ export function AyahSheet({ ayah, riwaya, onClose }: { ayah: MushafAyah | null; 
                 accessibilityLabel="مشاركة كصورة"
                 onPress={() => {
                   onClose();
-                  router.push({ pathname: "/share-ayah", params: { surah: String(ayah.surah), ayah: String(ayah.ayah) } });
+                  router.push({ pathname: "/share-ayah", params: { surah: String(current.surah), ayah: String(current.ayah) } });
                 }}
-                className="size-11 items-center justify-center rounded-2xl border border-gold/50 bg-accent-soft"
+                className="size-12 items-center justify-center rounded-2xl border border-border bg-surface"
+                style={pressScale}
               >
-                <ImageIcon size={20} color={primary} />
+                <ImageIcon size={20} color={fg} strokeWidth={1.8} />
               </Pressable>
             )}
           </View>
 
           {!riwaya &&
             (editing ? (
-              <View className="mt-3 gap-2">
+              <View className="gap-3">
                 <TextInput
                   value={noteDraft.text}
-                  onChangeText={(text) => setNoteDraft({ id: ayah.id, text })}
+                  onChangeText={(text) => setNoteDraft({ id: current.id, text })}
                   placeholder="اكتب ملاحظتك على هذه الآية"
+                  placeholderTextColor={muted}
                   multiline
                   autoFocus
-                  className="min-h-20 rounded-2xl border border-border bg-bg p-3 font-sans text-base"
+                  className="min-h-24 rounded-2xl border border-border bg-surface p-4 font-sans text-base"
                   style={{ color: fg, textAlign: "right", textAlignVertical: "top" }}
                 />
-                <View className="flex-row gap-2">
-                  <Pressable
-                    accessibilityRole="button"
+                <View className="flex-row gap-3">
+                  <Button className="flex-1" variant="secondary" onPress={() => setNoteDraft(null)}>
+                    إلغاء
+                  </Button>
+                  <Button
+                    className="flex-1"
                     onPress={() => {
-                      reader.setNote(ayah.surah, ayah.ayah, ayah.page, noteDraft.text);
+                      reader.setNote(current.surah, current.ayah, current.page, noteDraft.text);
                       setNoteDraft(null);
                     }}
-                    className="flex-1 items-center rounded-2xl bg-primary py-2.5"
                   >
-                    <Text className="font-sans-bold text-sm text-on-primary">حفظ الملاحظة</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => setNoteDraft(null)}
-                    className="items-center rounded-2xl border border-border px-4 py-2.5"
-                  >
-                    <Text className="font-sans-bold text-sm text-fg">إلغاء</Text>
-                  </Pressable>
+                    حفظ الملاحظة
+                  </Button>
                 </View>
               </View>
             ) : (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => setNoteDraft({ id: ayah.id, text: note?.text ?? "" })}
-                className="mt-3 flex-row items-start gap-2 rounded-2xl bg-accent-soft p-3"
+                onPress={() => setNoteDraft({ id: current.id, text: note?.text ?? "" })}
+                style={pressScale}
               >
-                <NotebookPen size={16} color={primary} />
-                <Text className={`flex-1 font-sans text-sm leading-6 ${note ? "text-fg" : "text-fg-muted"}`}>
-                  {note ? note.text : "أضف ملاحظة على هذه الآية"}
-                </Text>
+                <View className="flex-row items-start gap-3 rounded-2xl border border-border bg-surface p-4">
+                  <NotebookPen size={18} color={primary} />
+                  <Text className={`flex-1 font-sans text-sm leading-6 ${note ? "text-fg" : "text-fg-muted"}`}>
+                    {note ? note.text : "أضف ملاحظة على هذه الآية"}
+                  </Text>
+                </View>
               </Pressable>
             ))}
 
           {!riwaya && (
-            <Pressable
-              accessibilityRole="button"
+            <Button
+              variant="secondary"
+              icon={Repeat}
               onPress={() => {
                 onClose();
-                router.push({ pathname: "/repeat", params: { surah: String(ayah.surah), from: String(ayah.ayah) } });
+                router.push({ pathname: "/repeat", params: { surah: String(current.surah), from: String(current.ayah) } });
               }}
-              className="mt-2 flex-row items-center justify-center gap-1.5 rounded-2xl border border-primary/40 py-2.5"
             >
-              <Repeat size={16} color={primary} />
-              <Text className="font-sans-bold text-sm text-primary">كرّر للحفظ (من آية إلى آية)</Text>
-            </Pressable>
+              كرّر للحفظ (من آية إلى آية)
+            </Button>
           )}
 
-          {!riwaya && (
-            <View className="mt-2">
-              <AyahPackButton surah={ayah.surah} voices={PACK_VOICES} />
-            </View>
-          )}
+          {!riwaya && <AyahPackButton surah={current.surah} voices={PACK_VOICES} />}
 
           {riwaya ? (
-            <Text className="mt-4 font-sans text-sm leading-6 text-fg-muted">
+            <Text className="mt-1 font-sans text-sm leading-6 text-fg-muted">
               أنت تقرأ برواية {riwaya}. التفسير والاستماع آية بآية متاحان برواية حفص.
             </Text>
           ) : (
-            <ScrollView className="mt-4" showsVerticalScrollIndicator={false}>
-              <Text className="font-sans-bold text-sm text-accent-strong">التفسير الميسر</Text>
+            <View className="mt-2 border-t border-border pt-4">
+              <View className="flex-row items-center gap-2">
+                <BookOpenText size={16} color={primary} />
+                <Text className="font-sans-bold text-base text-fg">التفسير الميسر</Text>
+              </View>
               <Text className="mt-2 font-sans text-base leading-8 text-fg">{tafsirText}</Text>
-            </ScrollView>
+            </View>
           )}
         </View>
       )}
-    </Modal>
+    </BottomSheet>
   );
 }

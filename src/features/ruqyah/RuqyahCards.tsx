@@ -44,10 +44,10 @@ export function PassageCard({
       : `الآيات ${toArabicDigits(passage.from)}–${toArabicDigits(passage.to)}`;
 
   return (
-    <View className={`mx-4 mb-3 rounded-3xl border bg-surface p-5 ${state ? "border-primary/40" : "border-border shadow-soft"}`}>
+    <View className={`mx-4 mb-3 rounded-3xl border bg-surface p-5 ${state ? "border-primary/40" : "border-border shadow-card"}`}>
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
-          <Text className="font-display-bold text-lg text-fg">{passage.title}</Text>
+          <Text className="font-sans-bold text-base text-fg">{passage.title}</Text>
           <Text className="mt-0.5 font-sans text-sm text-fg-muted">
             {passage.surahName} — {range}
           </Text>
@@ -94,7 +94,7 @@ export function HadithCard({ hadith }: { hadith: RuqyahHadith }) {
   const duaText = useScaledText(22, 44);
 
   return (
-    <View className="mx-4 mb-3 rounded-3xl border border-border bg-surface p-5 shadow-soft">
+    <View className="mx-4 mb-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
       <View className="flex-row items-center justify-between gap-3">
         <Text className="flex-1 font-sans-bold text-sm text-accent-strong">{hadith.title}</Text>
         {hadith.repeat && <RepeatBadge label="سبع مرات" />}
@@ -108,7 +108,7 @@ export function HadithCard({ hadith }: { hadith: RuqyahHadith }) {
         <Text className="mt-3 font-sans text-base leading-8 text-fg">{hadith.hadith}</Text>
       )}
       {hadith.dua && (
-        <View className="mt-3 rounded-2xl bg-bg p-3">
+        <View className="mt-3 rounded-2xl border border-border bg-surface-alt p-3">
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ expanded: open }}

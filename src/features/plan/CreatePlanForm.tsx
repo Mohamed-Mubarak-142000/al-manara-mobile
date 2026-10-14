@@ -1,11 +1,11 @@
-import { Check, Repeat, Sprout, X } from "lucide-react-native";
+import { BookCheck, Check, Repeat, Sprout } from "lucide-react-native";
 import { useMemo, useState, type ReactNode } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { ALL_DAYS, PAGES_PER_DAY_OPTIONS, WEEKDAY_NAMES, WEEK_ORDER, pagesLabel, unitsLabel } from "@/core/plan/schedule";
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { SearchField } from "@/components/ui/SearchField";
 import { getSurahs } from "@/features/mushaf/mushaf";
@@ -24,8 +24,9 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
       accessibilityState={{ selected: active }}
       onPress={onPress}
       className={`rounded-full border px-3.5 py-2 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
+      <Text className={`font-sans-semibold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
     </Pressable>
   );
 }
@@ -33,7 +34,7 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <View className="gap-2">
-      <Text className="font-sans-bold text-sm text-fg">{label}</Text>
+      <Text className="font-sans-bold text-base text-fg">{label}</Text>
       {children}
       {hint ? <Text className="font-sans text-xs leading-5 text-fg-muted">{hint}</Text> : null}
     </View>
@@ -53,7 +54,7 @@ function DaysPicker({ days, onChange }: { days: number[]; onChange: (days: numbe
             onPress={() => onChange(on ? days.filter((entry) => entry !== day) : [...days, day])}
             className={`rounded-full border px-3 py-1.5 ${on ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
           >
-            <Text className={`font-sans-bold text-xs ${on ? "text-primary" : "text-fg-muted"}`}>{WEEKDAY_NAMES[day]}</Text>
+            <Text className={`font-sans-semibold text-xs ${on ? "text-primary" : "text-fg"}`}>{WEEKDAY_NAMES[day]}</Text>
           </Pressable>
         );
       })}
@@ -73,9 +74,7 @@ function PriorPicker({
   onJuz: (juz: number[]) => void;
   onSurahs: (surahs: number[]) => void;
 }) {
-  const insets = useSafeAreaInsets();
   const primary = useThemeColor("primary");
-  const muted = useThemeColor("fg-muted");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const list = useMemo(() => {
@@ -98,49 +97,51 @@ function PriorPicker({
               onPress={() => onJuz(toggle(juz, number))}
               className={`size-10 items-center justify-center rounded-xl border ${on ? "border-primary bg-primary" : "border-border bg-surface"}`}
             >
-              <Text className={`font-display-bold text-sm ${on ? "text-on-primary" : "text-fg"}`}>{toArabicDigits(number)}</Text>
+              <Text className={`font-sans-bold text-sm ${on ? "text-on-primary" : "text-fg"}`}>{toArabicDigits(number)}</Text>
             </Pressable>
           );
         })}
       </View>
-      <Button variant="outline" size="sm" className="self-start" onPress={() => setOpen(true)}>
+      <Button variant="secondary" size="sm" className="self-start" onPress={() => setOpen(true)}>
         {surahs.length ? `السور المختارة: ${toArabicDigits(surahs.length)}` : "اختر سورًا بعينها"}
       </Button>
-      <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8 }}>
-          <View className="flex-row items-center justify-between px-4 pb-3">
-            <Text className="font-display-bold text-xl text-fg">السور التي تحفظها</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="إغلاق" onPress={() => setOpen(false)} hitSlop={10}>
-              <X size={24} color={muted} />
-            </Pressable>
-          </View>
-          <View className="px-4 pb-3">
-            <SearchField value={query} onChangeText={setQuery} placeholder="ابحث عن سورة" />
-          </View>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }} keyboardShouldPersistTaps="handled">
-            {list.map((surah) => {
-              const on = surahs.includes(surah.number);
-              return (
-                <Pressable
-                  key={surah.number}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: on }}
-                  onPress={() => onSurahs(toggle(surahs, surah.number))}
-                  className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 ${on ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
-                >
-                  <Text className="font-display-bold text-base text-fg">
-                    {toArabicDigits(surah.number)}. سورة {surah.name}
-                  </Text>
-                  {on && <Check size={18} color={primary} />}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-          <View className="px-4 pt-3">
-            <Button onPress={() => setOpen(false)}>تم</Button>
-          </View>
+      <BottomSheet
+        visible={open}
+        onClose={() => setOpen(false)}
+        title="السور التي تحفظها"
+        icon={BookCheck}
+        scroll={false}
+        maxHeight={0.88}
+        primary={{ label: "تم", onPress: () => setOpen(false) }}
+      >
+        <View className="pb-3">
+          <SearchField value={query} onChangeText={setQuery} placeholder="ابحث عن سورة" />
         </View>
-      </Modal>
+        <ScrollView
+          style={{ flexShrink: 1 }}
+          contentContainerStyle={{ gap: 8 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {list.map((surah) => {
+            const on = surahs.includes(surah.number);
+            return (
+              <Pressable
+                key={surah.number}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: on }}
+                onPress={() => onSurahs(toggle(surahs, surah.number))}
+                className={`flex-row items-center justify-between rounded-2xl border px-4 py-3.5 ${on ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+              >
+                <Text className="font-sans-bold text-base text-fg">
+                  {toArabicDigits(surah.number)}. سورة {surah.name}
+                </Text>
+                {on && <Check size={18} color={primary} />}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </BottomSheet>
     </View>
   );
 }
@@ -198,12 +199,13 @@ export function CreatePlanForm() {
               if (value === "review" && farPages === 0) setFarPages(2);
             }}
             className={`flex-row items-start gap-3 rounded-3xl border p-4 ${active ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+            style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
           >
             <View className={`size-10 items-center justify-center rounded-2xl ${active ? "bg-primary" : "bg-accent-soft"}`}>
               <Icon size={20} color={active ? onPrimary : accent} />
             </View>
             <View className="flex-1">
-              <Text className="font-display-bold text-base text-fg">{title}</Text>
+              <Text className="font-sans-bold text-base text-fg">{title}</Text>
               <Text className="mt-0.5 font-sans text-xs leading-5 text-fg-muted">{text}</Text>
             </View>
           </Pressable>

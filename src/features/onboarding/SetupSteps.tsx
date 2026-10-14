@@ -27,7 +27,7 @@ export function tapHaptic() {
 
 export function LocationStep() {
   const location = useUserLocation();
-  const gold = useThemeColor("gold-soft");
+  const primary = useThemeColor("primary");
   const [locating, setLocating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -39,21 +39,28 @@ export function LocationStep() {
     if (result === "ok") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } else {
-      setMessage(result === "denied" ? "لم نحصل على إذن الموقع، اختر مدينتك من القائمة." : "تعذّر تحديد موقعك الآن، اختر مدينتك من القائمة.");
+      setMessage(
+        result === "denied" ? "لم نحصل على إذن الموقع، اختر مدينتك من القائمة." : "تعذّر تحديد موقعك الآن، اختر مدينتك من القائمة.",
+      );
     }
   }
 
   return (
-    <StepLayout icon={MapPin} eyebrow="مواقيت الصلاة" title="أين تصلّي؟" subtitle="نضبط المواقيت والأذان على مدينتك. موقعك يبقى على هاتفك فقط.">
-      <Button variant="gold" size="lg" icon={LocateFixed} disabled={locating} onPress={locate}>
+    <StepLayout
+      icon={MapPin}
+      eyebrow="مواقيت الصلاة"
+      title="أين تصلّي؟"
+      subtitle="نضبط المواقيت والأذان على مدينتك. موقعك يبقى على هاتفك فقط."
+    >
+      <Button size="lg" icon={LocateFixed} disabled={locating} onPress={locate}>
         {locating ? "جارٍ التحديد…" : "استخدم موقعي الحالي"}
       </Button>
-      {message ? <Text className="text-center font-sans text-xs leading-5 text-gold-soft">{message}</Text> : null}
+      {message ? <Text className="text-center font-sans text-xs leading-5 text-danger">{message}</Text> : null}
 
       <View className="flex-row items-center gap-3">
-        <View className="h-px flex-1 bg-white/15" />
-        <Text className="font-sans-bold text-xs text-white/60">أو اختر مدينتك</Text>
-        <View className="h-px flex-1 bg-white/15" />
+        <View className="h-px flex-1 bg-border" />
+        <Text className="font-sans-bold text-xs text-fg-muted">أو اختر مدينتك</Text>
+        <View className="h-px flex-1 bg-border" />
       </View>
 
       <CityDropdown
@@ -65,10 +72,10 @@ export function LocationStep() {
         }}
       />
 
-      <View className="flex-row items-center gap-2 rounded-2xl bg-white/5 px-4 py-3">
-        <Check size={16} color={gold} />
-        <Text className="flex-1 font-sans text-xs leading-5 text-white/70">
-          المواقيت الحالية لـ <Text className="font-sans-bold text-white">{location.label}</Text>
+      <View className="flex-row items-center gap-2 rounded-2xl bg-primary-soft px-4 py-3">
+        <Check size={16} color={primary} />
+        <Text className="flex-1 font-sans text-xs leading-5 text-fg-muted">
+          المواقيت الحالية لـ <Text className="font-sans-bold text-primary">{location.label}</Text>
         </Text>
       </View>
     </StepLayout>
@@ -80,7 +87,7 @@ export function LocationStep() {
 export function ReciterStep() {
   const { favoriteReciterId } = useOnboarding();
   const { reciters } = useReciters();
-  const hero = useThemeColor("hero");
+  const primary = useThemeColor("primary");
   const [query, setQuery] = useState("");
 
   const reciterList = useMemo(() => {
@@ -109,7 +116,7 @@ export function ReciterStep() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ gap: 8, paddingBottom: 8 }}
         ListEmptyComponent={
-          <Text className="mt-6 text-center font-sans text-sm text-white/60">
+          <Text className="mt-6 text-center font-sans text-sm text-fg-muted">
             {reciters ? "لا يوجد قارئ بهذا الاسم." : "جارٍ تحميل القرّاء…"}
           </Text>
         }
@@ -123,10 +130,10 @@ export function ReciterStep() {
                 tapHaptic();
                 onboarding.setFavoriteReciter(active ? null : item.id);
               }}
-              className={`flex-row items-center justify-between rounded-2xl px-4 py-3.5 ${active ? "bg-gold" : "bg-white/8"}`}
+              className={`flex-row items-center justify-between rounded-2xl border px-4 py-3.5 ${active ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
             >
-              <Text className={`flex-1 font-display-bold text-base ${active ? "text-emerald-night" : "text-white"}`}>{item.name}</Text>
-              {active && <Check size={18} color={hero} />}
+              <Text className={`flex-1 font-sans-bold text-base ${active ? "text-primary" : "text-fg"}`}>{item.name}</Text>
+              {active && <Check size={18} color={primary} />}
             </Pressable>
           );
         }}
@@ -153,17 +160,17 @@ function Choice({ label, active, onPress }: { label: string; active: boolean; on
         tapHaptic();
         onPress();
       }}
-      className={`min-w-[30%] grow items-center rounded-2xl border px-3 py-3 ${active ? "border-gold bg-gold" : "border-white/10 bg-white/8"}`}
+      className={`min-w-[30%] grow items-center rounded-full border px-3 py-3 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
     >
-      <Text className={`font-sans-bold text-sm ${active ? "text-emerald-night" : "text-white/85"}`}>{label}</Text>
+      <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
     </Pressable>
   );
 }
 
 export function WirdStep({ wird, onWird, adhan, onAdhan }: WirdStepProps) {
-  const gold = useThemeColor("gold");
-  const goldSoft = useThemeColor("gold-soft");
-  const heroFg = useThemeColor("hero-fg");
+  const primary = useThemeColor("primary");
+  const border = useThemeColor("border");
+  const surface = useThemeColor("surface");
 
   return (
     <StepLayout
@@ -184,17 +191,19 @@ export function WirdStep({ wird, onWird, adhan, onAdhan }: WirdStepProps) {
         <Choice label="لاحقًا" active={wird === null} onPress={() => onWird(null)} />
       </View>
 
-      <Text className="text-center font-sans text-xs leading-6 text-gold-soft">
+      <Text className="text-center font-sans text-xs leading-6 text-accent-strong">
         {wird
           ? `بهذا الورد تختم القرآن في نحو ${toArabicDigits(khatmaDays(wird))} يومًا بإذن الله.`
           : "لن نبدأ ختمة الآن، وتستطيع بدءها من صفحة الختمة في أي وقت."}
       </Text>
 
-      <View className="flex-row items-center gap-3 rounded-2xl border border-white/10 bg-white/8 p-4">
-        <Bell size={20} color={goldSoft} />
+      <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+        <View className="size-10 items-center justify-center rounded-xl bg-primary-soft">
+          <Bell size={20} color={primary} />
+        </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-white">الأذان وتذكير الأذكار</Text>
-          <Text className="font-sans text-xs leading-5 text-white/65">
+          <Text className="font-sans-bold text-base text-fg">الأذان وتذكير الأذكار</Text>
+          <Text className="font-sans text-xs leading-5 text-fg-muted">
             الأذان عند دخول كل صلاة، وتذكير بأذكار الصباح والمساء، حتى والتطبيق مغلق. سنطلب إذن الإشعارات مرة واحدة.
           </Text>
         </View>
@@ -205,8 +214,8 @@ export function WirdStep({ wird, onWird, adhan, onAdhan }: WirdStepProps) {
             tapHaptic();
             onAdhan(value);
           }}
-          trackColor={{ false: "rgba(255,255,255,0.2)", true: gold }}
-          thumbColor={heroFg}
+          trackColor={{ false: border, true: primary }}
+          thumbColor={surface}
         />
       </View>
     </StepLayout>

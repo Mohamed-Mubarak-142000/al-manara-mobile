@@ -1,9 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { BookMarked, ChevronDown, ChevronRight, ChevronUp, CircleCheck, ImageIcon, Library, ScrollText, Share2 } from "lucide-react-native";
+import { BookMarked, ChevronDown, ChevronUp, CircleCheck, ImageIcon, Library, ScrollText, Share2 } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Share, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { IconButton, ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { getHadithOffline } from "@/features/hadith/offlineHadith";
 import { HadithChip, HadithPanel, HadithText } from "@/features/hadith/HadithPanel";
@@ -18,7 +20,6 @@ export default function HadithScreen() {
   const { id, category } = useLocalSearchParams<{ id: string; category?: string }>();
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const fg = useThemeColor("fg");
   const muted = useThemeColor("fg-muted");
   const primary = useThemeColor("primary");
   const { state, reload } = useAsync(id, () => getHadithOffline(id));
@@ -32,40 +33,32 @@ export default function HadithScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 32 }}
-    >
-      <View className="flex-row items-center justify-between px-3">
-        <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12} className="flex-row items-center gap-1 p-1">
-          <ChevronRight size={24} color={fg} />
-          <Text className="font-sans-bold text-sm text-fg">{category ? `أحاديث ${category}` : "كل الأحاديث"}</Text>
-        </Pressable>
-        {state.status === "ready" && (
-          <View className="flex-row items-center">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="مشاركة الحديث كصورة"
-              onPress={() => router.push({ pathname: "/share-card", params: { kind: "hadith", id } })}
-              hitSlop={10}
-              className="p-2"
-            >
-              <ImageIcon size={20} color={muted} />
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="مشاركة نص الحديث" onPress={share} hitSlop={10} className="p-2">
-              <Share2 size={20} color={muted} />
-            </Pressable>
-          </View>
-        )}
-      </View>
+    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
+      <ScreenHeader
+        title={category ? `أحاديث ${category}` : "كل الأحاديث"}
+        actions={
+          state.status === "ready" ? (
+            <>
+              <IconButton
+                icon={ImageIcon}
+                label="مشاركة الحديث كصورة"
+                onPress={() => router.push({ pathname: "/share-card", params: { kind: "hadith", id } })}
+              />
+              <IconButton icon={Share2} label="مشاركة نص الحديث" onPress={share} />
+            </>
+          ) : undefined
+        }
+      />
 
       {state.status === "loading" ? (
         <StateMessage loading />
       ) : state.status === "error" ? (
         <StateMessage message="تعذّر تحميل الحديث الآن، حاول بعد قليل." onRetry={reload} />
       ) : (
-        <View className="gap-8 px-4 pt-3">
-          <Text className="font-display-bold text-xl leading-9 text-primary-strong">{state.data.title}</Text>
+        <View className="gap-4 px-4 pt-2">
+          <Animated.Text entering={enterSoft(0)} className="mb-1 font-sans-bold text-xl leading-9 text-fg">
+            {state.data.title}
+          </Animated.Text>
           <HadithPanel title="الحديث" icon={ScrollText}>
             {state.data.intro ? <Text className="mb-1 font-sans text-base leading-8 text-fg-muted">{state.data.intro}</Text> : null}
             <HadithText text={state.data.text} />
@@ -75,7 +68,7 @@ export default function HadithScreen() {
               <Pressable
                 accessibilityRole="button"
                 onPress={share}
-                className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1"
+                className="flex-row items-center gap-1.5 rounded-full border border-primary bg-surface px-3 py-1.5"
               >
                 <Share2 size={14} color={primary} />
                 <Text className="font-sans-bold text-sm text-primary">مشاركة</Text>
@@ -110,7 +103,7 @@ export default function HadithScreen() {
           {state.data.words.length > 0 && (
             <HadithPanel title="معاني الكلمات" icon={Library}>
               {state.data.words.map((entry, index) => (
-                <View key={index} className={`gap-1 py-3 ${index > 0 ? "border-t border-accent/20" : ""}`}>
+                <View key={index} className={`gap-1 pb-3 ${index > 0 ? "border-t border-border pt-3" : ""}`}>
                   <Text className="font-sans-bold text-base text-primary-strong">{entry.word}</Text>
                   <Text className="font-sans text-base leading-8 text-fg">{entry.meaning}</Text>
                 </View>
@@ -118,13 +111,13 @@ export default function HadithScreen() {
             </HadithPanel>
           )}
           {state.data.references.length > 0 && (
-            <View className="rounded-3xl border border-border bg-surface p-5">
+            <View className="rounded-3xl border border-border bg-surface p-5 shadow-card">
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowReferences((value) => !value)}
                 className="flex-row items-center justify-between"
               >
-                <Text className="font-sans-bold text-base text-primary-strong">المراجع</Text>
+                <Text className="font-sans-bold text-base text-fg">المراجع</Text>
                 {showReferences ? <ChevronUp size={18} color={muted} /> : <ChevronDown size={18} color={muted} />}
               </Pressable>
               {showReferences &&

@@ -50,10 +50,10 @@ function useSupporters(): Supporter[] {
 function SupporterCard({ supporter }: { supporter: Supporter }) {
   const accent = useThemeColor("accent-strong");
   return (
-    <View className="w-44 gap-1.5 rounded-3xl border border-border bg-surface p-4 shadow-soft">
+    <View className="w-44 gap-1.5 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-2">
         <Heart size={14} color={accent} fill={accent} />
-        <Text className="flex-1 font-display-bold text-sm text-fg" numberOfLines={1}>
+        <Text className="flex-1 font-sans-bold text-sm text-fg" numberOfLines={1}>
           {supporter.name}
         </Text>
       </View>
@@ -67,16 +67,20 @@ function SupporterCard({ supporter }: { supporter: Supporter }) {
 }
 
 function JoinCard() {
-  const gold = useThemeColor("gold-soft");
+  const onPrimary = useThemeColor("on-primary");
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push("/support")} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push("/support")}
+      style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] })}
+    >
       {/* flex-1, not h-full: a percentage height inside the horizontal list resolved against the whole
           screen, stretching every card down past the tab bar. The row's stretch matches the tallest card. */}
-      <View className="flex-1 w-36 items-center justify-center gap-2 rounded-3xl bg-hero p-4 shadow-lift">
-        <View className="size-10 items-center justify-center rounded-full bg-white/10">
-          <Plus size={20} color={gold} />
+      <View className="flex-1 w-36 items-center justify-center gap-2 rounded-3xl border border-primary bg-primary-soft p-4">
+        <View className="size-10 items-center justify-center rounded-full bg-primary">
+          <Plus size={20} color={onPrimary} />
         </View>
-        <Text className="text-center font-display-bold text-sm text-hero-fg">كن منهم</Text>
+        <Text className="text-center font-sans-bold text-sm text-primary">كن منهم</Text>
       </View>
     </Pressable>
   );
@@ -102,7 +106,7 @@ export function SupportersStrip({ className }: { className?: string }) {
     <View className={`gap-3 ${className ?? ""}`}>
       <View className="flex-row items-center gap-2 px-4">
         <HandHeart size={16} color={accent} />
-        <Text className="flex-1 font-display-bold text-lg text-fg">شكرًا لداعمي المنارة</Text>
+        <Text className="flex-1 font-sans-bold text-base text-fg">شكرًا لداعمي المنارة</Text>
       </View>
       <FlatList
         horizontal

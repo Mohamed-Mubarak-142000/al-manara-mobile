@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { CalendarDays, ChevronLeft, ChevronRight, MoonStar } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -16,6 +15,7 @@ import {
 import { dualDate } from "@/core/calendar/format";
 import { daysBetween, getHijriDate, getNextRamadanStart } from "@/core/calendar/hijriDate";
 import { toArabicDigits } from "@/core/text/arabic";
+import { IconButton, PageHeader } from "@/components/ui/PageHeader";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 type Mode = "gregorian" | "hijri";
@@ -31,9 +31,7 @@ function daysWord(days: number): string {
 /** The website's /calendar: both calendars, the Hijri occasions, and how far Ramadan is. */
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
-  const fg = useThemeColor("fg");
+  const accent = useThemeColor("accent-strong");
   const today = useMemo(() => new Date(), []);
   const [mode, setMode] = useState<Mode>("hijri");
   const [anchor, setAnchor] = useState(today);
@@ -81,9 +79,7 @@ export default function CalendarScreen() {
           className={`h-14 items-center justify-center rounded-xl ${isSelected ? "bg-primary" : isToday ? "border border-primary bg-primary-soft" : cell.occasion ? "bg-accent-soft" : ""}`}
           style={{ opacity: cell.inMonth ? 1 : 0.35 }}
         >
-          <Text className={`font-display-bold text-base ${isSelected ? "text-on-primary" : "text-fg"}`}>
-            {toArabicDigits(primaryNumber)}
-          </Text>
+          <Text className={`font-sans-bold text-base ${isSelected ? "text-on-primary" : "text-fg"}`}>{toArabicDigits(primaryNumber)}</Text>
           <Text className={`font-sans text-[10px] ${isSelected ? "text-on-primary" : "text-fg-muted"}`}>
             {toArabicDigits(secondaryNumber)}
           </Text>
@@ -95,27 +91,15 @@ export default function CalendarScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <CalendarDays size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">التقويم</Text>
-        </View>
-        <Text className="mt-2 font-display-bold text-2xl leading-10 text-hero-fg">الهجري والميلادي في مكان واحد</Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-white/75">
-          {`${chosen.weekday} ${chosen.hijriDay} ${chosen.hijriMonth} ${chosen.hijriYear} هـ · ${chosen.gregorianDay} ${chosen.gregorianMonth} ${chosen.gregorianYear}`}
-        </Text>
-      </View>
+      <PageHeader
+        back
+        kicker="التقويم"
+        icon={CalendarDays}
+        title="الهجري والميلادي في مكان واحد"
+        description={`${chosen.weekday} ${chosen.hijriDay} ${chosen.hijriMonth} ${chosen.hijriYear} هـ · ${chosen.gregorianDay} ${chosen.gregorianMonth} ${chosen.gregorianYear}`}
+      />
 
-      <View className="gap-4 px-4 pt-5">
+      <View className="gap-4 px-4">
         <View className="flex-row rounded-full border border-border bg-surface p-1">
           {(
             [
@@ -128,31 +112,21 @@ export default function CalendarScreen() {
               accessibilityRole="tab"
               accessibilityState={{ selected: mode === value }}
               onPress={() => setMode(value)}
-              className={`flex-1 items-center rounded-full py-2 ${mode === value ? "bg-primary" : ""}`}
+              className={`flex-1 items-center rounded-full py-2.5 ${mode === value ? "bg-primary" : ""}`}
             >
               <Text className={`font-sans-bold text-sm ${mode === value ? "text-on-primary" : "text-fg-muted"}`}>{label}</Text>
             </Pressable>
           ))}
         </View>
 
-        <View className="rounded-3xl border border-border bg-surface p-3 shadow-soft">
-          <View className="mb-2 flex-row items-center justify-between px-1">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="الشهر السابق"
-              onPress={() => shift(-1)}
-              hitSlop={10}
-              className="p-1.5"
-            >
-              <ChevronRight size={22} color={fg} />
-            </Pressable>
-            <View className="items-center">
-              <Text className="font-display-bold text-lg text-fg">{month.title}</Text>
+        <View className="rounded-3xl border border-border bg-surface p-3 shadow-card">
+          <View className="mb-3 flex-row items-center justify-between gap-2">
+            <IconButton icon={ChevronRight} label="الشهر السابق" onPress={() => shift(-1)} />
+            <View className="flex-1 items-center">
+              <Text className="font-sans-bold text-lg text-fg">{month.title}</Text>
               {month.subtitle ? <Text className="font-sans text-xs text-fg-muted">{month.subtitle}</Text> : null}
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel="الشهر التالي" onPress={() => shift(1)} hitSlop={10} className="p-1.5">
-              <ChevronLeft size={22} color={fg} />
-            </Pressable>
+            <IconButton icon={ChevronLeft} label="الشهر التالي" onPress={() => shift(1)} />
           </View>
           <View className="flex-row">
             {WEEKDAYS_SHORT.map((day) => (
@@ -178,9 +152,9 @@ export default function CalendarScreen() {
           </Pressable>
         </View>
 
-        <View className="rounded-3xl border border-border bg-surface p-4">
+        <View className="rounded-3xl border border-border bg-surface p-5 shadow-card">
           <Text className="font-sans-bold text-xs text-fg-muted">{sameDay(selected, today) ? "اليوم" : "اليوم المحدد"}</Text>
-          <Text className="mt-1 font-display-bold text-lg text-fg">
+          <Text className="mt-1 font-sans-bold text-lg text-fg">
             {chosen.hijriDay} {chosen.hijriMonth} {chosen.hijriYear} هـ
           </Text>
           <Text className="font-sans text-sm text-fg-muted">
@@ -190,24 +164,28 @@ export default function CalendarScreen() {
         </View>
 
         {ramadan !== null ? (
-          <View className="flex-row items-center gap-3 rounded-3xl bg-hero p-5">
-            <MoonStar size={30} color={gold} />
+          <View className="flex-row items-center gap-4 rounded-3xl border border-gold/40 bg-accent-soft p-5">
+            <View className="size-14 items-center justify-center rounded-2xl bg-surface">
+              <MoonStar size={28} color={accent} />
+            </View>
             <View className="flex-1">
-              <Text className="font-sans text-sm text-white/75">يفصلنا عن رمضان تقريبًا</Text>
-              <Text className="font-display-bold text-2xl text-hero-fg">{daysWord(ramadan)}</Text>
+              <Text className="font-sans text-sm text-fg-muted">يفصلنا عن رمضان تقريبًا</Text>
+              <Text className="font-sans-bold text-2xl text-accent-strong">{daysWord(ramadan)}</Text>
             </View>
           </View>
         ) : (
-          <View className="flex-row items-center gap-3 rounded-3xl bg-hero p-5">
-            <MoonStar size={30} color={gold} />
-            <Text className="flex-1 font-display-bold text-lg text-hero-fg">رمضان مبارك، تقبّل الله صيامكم وقيامكم</Text>
+          <View className="flex-row items-center gap-4 rounded-3xl border border-gold/40 bg-accent-soft p-5">
+            <View className="size-14 items-center justify-center rounded-2xl bg-surface">
+              <MoonStar size={28} color={accent} />
+            </View>
+            <Text className="flex-1 font-sans-bold text-lg text-accent-strong">رمضان مبارك، تقبّل الله صيامكم وقيامكم</Text>
           </View>
         )}
 
-        <View className="gap-2 rounded-3xl border border-border bg-surface p-4">
-          <Text className="font-display-bold text-base text-fg">مناسبات قادمة</Text>
+        <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
+          <Text className="font-sans-bold text-base text-fg">مناسبات قادمة</Text>
           {upcoming.map((entry) => (
-            <View key={entry.occasion.label} className="flex-row items-center justify-between border-t border-border pt-2">
+            <View key={entry.occasion.label} className="flex-row items-center justify-between border-t border-border pt-3">
               <View>
                 <Text className="font-sans-bold text-sm text-fg">{entry.occasion.label}</Text>
                 <Text className="font-sans text-xs text-fg-muted">{LONG_DATE.format(entry.date)}</Text>

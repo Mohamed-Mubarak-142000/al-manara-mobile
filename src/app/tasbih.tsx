@@ -2,7 +2,18 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Check, ChevronDown, ChevronRight, Palette, RotateCcw, Vibrate, VibrateOff, Volume2, VolumeX, type LucideIcon } from "lucide-react-native";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Palette,
+  RotateCcw,
+  Vibrate,
+  VibrateOff,
+  Volume2,
+  VolumeX,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
@@ -44,10 +55,14 @@ function ToolButton({
       accessibilityState={pressed === undefined ? undefined : { selected: pressed }}
       onPress={onPress}
       hitSlop={6}
-      className="size-12 items-center justify-center rounded-full border"
-      style={({ pressed: down }) => ({ backgroundColor: theme.face, borderColor: theme.accent, transform: [{ scale: down ? 0.9 : 1 }] })}
+      className="size-12 items-center justify-center rounded-2xl border"
+      style={({ pressed: down }) => ({
+        backgroundColor: pressed ? theme.accent : theme.face,
+        borderColor: theme.accent,
+        transform: [{ scale: down ? 0.96 : 1 }],
+      })}
     >
-      <Icon size={20} color={theme.ink} />
+      <Icon size={20} color={pressed ? theme.face : theme.ink} strokeWidth={1.8} />
     </Pressable>
   );
 }
@@ -140,11 +155,14 @@ function BeadRing({ lit, theme }: { lit: number; theme: TasbihTheme }) {
 
 function Stat({ label, value, theme }: { label: string; value: number; theme: TasbihTheme }) {
   return (
-    <View className="flex-1 items-center rounded-2xl px-2 py-3" style={{ backgroundColor: `${theme.face}cc` }}>
+    <View
+      className="flex-1 items-center rounded-2xl border px-2 py-3"
+      style={{ backgroundColor: `${theme.face}cc`, borderColor: theme.track }}
+    >
       <Text className="font-sans text-xs" style={{ color: theme.soft }}>
         {label}
       </Text>
-      <Text className="mt-1 font-display-bold text-xl" style={{ color: theme.ink }}>
+      <Text className="mt-1 font-sans-bold text-xl" style={{ color: theme.ink }}>
         {toArabicDigits(value)}
       </Text>
     </View>
@@ -198,19 +216,16 @@ export default function TasbihScreen() {
         }}
       >
         <View className="w-full flex-row items-center justify-between">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
+          <ToolButton
+            icon={ChevronRight}
+            label="رجوع"
+            theme={theme}
             onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-            hitSlop={12}
-            className="p-1"
-          >
-            <ChevronRight size={26} color={theme.ink} />
-          </Pressable>
-          <Text className="font-display-bold text-lg" style={{ color: theme.ink }}>
+          />
+          <Text className="font-sans-bold text-lg" style={{ color: theme.ink }}>
             السبحة الإلكترونية
           </Text>
-          <View className="w-8" />
+          <View className="size-12" />
         </View>
 
         <Pressable

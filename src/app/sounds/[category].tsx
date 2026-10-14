@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronRight, Pause, Play } from "lucide-react-native";
+import { Music, Pause, Play, Radio } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SOUND_CATEGORIES, getSoundLibrary, type SoundCategoryKey, type SoundLibrary, type SoundTrack } from "@/core/sounds/soundsApi";
 import { formatDuration } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { RADIO_REF, audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
@@ -41,7 +42,6 @@ export default function SoundsScreen() {
   const info = SOUND_CATEGORIES[category];
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
   const primary = useThemeColor("primary");
   const onPrimary = useThemeColor("on-primary");
   const player = usePlayer();
@@ -104,43 +104,41 @@ export default function SoundsScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
       ListHeaderComponent={
         <View className="mb-3">
-          <View className="rounded-b-[32px] bg-hero px-5 pb-10" style={{ paddingTop: insets.top + 8 }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="رجوع"
-              onPress={() => router.back()}
-              hitSlop={12}
-              className="mb-3 self-start p-1"
+          <PageHeader
+            back
+            icon={category === "recordings" ? Radio : Music}
+            kicker={category === "recordings" ? "مكتبة الإذاعة" : "أدعية وابتهالات"}
+            title={info.title}
+            description={info.description}
+          />
+          {category !== "recordings" && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 16 }}
             >
-              <ChevronRight size={26} color={heroFg} />
-            </Pressable>
-            <Text className="font-sans-bold text-sm text-gold-soft">{category === "recordings" ? "مكتبة الإذاعة" : "أدعية وابتهالات"}</Text>
-            <Text className="mt-2 font-display-bold text-3xl text-hero-fg">{info.title}</Text>
-            <Text className="mt-2 font-sans text-sm leading-6 text-white/75" numberOfLines={3}>
-              {info.description}
-            </Text>
-            {category !== "recordings" && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 16 }}>
-              {TABS.map((key) => (
-                <Pressable
-                  key={key}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: key === category }}
-                  onPress={() => {
-                    setArtist(null);
-                    router.setParams({ category: key });
-                  }}
-                  className={`rounded-full px-4 py-1.5 ${key === category ? "bg-gold" : "bg-white/10"}`}
-                >
-                  <Text className={`font-sans-bold text-sm ${key === category ? "text-emerald-night" : "text-white/80"}`}>
-                    {SOUND_CATEGORIES[key].label}
-                  </Text>
-                </Pressable>
-              ))}
+              {TABS.map((key) => {
+                const active = key === category;
+                return (
+                  <Pressable
+                    key={key}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => {
+                      setArtist(null);
+                      router.setParams({ category: key });
+                    }}
+                    className={`rounded-full border px-4 py-1.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+                  >
+                    <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>
+                      {SOUND_CATEGORIES[key].label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
-            )}
-          </View>
-          <View className="-mt-6 gap-3 px-4">
+          )}
+          <View className="gap-3 px-4">
             <SearchField
               value={query}
               onChangeText={setQuery}
@@ -148,7 +146,7 @@ export default function SoundsScreen() {
             />
             {library && library.artists.length > 1 && (
               <>
-                <Text className="font-sans-bold text-sm text-fg">{ARTIST_ROW_LABEL[category]}</Text>
+                <Text className="mt-1 font-sans-bold text-base text-fg">{ARTIST_ROW_LABEL[category]}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                   <Pressable
                     accessibilityRole="radio"
@@ -172,7 +170,7 @@ export default function SoundsScreen() {
                           <Image source={{ uri: entry.image }} style={{ width: 30, height: 30, borderRadius: 15 }} contentFit="cover" />
                         ) : (
                           <View className="size-[30px] items-center justify-center rounded-full bg-primary-soft">
-                            <Text className="font-display-bold text-xs text-primary">{entry.name.slice(0, 1)}</Text>
+                            <Text className="font-sans-bold text-xs text-primary">{entry.name.slice(0, 1)}</Text>
                           </View>
                         )}
                         <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{entry.name}</Text>
@@ -182,9 +180,7 @@ export default function SoundsScreen() {
                 </ScrollView>
               </>
             )}
-            {streamOnly && (
-              <Text className="font-sans text-xs leading-5 text-fg-muted">هذه التسجيلات تُبث من مصدرها ولا يمكن حفظها</Text>
-            )}
+            {streamOnly && <Text className="font-sans text-xs leading-5 text-fg-muted">هذه التسجيلات تُبث من مصدرها ولا يمكن حفظها</Text>}
           </View>
         </View>
       }
@@ -210,12 +206,12 @@ export default function SoundsScreen() {
           <Pressable
             accessibilityRole="button"
             onPress={() => (isCurrent ? audio.toggle() : audio.playQueue(queue, index))}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
           >
             <View
-              className={`mx-4 mb-2 flex-row items-center gap-3 rounded-2xl border px-3 py-2.5 ${isCurrent ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+              className={`mx-4 mb-2.5 flex-row items-center gap-3 rounded-3xl border px-4 py-3 ${isCurrent ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
             >
-              <View className={`size-10 items-center justify-center rounded-full ${isCurrent ? "bg-primary" : "bg-primary-soft"}`}>
+              <View className={`size-11 items-center justify-center rounded-2xl ${isCurrent ? "bg-primary" : "bg-primary-soft"}`}>
                 {isCurrent && player.playing ? (
                   <Pause size={16} color={onPrimary} fill={onPrimary} />
                 ) : (
@@ -223,7 +219,7 @@ export default function SoundsScreen() {
                 )}
               </View>
               <View className="flex-1">
-                <Text numberOfLines={2} className={`font-display-bold text-sm leading-6 ${isCurrent ? "text-primary" : "text-fg"}`}>
+                <Text numberOfLines={2} className={`font-sans-bold text-sm leading-6 ${isCurrent ? "text-primary" : "text-fg"}`}>
                   {item.track.title}
                 </Text>
                 <Text className="font-sans text-xs text-fg-muted">

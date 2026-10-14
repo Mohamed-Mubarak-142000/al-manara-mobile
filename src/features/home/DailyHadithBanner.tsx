@@ -15,7 +15,7 @@ import { useThemeColor } from "@/theme/useThemeColor";
  */
 export function DailyHadithBanner() {
   const gold = useThemeColor("gold-soft");
-  // The brand's emerald in both themes, like the Home hero above it.
+  // The brand's emerald in both themes, like the next-prayer card: a dark accent card in the page gutter.
   const deep = useThemeColor("emerald-deep");
   const night = useThemeColor("emerald-night");
   const today = planDay();
@@ -25,7 +25,7 @@ export function DailyHadithBanner() {
   const parts = hadith.text.split(/(«[^»]*»)/g).filter(Boolean);
 
   return (
-    <Animated.View entering={FadeIn.duration(500)}>
+    <Animated.View entering={FadeIn.duration(400)}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`حديث اليوم: ${hadith.title}`}
@@ -34,13 +34,8 @@ export function DailyHadithBanner() {
         style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}
       >
         <View className="overflow-hidden rounded-4xl border border-gold/30">
-          <LinearGradient
-            colors={[deep, night]}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={{ position: "absolute", inset: 0 }}
-          />
-          {/* Soft gold halos in the corners, the Home hero's palette. */}
+          <LinearGradient colors={[deep, night]} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", inset: 0 }} />
+          {/* Soft gold halos in the corners, the brand's palette. */}
           <View className="absolute -end-10 -top-12 size-40 rounded-full bg-gold/15" />
           <View className="absolute -bottom-16 -start-8 size-36 rounded-full bg-gold/10" />
 

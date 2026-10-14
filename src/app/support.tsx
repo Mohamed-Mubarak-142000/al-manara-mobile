@@ -3,13 +3,14 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { Check, ChevronRight, Clock, Copy, HandHeart, ImagePlus, LogIn, MessageCircleHeart, Sparkles, UserRound, X } from "lucide-react-native";
+import { Check, Clock, Copy, HandHeart, ImagePlus, LogIn, MessageCircleHeart, Sparkles, UserRound, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAccount } from "@/features/account/accountStore";
 import { AuthField, FormError } from "@/features/account/AuthLayout";
 import { donationProblem, submitDonation, useMyDonation, type NewDonation } from "@/features/support/donationApi";
@@ -17,7 +18,7 @@ import { INSTAPAY_NUMBER, QUICK_AMOUNTS, SUPPORTER_PERKS, useSupporter } from "@
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function InstaPayCard() {
-  const gold = useThemeColor("gold-soft");
+  const accent = useThemeColor("accent-strong");
   const [copied, setCopied] = useState(false);
   async function copy() {
     await Clipboard.setStringAsync(INSTAPAY_NUMBER).catch(() => {});
@@ -26,21 +27,21 @@ function InstaPayCard() {
     setTimeout(() => setCopied(false), 2000);
   }
   return (
-    <View className="gap-3 rounded-3xl border border-gold/40 bg-surface p-5 shadow-soft">
-      <Text className="font-sans-bold text-sm text-accent-strong">١. حوّل عبر إنستاباي</Text>
+    <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
+      <Text className="font-sans-bold text-base text-fg">١. حوّل عبر إنستاباي</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`نسخ الرقم ${INSTAPAY_NUMBER}`}
         onPress={copy}
-        style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
       >
-        <View className="flex-row items-center gap-3 rounded-2xl bg-hero px-4 py-3.5">
-          <Text selectable className="flex-1 text-center font-display-bold text-2xl tracking-widest text-hero-fg">
+        <View className="flex-row items-center gap-3 rounded-2xl border border-gold/40 bg-accent-soft px-4 py-3.5">
+          <Text selectable className="flex-1 text-center font-sans-bold text-2xl tracking-widest text-accent-strong">
             {INSTAPAY_NUMBER}
           </Text>
-          <View className="flex-row items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
-            {copied ? <Check size={16} color={gold} /> : <Copy size={16} color={gold} />}
-            <Text className="font-sans-bold text-xs text-gold-soft">{copied ? "تم النسخ" : "نسخ"}</Text>
+          <View className="flex-row items-center gap-1.5 rounded-full border border-gold/40 bg-surface px-3 py-1.5">
+            {copied ? <Check size={16} color={accent} /> : <Copy size={16} color={accent} />}
+            <Text className="font-sans-bold text-xs text-accent-strong">{copied ? "تم النسخ" : "نسخ"}</Text>
           </View>
         </View>
       </Pressable>
@@ -51,13 +52,25 @@ function InstaPayCard() {
   );
 }
 
-function StatusCard({ icon: Icon, title, body, tone }: { icon: typeof Clock; title: string; body: string; tone: "wait" | "done" | "warn" }) {
+function StatusCard({
+  icon: Icon,
+  title,
+  body,
+  tone,
+}: {
+  icon: typeof Clock;
+  title: string;
+  body: string;
+  tone: "wait" | "done" | "warn";
+}) {
   const color = useThemeColor(tone === "warn" ? "danger" : tone === "done" ? "primary" : "accent-strong");
   return (
-    <View className={`flex-row gap-3 rounded-3xl border p-4 ${tone === "warn" ? "border-danger/40 bg-surface" : "border-gold/40 bg-accent-soft"}`}>
+    <View
+      className={`flex-row gap-3 rounded-3xl border p-4 ${tone === "warn" ? "border-danger/40 bg-surface" : "border-gold/40 bg-accent-soft"}`}
+    >
       <Icon size={22} color={color} />
       <View className="flex-1 gap-1">
-        <Text className="font-display-bold text-base text-fg">{title}</Text>
+        <Text className="font-sans-bold text-base text-fg">{title}</Text>
         <Text className="font-sans text-sm leading-6 text-fg-muted">{body}</Text>
       </View>
     </View>
@@ -69,7 +82,7 @@ function DonationForm({ defaultName, onSent }: { defaultName: string; onSent: ()
   const primary = useThemeColor("primary");
   const border = useThemeColor("border");
   const surface = useThemeColor("surface");
-  const muted = useThemeColor("fg-muted");
+  const fg = useThemeColor("fg");
   const [amountText, setAmountText] = useState("");
   const [displayName, setDisplayName] = useState(defaultName);
   const [sender, setSender] = useState("");
@@ -111,8 +124,8 @@ function DonationForm({ defaultName, onSent }: { defaultName: string; onSent: ()
   }
 
   return (
-    <View className="gap-4 rounded-3xl border border-border bg-surface p-5 shadow-soft">
-      <Text className="font-sans-bold text-sm text-accent-strong">٢. أرسل بيانات التحويل</Text>
+    <View className="gap-4 rounded-3xl border border-border bg-surface p-5 shadow-card">
+      <Text className="font-sans-bold text-base text-fg">٢. أرسل بيانات التحويل</Text>
 
       <View className="gap-2">
         <Text className="font-sans-bold text-sm text-fg">المبلغ (جنيه)</Text>
@@ -125,14 +138,21 @@ function DonationForm({ defaultName, onSent }: { defaultName: string; onSent: ()
                 accessibilityRole="radio"
                 accessibilityState={{ selected: active }}
                 onPress={() => setAmountText(String(value))}
-                className={`flex-1 items-center rounded-2xl border py-2.5 ${active ? "border-primary bg-primary" : "border-border bg-bg"}`}
+                className={`flex-1 items-center rounded-full border py-2.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
               >
                 <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{toArabicDigits(value)}</Text>
               </Pressable>
             );
           })}
         </View>
-        <AuthField label="" placeholder="أو اكتب المبلغ" keyboardType="number-pad" value={amountText} onChangeText={setAmountText} accessibilityLabel="المبلغ" />
+        <AuthField
+          label=""
+          placeholder="أو اكتب المبلغ"
+          keyboardType="number-pad"
+          value={amountText}
+          onChangeText={setAmountText}
+          accessibilityLabel="المبلغ"
+        />
       </View>
 
       <AuthField label="اسمك" icon={UserRound} value={displayName} onChangeText={setDisplayName} maxLength={60} autoCapitalize="words" />
@@ -161,11 +181,17 @@ function DonationForm({ defaultName, onSent }: { defaultName: string; onSent: ()
       </View>
 
       {receipt ? (
-        <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-bg p-2.5">
+        <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-surface p-2.5">
           <Image source={{ uri: receipt.uri }} style={{ width: 56, height: 72, borderRadius: 12 }} contentFit="cover" />
           <Text className="flex-1 font-sans-bold text-sm text-fg">صورة التحويل جاهزة</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="إزالة الصورة" onPress={() => setReceipt(null)} hitSlop={10} className="p-2">
-            <X size={18} color={muted} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="إزالة الصورة"
+            onPress={() => setReceipt(null)}
+            hitSlop={6}
+            className="size-10 items-center justify-center rounded-xl border border-border bg-surface"
+          >
+            <X size={18} color={fg} />
           </Pressable>
         </View>
       ) : (
@@ -193,8 +219,6 @@ function DonationForm({ defaultName, onSent }: { defaultName: string; onSent: ()
  */
 export default function SupportScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
   const primary = useThemeColor("primary");
   const account = useAccount();
   const supporter = useSupporter();
@@ -213,21 +237,15 @@ export default function SupportScreen() {
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
     >
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="mb-3 self-start p-1">
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <HandHeart size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">صدقة جارية</Text>
-        </View>
-        <Text className="mt-2 font-display-bold text-3xl text-hero-fg">ادعم المنارة</Text>
-        <Text className="mt-2 font-sans text-sm leading-7 text-white/75">
-          المنارة مجانية بالكامل، بلا إعلانات وبلا اشتراكات. دعمك يغطي الخوادم ويضيف قرّاءً وروايات ومحتوى للأطفال، ويبقيها مجانية لكل مسلم.
-        </Text>
-      </View>
+      <PageHeader
+        back
+        kicker="صدقة جارية"
+        icon={HandHeart}
+        title="ادعم المنارة"
+        description="المنارة مجانية بالكامل، بلا إعلانات وبلا اشتراكات. دعمك يغطي الخوادم ويضيف قرّاءً وروايات ومحتوى للأطفال، ويبقيها مجانية لكل مسلم."
+      />
 
-      <View className="gap-4 px-4 pt-5">
+      <View className="gap-4 px-4">
         {supporter && (
           <StatusCard icon={Sparkles} tone="done" title="أنت من داعمي المنارة ✓" body="جزاك الله خيرًا. يمكنك الدعم مرة أخرى متى شئت." />
         )}
@@ -235,9 +253,11 @@ export default function SupportScreen() {
         <InstaPayCard />
 
         {!signedIn && account.status !== "loading" ? (
-          <View className="gap-3 rounded-3xl border border-border bg-surface p-5">
-            <Text className="font-display-bold text-base text-fg">سجّل الدخول لإرسال دعمك</Text>
-            <Text className="font-sans text-sm leading-6 text-fg-muted">نحتاج حسابك لنربط التحويل بك ونرسل لك رسالة الشكر بعد التأكد منه.</Text>
+          <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
+            <Text className="font-sans-bold text-base text-fg">سجّل الدخول لإرسال دعمك</Text>
+            <Text className="font-sans text-sm leading-6 text-fg-muted">
+              نحتاج حسابك لنربط التحويل بك ونرسل لك رسالة الشكر بعد التأكد منه.
+            </Text>
             <Button icon={LogIn} onPress={() => router.push("/login")}>
               تسجيل الدخول
             </Button>
@@ -275,8 +295,8 @@ export default function SupportScreen() {
           />
         )}
 
-        <View className="gap-2 rounded-3xl border border-border bg-surface p-5">
-          <Text className="font-display-bold text-base text-fg">ماذا يحصل الداعم؟</Text>
+        <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
+          <Text className="font-sans-bold text-base text-fg">ماذا يحصل الداعم؟</Text>
           {SUPPORTER_PERKS.map((perk) => (
             <View key={perk} className="flex-row items-center gap-2">
               <Check size={16} color={primary} />

@@ -1,11 +1,11 @@
-import { router } from "expo-router";
-import { BookOpen, ChevronRight, HandHeart, Pause, Play, ScrollText, ShieldCheck, type LucideIcon } from "lucide-react-native";
+import { BookOpen, HandHeart, Pause, Play, ScrollText, ShieldCheck, type LucideIcon } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RUQYAH_QURAN, RUQYAH_SUNNAH, type RuqyahPassage } from "@/core/ruqyah/ruqyahData";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { audio, currentTrack, usePlayerValue } from "@/features/audio/playerStore";
 import { HadithCard, PassageCard, type ListenState } from "@/features/ruqyah/RuqyahCards";
@@ -29,10 +29,10 @@ const GUIDANCE = [
 function Guidance() {
   const accent = useThemeColor("accent-strong");
   return (
-    <View className="mx-4 mt-4 rounded-3xl border border-accent/40 bg-accent-soft p-5">
+    <View className="mx-4 rounded-3xl border border-accent/40 bg-accent-soft p-5">
       <View className="flex-row items-center gap-2">
-        <HandHeart size={20} color={accent} />
-        <Text className="font-display-bold text-lg text-fg">قبل أن تبدأ</Text>
+        <HandHeart size={18} color={accent} />
+        <Text className="font-sans-bold text-base text-fg">قبل أن تبدأ</Text>
       </View>
       <View className="mt-3 gap-1.5">
         {GUIDANCE.map((line) => (
@@ -50,8 +50,6 @@ function Guidance() {
 export default function RuqyahScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
   const onPrimary = useThemeColor("on-primary");
   const primary = useThemeColor("primary");
   const [tab, setTab] = useState<Tab>("quran");
@@ -83,25 +81,13 @@ export default function RuqyahScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <ShieldCheck size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">الرقية الشرعية</Text>
-        </View>
-        <Text className="mt-2 font-display-bold text-3xl leading-[46px] text-hero-fg">وننزّل من القرآن ما هو شفاء</Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-white/75">
-          آيات الرقية وأدعية النبي ﷺ الثابتة للشفاء والتحصين، تقرؤها أو تستمع إليها.
-        </Text>
-      </View>
+      <PageHeader
+        back
+        icon={ShieldCheck}
+        kicker="الرقية الشرعية"
+        title="وننزّل من القرآن ما هو شفاء"
+        description="آيات الرقية وأدعية النبي ﷺ الثابتة للشفاء والتحصين، تقرؤها أو تستمع إليها."
+      />
 
       <Guidance />
 
@@ -125,7 +111,7 @@ export default function RuqyahScreen() {
 
       {tab === "quran" ? (
         <>
-          <Button variant="gold" icon={playingAll && playing ? Pause : Play} onPress={playAll} className="mx-4 mb-4 mt-4">
+          <Button size="lg" icon={playingAll && playing ? Pause : Play} onPress={playAll} className="mx-4 mb-4 mt-4">
             {playingAll ? (playing ? "إيقاف مؤقت" : "متابعة الاستماع") : "استمع للرقية كاملة"}
           </Button>
           {RUQYAH_QURAN.map((passage) => {

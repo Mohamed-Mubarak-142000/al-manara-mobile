@@ -2,13 +2,13 @@ import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { BookOpen, Bookmark, NotebookPen, TextSearch, Trash2 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { Button } from "@/components/ui/Button";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { PageHeader, enterSoft } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
@@ -55,15 +55,15 @@ function IndexRow({ row, icon }: { row: Row; icon?: "bookmark" | "note" }) {
       onAccessibilityAction={(event) => event.nativeEvent.actionName === "delete" && row.remove?.run()}
       onPress={() => openPage(row.page)}
       onLongPress={row.remove?.run}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
-      <View className="mx-4 mb-2.5 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+      <View className="mx-4 mb-3 flex-row items-center gap-3 rounded-3xl border border-border bg-surface px-4 py-3.5">
         <View className="size-11 items-center justify-center">
           <View className="absolute size-9 rotate-45 rounded-lg border border-gold/60 bg-accent-soft" />
-          {icon ? <Icon size={16} color={accent} /> : <Text className="font-display-bold text-sm text-accent-strong">{row.badge}</Text>}
+          {icon ? <Icon size={16} color={accent} /> : <Text className="font-sans-bold text-sm text-accent-strong">{row.badge}</Text>}
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">{row.title}</Text>
+          <Text className="font-sans-bold text-base text-fg">{row.title}</Text>
           <Text className="font-sans text-xs text-fg-muted" numberOfLines={2}>
             {row.subtitle}
           </Text>
@@ -182,13 +182,19 @@ export default function QuranIndexScreen() {
               title="المصحف الشريف"
               description="بالرسم العثماني، برواية حفص عن عاصم. يعمل دون إنترنت."
             />
-            <View className="-mt-6 gap-3 px-4">
+            <Animated.View entering={enterSoft(3)} className="gap-4 px-4">
               {tab === "surahs" && <SearchField value={query} onChangeText={setQuery} placeholder="ابحث باسم السورة أو رقمها" />}
-              <Button variant="outline" size="sm" icon={TextSearch} className="self-start" onPress={() => router.push("/search")}>
+              <Button variant="secondary" size="sm" icon={TextSearch} className="self-start" onPress={() => router.push("/search")}>
                 ابحث في نص القرآن
               </Button>
               <ContinueReadingCard />
-              <View className="flex-row rounded-full border border-border bg-surface p-1">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="-mx-4"
+                contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+                accessibilityRole="tablist"
+              >
                 {TABS.map((entry) => {
                   const active = entry.key === tab;
                   return (
@@ -197,19 +203,20 @@ export default function QuranIndexScreen() {
                       accessibilityRole="tab"
                       accessibilityState={{ selected: active }}
                       onPress={() => setTab(entry.key)}
-                      className={`flex-1 items-center rounded-full py-2 ${active ? "bg-primary" : ""}`}
+                      className={`rounded-full border px-4 py-2 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+                      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
                     >
-                      <Text numberOfLines={1} className={`font-sans-bold text-[13px] ${active ? "text-on-primary" : "text-fg-muted"}`}>
+                      <Text numberOfLines={1} className={`font-sans-semibold text-[13px] ${active ? "text-on-primary" : "text-fg"}`}>
                         {entry.label}
                       </Text>
                     </Pressable>
                   );
                 })}
-              </View>
+              </ScrollView>
               {(tab === "bookmarks" || tab === "notes") && rows.length > 0 && (
                 <Text className="font-sans text-xs text-fg-muted">اضغط مطولًا على أي عنصر أو على أيقونة الحذف لإزالته.</Text>
               )}
-            </View>
+            </Animated.View>
           </View>
         }
         ListEmptyComponent={
@@ -228,12 +235,12 @@ export default function QuranIndexScreen() {
       {undo && (
         <Animated.View
           key={undo.id}
-          entering={FadeInDown.duration(200)}
-          exiting={FadeOutDown.duration(160)}
-          className="absolute inset-x-4 bottom-3 flex-row items-center gap-3 rounded-2xl bg-hero px-4 py-3 shadow-lift"
+          entering={FadeInDown.duration(320).easing(Easing.bezier(0.22, 1, 0.36, 1))}
+          exiting={FadeOutDown.duration(240)}
+          className="absolute inset-x-4 bottom-3 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 shadow-card"
           accessibilityLiveRegion="polite"
         >
-          <Text className="flex-1 font-sans-bold text-sm text-hero-fg">{undo.message}</Text>
+          <Text className="flex-1 font-sans-bold text-sm text-fg">{undo.message}</Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => {
@@ -243,7 +250,7 @@ export default function QuranIndexScreen() {
             hitSlop={10}
             className="px-2 py-1"
           >
-            <Text className="font-sans-bold text-sm text-gold">تراجع</Text>
+            <Text className="font-sans-bold text-sm text-primary">تراجع</Text>
           </Pressable>
         </Animated.View>
       )}

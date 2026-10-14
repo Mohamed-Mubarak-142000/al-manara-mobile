@@ -1,12 +1,12 @@
-import { router } from "expo-router";
-import { ChevronRight, Play, Trash2 } from "lucide-react-native";
+import { Download, Play, Repeat, Trash2 } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AYAH_VOICES } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { audio, type Track } from "@/features/audio/playerStore";
@@ -60,20 +60,25 @@ function useUndoableRemove() {
 /** Saved ayah-by-ayah packs, one card per surah with a row per voice. */
 function AyahPacksSection({ packs }: { packs: AyahPackSummary[] }) {
   const muted = useThemeColor("fg-muted");
+  const primary = useThemeColor("primary");
   if (!packs.length) return null;
   const bySurah = new Map<number, AyahPackSummary[]>();
   for (const pack of packs) bySurah.set(pack.surah, [...(bySurah.get(pack.surah) ?? []), pack]);
 
   return (
     <View className="mt-4">
-      <Text className="mx-5 mb-2 font-sans-bold text-sm text-accent-strong">آيات للتكرار والحفظ</Text>
+      <View className="mx-5 mb-3 flex-row items-center gap-2">
+        <Repeat size={16} color={primary} />
+        <Text className="font-sans-bold text-base text-fg">آيات للتكرار والحفظ</Text>
+      </View>
       {[...bySurah].map(([surah, voices]) => (
-        <View key={surah} className="mx-4 mb-2 rounded-2xl border border-border bg-surface px-3 py-2.5">
-          <Text className="font-display-bold text-base text-fg">سورة {getSurah(surah)?.name ?? toArabicDigits(surah)}</Text>
+        <View key={surah} className="mx-4 mb-3 rounded-3xl border border-border bg-surface px-4 py-3">
+          <Text className="font-sans-bold text-base text-fg">سورة {getSurah(surah)?.name ?? toArabicDigits(surah)}</Text>
           {voices.map(({ voice, entry }) => (
             <View key={voice} className="mt-1 flex-row items-center gap-2">
               <Text className="flex-1 font-sans text-xs text-fg-muted">
-                {AYAH_VOICES[voice].label} · {entry.complete ? "كاملة" : `${toArabicDigits(entry.count)} من ${toArabicDigits(entry.total)} آية`} ·{" "}
+                {AYAH_VOICES[voice].label} ·{" "}
+                {entry.complete ? "كاملة" : `${toArabicDigits(entry.count)} من ${toArabicDigits(entry.total)} آية`} ·{" "}
                 {megabytes(entry.bytes)}
               </Text>
               <Pressable
@@ -97,7 +102,6 @@ function AyahPacksSection({ packs }: { packs: AyahPackSummary[] }) {
 export default function DownloadsScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   const entries = useDownloads();
@@ -120,23 +124,17 @@ export default function DownloadsScreen() {
         keyExtractor={(meta) => meta.id}
         contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + (undoable.pending ? 96 : 32) }}
         ListHeaderComponent={
-          <View className="mb-4 rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="رجوع"
-              onPress={() => router.back()}
-              hitSlop={12}
-              className="mb-3 self-start p-1"
-            >
-              <ChevronRight size={26} color={heroFg} />
-            </Pressable>
-            <Text className="font-display-bold text-3xl text-hero-fg">المحفوظات</Text>
-            <Text className="mt-1 font-sans text-sm text-white/70">
-              {empty
+          <PageHeader
+            back
+            kicker="دون إنترنت"
+            icon={Download}
+            title="المحفوظات"
+            description={
+              empty
                 ? "تلاوات للاستماع دون إنترنت"
-                : `${saved.length ? `${toArabicDigits(saved.length)} تلاوة · ` : ""}${packs.length ? `${toArabicDigits(packs.length)} حزمة آيات · ` : ""}${megabytes(total + packBytes)} على الجهاز`}
-            </Text>
-          </View>
+                : `${saved.length ? `${toArabicDigits(saved.length)} تلاوة · ` : ""}${packs.length ? `${toArabicDigits(packs.length)} حزمة آيات · ` : ""}${megabytes(total + packBytes)} على الجهاز`
+            }
+          />
         }
         ListEmptyComponent={empty ? <StateMessage message="لم تحفظ أي تلاوة بعد. اضغط زر التنزيل بجوار أي سورة." /> : null}
         ListFooterComponent={
@@ -146,17 +144,18 @@ export default function DownloadsScreen() {
           </>
         }
         renderItem={({ item, index }) => (
-          <View className="mx-4 mb-2 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-2.5">
+          <View className="mx-4 mb-3 flex-row items-center gap-3 rounded-3xl border border-border bg-surface px-4 py-3">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`تشغيل ${item.title}`}
               onPress={() => audio.playQueue(queue, index)}
               className="size-10 items-center justify-center rounded-full bg-primary-soft"
+              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.95 : 1 }] })}
             >
               <Play size={16} color={primary} fill={primary} />
             </Pressable>
             <View className="flex-1">
-              <Text className="font-display-bold text-base text-fg">{item.title}</Text>
+              <Text className="font-sans-bold text-base text-fg">{item.title}</Text>
               <Text className="font-sans text-xs text-fg-muted">
                 {item.artist} · {megabytes(item.bytes)}
               </Text>
@@ -175,17 +174,17 @@ export default function DownloadsScreen() {
       />
       {undoable.pending && (
         <Animated.View
-          entering={FadeInDown.duration(200)}
-          exiting={FadeOutDown.duration(150)}
+          entering={FadeInDown.duration(320).easing(Easing.bezier(0.22, 1, 0.36, 1))}
+          exiting={FadeOutDown.duration(240)}
           accessibilityLiveRegion="polite"
-          className="absolute inset-x-3 flex-row items-center gap-3 rounded-2xl bg-hero px-4 py-3 shadow-lift"
+          className="absolute inset-x-4 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 shadow-card"
           style={{ bottom: insets.bottom + miniPlayer + 12 }}
         >
-          <Text numberOfLines={1} className="flex-1 font-sans text-sm text-hero-fg">
+          <Text numberOfLines={1} className="flex-1 font-sans text-sm text-fg">
             حُذفت {undoable.pending.title}
           </Text>
           <Pressable accessibilityRole="button" accessibilityLabel="تراجع عن الحذف" onPress={undoable.undo} hitSlop={8}>
-            <Text className="font-sans-bold text-sm text-gold-soft">تراجع</Text>
+            <Text className="font-sans-bold text-sm text-primary">تراجع</Text>
           </Pressable>
         </Animated.View>
       )}

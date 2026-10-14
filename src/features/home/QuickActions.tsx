@@ -20,7 +20,7 @@ function Action({ icon: Icon, label, hint, onPress }: { icon: LucideIcon; label:
       accessibilityHint={hint}
       onPress={onPress}
       className="flex-1"
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
       <View className="min-h-18 items-center justify-center gap-1.5 rounded-2xl px-1 py-2.5">
         <View className="size-10 items-center justify-center rounded-full bg-primary-soft">
@@ -40,7 +40,7 @@ function Action({ icon: Icon, label, hint, onPress }: { icon: LucideIcon; label:
  */
 export function QuickActions() {
   return (
-    <View className="flex-row gap-2 rounded-3xl border border-border bg-surface p-2 shadow-soft">
+    <View className="flex-row gap-2 rounded-3xl border border-border bg-surface p-2 shadow-card">
       <Action icon={Mic} label="التسميع" hint="سمّع من حفظك بصوتك" onPress={() => router.push("/tasmee")} />
       <Action icon={Sparkles} label="الأذكار" onPress={() => router.push("/adhkar")} />
       <Action icon={Compass} label="القبلة" onPress={() => router.push("/qibla")} />

@@ -1,12 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Award, BookOpen, CheckCircle2, ChevronRight, GraduationCap, ListChecks, Lock } from "lucide-react-native";
+import { Award, BookOpen, CheckCircle2, GraduationCap, ListChecks, Lock } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FINAL_PART, NAWAWI_PARTS, examSize, parsePartSlug, partRange, partSlug, partTitle } from "@/core/nawawi/nawawiData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
@@ -34,8 +36,6 @@ export default function NawawiExamScreen() {
   const part = parsePartSlug(slug ?? "");
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
   const accent = useThemeColor("accent-strong");
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
@@ -85,42 +85,40 @@ export default function NawawiExamScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace("/nawawi"))}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <GraduationCap size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">الأربعون النووية</Text>
-        </View>
-        {part && size && (
-          <>
-            <Text className="mt-2 font-display-bold text-3xl leading-[46px] text-hero-fg">
-              {isFinal ? partTitle(part) : `اختبار ${partTitle(part)}`}
-            </Text>
-            <Text className="mt-1 font-sans text-sm leading-6 text-white/75">
-              {partRange(part)} · {toArabicDigits(size.questions)} أسئلة · {toArabicDigits(size.minutes)} دقيقة · النجاح{" "}
-              {toArabicDigits(settings?.exam_pass_percent ?? 80)}٪
-            </Text>
-          </>
-        )}
-      </View>
+      <ScreenHeader title="الأربعون النووية" onBack={() => (router.canGoBack() ? router.back() : router.replace("/nawawi"))} />
+      {part && size && (
+        <Animated.View entering={enterSoft(0)} className="px-5 pb-5 pt-2">
+          <View className="flex-row items-center gap-2">
+            <GraduationCap size={16} color={primary} />
+            <Text className="font-sans-bold text-sm text-primary">{isFinal ? "الاختبار النهائي" : "اختبار المرحلة"}</Text>
+          </View>
+          <Text className="mt-2 font-sans-bold text-[28px] leading-10.5 text-fg">
+            {isFinal ? partTitle(part) : `اختبار ${partTitle(part)}`}
+          </Text>
+          <View className="mt-3 flex-row flex-wrap gap-2">
+            {[
+              partRange(part),
+              `${toArabicDigits(size.questions)} أسئلة`,
+              `${toArabicDigits(size.minutes)} دقيقة`,
+              `النجاح ${toArabicDigits(settings?.exam_pass_percent ?? 80)}٪`,
+            ].map((chip) => (
+              <View key={chip} className="rounded-full border border-border px-3 py-1.5">
+                <Text className="font-sans-medium text-xs text-fg">{chip}</Text>
+              </View>
+            ))}
+          </View>
+        </Animated.View>
+      )}
 
-      <View className="gap-4 px-4 pt-5">
+      <View className="gap-4 px-4">
         {!part ? (
           <StateMessage message="لم نجد هذا الاختبار." actionLabel="الأربعون النووية" onAction={() => router.replace("/nawawi")} />
         ) : result ? (
           <NawawiResult result={result} part={part} />
         ) : isFinal && overview?.certificate ? (
-          <View className="items-center rounded-[28px] border border-gold/50 bg-accent-soft p-6">
+          <View className="items-center rounded-3xl border border-accent/40 bg-accent-soft p-6">
             <Award size={48} color={accent} />
-            <Text className="mt-4 font-display-bold text-2xl text-fg">أتممت الأربعين النووية</Text>
+            <Text className="mt-4 font-sans-bold text-2xl text-fg">أتممت الأربعين النووية</Text>
             <Button
               className="mt-5"
               size="lg"
@@ -131,10 +129,10 @@ export default function NawawiExamScreen() {
           </View>
         ) : (
           <>
-            <View className="gap-2 rounded-3xl border border-border bg-surface p-5">
-              <View className="flex-row items-center gap-2">
-                <ListChecks size={20} color={accent} />
-                <Text className="font-display-bold text-lg text-fg">قبل أن تبدأ</Text>
+            <View className="gap-2 rounded-3xl border border-border bg-surface p-5 shadow-card">
+              <View className="mb-1 flex-row items-center gap-2">
+                <ListChecks size={18} color={primary} />
+                <Text className="font-sans-bold text-base text-fg">قبل أن تبدأ</Text>
               </View>
               {[
                 ...RULES,
@@ -163,7 +161,7 @@ export default function NawawiExamScreen() {
                   return (
                     <View
                       key={entry.id}
-                      className="flex-row items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
+                      className="flex-row items-center justify-between gap-3 rounded-3xl border border-border bg-surface p-4"
                     >
                       <View className="flex-1 flex-row items-center gap-2">
                         {passed ? <CheckCircle2 size={18} color={primary} /> : <Lock size={18} color={muted} />}
@@ -173,7 +171,7 @@ export default function NawawiExamScreen() {
                       </View>
                       {!passed && (
                         <Button
-                          variant="outline"
+                          variant="secondary"
                           size="sm"
                           onPress={() => router.replace({ pathname: "/nawawi/exam/[part]", params: { part: partSlug(entry.id) } })}
                         >
@@ -190,7 +188,7 @@ export default function NawawiExamScreen() {
                   {busy ? "جارٍ تجهيز الاختبار…" : "ابدأ الاختبار"}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="lg"
                   icon={BookOpen}
                   onPress={() => (router.canGoBack() ? router.back() : router.replace("/nawawi"))}

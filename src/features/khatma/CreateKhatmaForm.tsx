@@ -37,8 +37,9 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
       accessibilityState={{ selected: active }}
       onPress={onPress}
       className={`rounded-full border px-4 py-2 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
+      <Text className={`font-sans-semibold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
     </Pressable>
   );
 }
@@ -62,10 +63,11 @@ function ModeOption({
       accessibilityState={{ selected: active }}
       onPress={onPress}
       className={`flex-row items-start gap-3 rounded-3xl border p-4 ${active ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
       <View className={`size-10 items-center justify-center rounded-2xl ${active ? "bg-primary" : "bg-accent-soft"}`}>{icon}</View>
       <View className="flex-1">
-        <Text className="font-display-bold text-base text-fg">{title}</Text>
+        <Text className="font-sans-bold text-base text-fg">{title}</Text>
         <Text className="mt-0.5 font-sans text-xs leading-5 text-fg-muted">{text}</Text>
       </View>
     </Pressable>
@@ -117,7 +119,7 @@ export function CreateKhatmaForm() {
 
       {mode === "amount" ? (
         <>
-          <Text className="font-sans-bold text-sm text-fg">أقرأ بـ</Text>
+          <Text className="font-sans-bold text-base text-fg">أقرأ بـ</Text>
           <View className="flex-row flex-wrap gap-2">
             {(Object.keys(UNIT_NAMES) as KhatmaUnit[]).map((key) => (
               <Chip
@@ -131,7 +133,7 @@ export function CreateKhatmaForm() {
               />
             ))}
           </View>
-          <Text className="font-sans-bold text-sm text-fg">مقدار كل يوم</Text>
+          <Text className="font-sans-bold text-base text-fg">مقدار كل يوم</Text>
           <View className="flex-row flex-wrap gap-2">
             {PER_SESSION_OPTIONS[unit].map((count) => (
               <Chip key={count} label={amountLabel(unit, count)} active={perSession === count} onPress={() => setPerSession(count)} />
@@ -140,7 +142,7 @@ export function CreateKhatmaForm() {
         </>
       ) : (
         <>
-          <Text className="font-sans-bold text-sm text-fg">أختم خلال</Text>
+          <Text className="font-sans-bold text-base text-fg">أختم خلال</Text>
           <View className="flex-row flex-wrap gap-2">
             {QUICK_DURATIONS.map(([label, count]) => {
               const day = shiftDay(today, count - 1);
@@ -150,7 +152,7 @@ export function CreateKhatmaForm() {
         </>
       )}
 
-      <Text className="font-sans-bold text-sm text-fg">أيام القراءة</Text>
+      <Text className="font-sans-bold text-base text-fg">أيام القراءة</Text>
       <View className="flex-row flex-wrap gap-2">
         {WEEK_ORDER.map((day) => {
           const on = days.includes(day);
@@ -162,13 +164,13 @@ export function CreateKhatmaForm() {
               onPress={() => setDays(on ? days.filter((entry) => entry !== day) : [...days, day])}
               className={`rounded-full border px-3 py-1.5 ${on ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
             >
-              <Text className={`font-sans-bold text-xs ${on ? "text-primary" : "text-fg-muted"}`}>{WEEKDAY_NAMES[day]}</Text>
+              <Text className={`font-sans-semibold text-xs ${on ? "text-primary" : "text-fg"}`}>{WEEKDAY_NAMES[day]}</Text>
             </Pressable>
           );
         })}
       </View>
 
-      <View className="rounded-2xl bg-accent-soft p-4">
+      <View className="rounded-2xl border border-border bg-accent-soft p-4">
         <Text className="font-sans text-sm leading-6 text-accent-strong">
           {mode === "amount"
             ? finish

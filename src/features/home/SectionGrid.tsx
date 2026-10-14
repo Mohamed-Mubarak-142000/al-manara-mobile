@@ -1,8 +1,7 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
-import { useThemeColor, withAlpha } from "@/theme/useThemeColor";
+import { useThemeColor } from "@/theme/useThemeColor";
 
 import { SECTION_GROUPS, sectionsFor, type AppSection, type SectionGroup, type SectionTone } from "./sections";
 
@@ -22,7 +21,6 @@ const TONES: Record<SectionTone, string> = {
 
 function SectionTile({ section }: { section: AppSection }) {
   const ink = useThemeColor("tile-ink");
-  const tone = useThemeColor(`tile-${section.tone}`);
   const Icon = section.icon;
   const href = section.href!;
   return (
@@ -32,22 +30,12 @@ function SectionTile({ section }: { section: AppSection }) {
       accessibilityHint={section.description}
       onPress={() => router.push(href)}
       className="flex-1"
-      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <View className="min-h-32 items-center gap-2.5 overflow-hidden rounded-3xl border border-border bg-surface px-1.5 pb-3 pt-4 shadow-soft">
-        {/* A wash of the section's colour from the top, so each card reads as its own. */}
-        <LinearGradient colors={[withAlpha(tone, 0.15), withAlpha(tone, 0)]} style={{ position: "absolute", inset: 0 }} />
-        <View
-          className={`size-15 items-center justify-center overflow-hidden rounded-full ${TONES[section.tone]}`}
-          style={{ boxShadow: `0 8px 16px -8px ${withAlpha(tone, 0.9)}` }}
-        >
-          {/* A soft highlight across the top: a glossy, rounded look rather than a flat disc. */}
-          <LinearGradient
-            colors={["rgba(255,255,255,0.38)", "rgba(255,255,255,0)"]}
-            locations={[0, 0.6]}
-            style={{ position: "absolute", inset: 0 }}
-          />
-          <Icon size={28} color={ink} strokeWidth={2} />
+      {/* A clean white card: hairline border, the faintest shadow, the section's colour only in its circle. */}
+      <View className="min-h-32 items-center gap-2.5 rounded-3xl border border-border bg-surface px-1.5 pb-3 pt-4 shadow-card">
+        <View className={`size-14 items-center justify-center rounded-full ${TONES[section.tone]}`}>
+          <Icon size={26} color={ink} strokeWidth={2} />
         </View>
         <Text numberOfLines={2} className="text-center font-sans-bold text-[13px] leading-5 text-fg">
           {section.label}
@@ -88,7 +76,7 @@ export function SectionGrid({ groups: chosen = SECTION_GROUPS }: { groups?: read
     <View className="gap-5">
       {groups.map((group) => (
         <View key={group.title} className="gap-2.5">
-          <Text className="px-1 font-sans-bold text-sm text-accent-strong">{group.title}</Text>
+          <Text className="px-1 font-sans-bold text-base text-fg">{group.title}</Text>
           <SectionTiles sections={group.sections} />
         </View>
       ))}

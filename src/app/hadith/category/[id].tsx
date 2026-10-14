@@ -1,12 +1,13 @@
 import { FlashList } from "@shopify/flash-list";
 import { router, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, ChevronRight, ScrollText } from "lucide-react-native";
+import { ArrowLeft, ScrollText } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { HadithCategory, HadithSummary } from "@/core/hadith/api";
 import { toArabicDigits } from "@/core/text/arabic";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { getCategoriesOffline, getCategoryHadithsOffline } from "@/features/hadith/offlineHadith";
@@ -20,8 +21,6 @@ export default function HadithCategoryScreen() {
   const { id, title } = useLocalSearchParams<{ id: string; title?: string }>();
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
   const muted = useThemeColor("fg-muted");
   const primary = useThemeColor("primary");
   const accent = useThemeColor("accent");
@@ -92,26 +91,14 @@ export default function HadithCategoryScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={accent} colors={[accent]} />}
         contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
         ListHeaderComponent={
-          <View className="mb-5 gap-5">
-            <View className="rounded-b-4xl bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="رجوع"
-              onPress={() => router.back()}
-              hitSlop={12}
-              className="mb-3 self-start p-1"
-            >
-              <ChevronRight size={26} color={heroFg} />
-            </Pressable>
-            <View className="flex-row items-center gap-2">
-              <ScrollText size={16} color={gold} />
-              <Text className="font-sans-bold text-sm text-gold-soft">{parent?.title ?? "الأحاديث النبوية"}</Text>
-            </View>
-            <Text className="mt-2 font-display-bold text-2xl leading-10 text-hero-fg">{category?.title ?? title ?? "الأحاديث"}</Text>
-            {current && !current.failed && (
-              <Text className="mt-1 font-sans text-sm text-white/70">{toArabicDigits(current.total)} حديث مع الشرح والفوائد.</Text>
-            )}
-            </View>
+          <View className="mb-4">
+            <PageHeader
+              back
+              icon={ScrollText}
+              kicker={parent?.title ?? "الأحاديث النبوية"}
+              title={category?.title ?? title ?? "الأحاديث"}
+              description={current && !current.failed ? `${toArabicDigits(current.total)} حديث مع الشرح والفوائد.` : undefined}
+            />
             <View className="gap-4 px-4">
               {/* The website's breadcrumb: الأحاديث / parent / this topic. */}
               <View className="flex-row flex-wrap items-center gap-2">
@@ -138,7 +125,7 @@ export default function HadithCategoryScreen() {
                       onPress={() => openCategory(child)}
                       className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5"
                     >
-                      <Text className="font-sans-bold text-sm text-fg">{child.title}</Text>
+                      <Text className="font-sans-medium text-sm text-fg">{child.title}</Text>
                       <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(child.count)}</Text>
                     </Pressable>
                   ))}
@@ -155,11 +142,11 @@ export default function HadithCategoryScreen() {
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push({ pathname: "/hadith/[id]", params: { id: item.id, category: category?.title ?? title ?? "" } })}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
           >
-            <View className="mx-4 mb-3 flex-row items-start gap-4 rounded-3xl border border-border bg-surface p-4">
-              <View className="size-9 items-center justify-center rounded-full bg-accent-soft">
-                <Text className="font-display-bold text-sm text-accent-strong">{toArabicDigits(index + 1)}</Text>
+            <View className="mx-4 mb-3 flex-row items-start gap-4 rounded-3xl border border-border bg-surface p-4 shadow-card">
+              <View className="size-10 items-center justify-center rounded-xl bg-accent-soft">
+                <Text className="font-sans-bold text-sm text-accent-strong">{toArabicDigits(index + 1)}</Text>
               </View>
               <Text className="flex-1 font-sans text-lg leading-9 text-fg">{item.title}</Text>
               <View className="mt-2.5">

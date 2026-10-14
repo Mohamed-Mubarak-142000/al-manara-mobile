@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import * as Sharing from "expo-sharing";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronDown, Share2 } from "lucide-react-native";
+import { ChevronDown, Palette, Share2 } from "lucide-react-native";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
+import { IconButton } from "@/components/ui/PageHeader";
 import { getSurah, getSurahAyahs } from "@/features/mushaf/mushaf";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -47,7 +48,7 @@ export default function ShareAyahScreen() {
   const surahNumber = Number(params.surah);
   const ayahNumber = Number(params.ayah);
   const insets = useSafeAreaInsets();
-  const fg = useThemeColor("fg");
+  const primary = useThemeColor("primary");
   const card = useRef<View>(null);
   const [style, setStyle] = useState<Style>("night");
   const [busy, setBusy] = useState(false);
@@ -68,17 +69,14 @@ export default function ShareAyahScreen() {
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32, paddingHorizontal: 16, gap: 16 }}
+      contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: insets.bottom + 32, paddingHorizontal: 16, gap: 16 }}
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="إغلاق"
-        onPress={() => router.back()}
-        hitSlop={12}
-        className="self-start p-1"
-      >
-        <ChevronDown size={28} color={fg} />
-      </Pressable>
+      <View className="flex-row items-center gap-3">
+        <IconButton icon={ChevronDown} label="إغلاق" onPress={() => router.back()} />
+        <Text className="flex-1 font-sans-bold text-lg text-fg" numberOfLines={1}>
+          مشاركة الآية كصورة
+        </Text>
+      </View>
 
       {ayah && (
         <View ref={card} collapsable={false} style={{ backgroundColor: colors.bg }} className="rounded-[28px] p-5">
@@ -108,23 +106,29 @@ export default function ShareAyahScreen() {
         </View>
       )}
 
-      <View className="flex-row gap-2">
-        {(Object.keys(STYLES) as Style[]).map((key) => (
-          <Pressable
-            key={key}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: key === style }}
-            onPress={() => setStyle(key)}
-            className={`flex-1 items-center rounded-2xl border-2 py-3 ${key === style ? "border-primary" : "border-border"}`}
-            style={{ backgroundColor: STYLES[key].card }}
-          >
-            <Text style={{ color: STYLES[key].ink }} className="font-sans-bold text-sm">
-              {STYLES[key].label}
-            </Text>
-          </Pressable>
-        ))}
+      <View className="gap-3">
+        <View className="flex-row items-center gap-2">
+          <Palette size={16} color={primary} />
+          <Text className="font-sans-bold text-base text-fg">نمط البطاقة</Text>
+        </View>
+        <View className="flex-row gap-2.5">
+          {(Object.keys(STYLES) as Style[]).map((key) => (
+            <Pressable
+              key={key}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: key === style }}
+              onPress={() => setStyle(key)}
+              className={`flex-1 items-center rounded-2xl py-3.5 ${key === style ? "border-2 border-primary" : "border border-border"}`}
+              style={({ pressed }) => ({ backgroundColor: STYLES[key].card, transform: [{ scale: pressed ? 0.97 : 1 }] })}
+            >
+              <Text style={{ color: STYLES[key].ink }} className="font-sans-bold text-sm">
+                {STYLES[key].label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
-      <Button variant="gold" size="lg" icon={Share2} onPress={share} disabled={busy || !ayah}>
+      <Button size="lg" icon={Share2} onPress={share} disabled={busy || !ayah}>
         {busy ? "جارٍ التجهيز…" : "مشاركة كصورة"}
       </Button>
     </ScrollView>

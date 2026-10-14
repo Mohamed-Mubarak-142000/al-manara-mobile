@@ -5,14 +5,7 @@ import { useState } from "react";
 import { Platform, Pressable, Share, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import {
-  buildCrashReportText,
-  clearCrashLog,
-  parseNativeReport,
-  readCrashLog,
-  type CrashEntry,
-  type NativeReport,
-} from "@/lib/crashLog";
+import { buildCrashReportText, clearCrashLog, parseNativeReport, readCrashLog, type CrashEntry, type NativeReport } from "@/lib/crashLog";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { background } from "../../../modules/almanara-background";
@@ -118,14 +111,19 @@ export function CrashReport() {
   const empty = js.length === 0 && native.native.length === 0 && native.exits.length === 0;
 
   return (
-    <View className="overflow-hidden rounded-3xl border border-border bg-surface">
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={toggle} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-        <View className="flex-row items-center gap-3 px-4 py-3.5">
-          <View className="size-9 items-center justify-center rounded-xl bg-primary-soft">
+    <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={toggle}
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      >
+        <View className="flex-row items-center gap-3 px-4 py-4">
+          <View className="size-10 items-center justify-center rounded-2xl bg-primary-soft">
             <Bug size={18} color={primary} />
           </View>
           <View className="flex-1">
-            <Text className="font-display-bold text-[15px] text-fg">تقرير الأعطال</Text>
+            <Text className="font-sans-bold text-[15px] text-fg">تقرير الأعطال</Text>
             <Text className="font-sans text-xs text-fg-muted">إن أُغلق التطبيق فجأة، أرسل لنا هذا التقرير</Text>
           </View>
           {open ? <ChevronDown size={18} color={muted} /> : <ChevronLeft size={18} color={muted} />}
@@ -139,13 +137,23 @@ export function CrashReport() {
           ) : (
             <View>
               {native.exits.map((e) => (
-                <Item key={`x${e.at}`} time={arabicTime(e.at)} title={`إغلاق: ${REASONS[e.reason] ?? e.reason}`} detail={e.description || undefined} />
+                <Item
+                  key={`x${e.at}`}
+                  time={arabicTime(e.at)}
+                  title={`إغلاق: ${REASONS[e.reason] ?? e.reason}`}
+                  detail={e.description || undefined}
+                />
               ))}
               {native.native.map((c) => (
                 <Item key={`n${c.at}`} time={arabicTime(c.at)} title="عطل في التطبيق" detail={c.message} />
               ))}
               {js.map((e) => (
-                <Item key={`j${e.at}${e.kind}`} time={arabicTime(e.at)} title={KINDS[e.kind] ?? e.kind} detail={`${e.route} · ${e.message}`} />
+                <Item
+                  key={`j${e.at}${e.kind}`}
+                  time={arabicTime(e.at)}
+                  title={KINDS[e.kind] ?? e.kind}
+                  detail={`${e.route} · ${e.message}`}
+                />
               ))}
             </View>
           )}

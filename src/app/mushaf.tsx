@@ -1,9 +1,21 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useKeepAwake } from "expo-keep-awake";
-import { ALargeSmall, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, HandHeart, Lock, Minus, Plus } from "lucide-react-native";
+import {
+  ALargeSmall,
+  Bookmark,
+  BookmarkCheck,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  HandHeart,
+  Lock,
+  Minus,
+  Plus,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Modal, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { FlatList, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -18,6 +30,7 @@ import { MushafFixedPage } from "@/features/mushaf/MushafFixedPage";
 import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import {
   DEFAULT_FONT_STEP,
@@ -31,8 +44,42 @@ import {
 } from "@/features/mushaf/readerPrefs";
 import { recordReading } from "@/features/streak/streakStore";
 import { useSupporter } from "@/features/support/supportStore";
+import { useThemeColor } from "@/theme/useThemeColor";
 
 const PAGES = Array.from({ length: TOTAL_PAGES }, (_, index) => index + 1);
+
+/** The reader bar's square outlined button, drawn in the reader theme's own ink so it sits on any page colour. */
+function ReaderIconButton({
+  icon: Icon,
+  label,
+  onPress,
+  ink,
+  color,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onPress: () => void;
+  ink: string;
+  color?: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      hitSlop={6}
+      className="size-11 items-center justify-center rounded-2xl border"
+      style={({ pressed }) => ({ borderColor: `${ink}2e`, transform: [{ scale: pressed ? 0.96 : 1 }] })}
+    >
+      <Icon size={21} color={color ?? ink} strokeWidth={1.8} />
+    </Pressable>
+  );
+}
+
+/** A setting's small label inside the reader settings sheet. */
+function SettingLabel({ children }: { children: string }) {
+  return <Text className="font-sans-bold text-base text-fg">{children}</Text>;
+}
 
 /** The paged mushaf: swipe between the 604 Madinah pages, fully offline. */
 export default function MushafScreen() {
@@ -44,6 +91,9 @@ export default function MushafScreen() {
   const state = useReaderState();
   const supporter = useSupporter();
   const player = usePlayer();
+  const primaryColor = useThemeColor("primary");
+  const borderColor = useThemeColor("border");
+  const onPrimary = useThemeColor("on-primary");
   const [page, setPage] = useState(initialPage);
   // Counts today for the streak even when the reader reopens on yesterday's page.
   useEffect(() => {
@@ -128,7 +178,7 @@ export default function MushafScreen() {
       <StatusBar style={state.prefs.theme === "night" || state.prefs.theme === "dusk" ? "light" : "dark"} hidden={!chrome} />
       {riwayaKey !== "hafs" && !riwaya ? (
         <View className="flex-1 items-center justify-center gap-4 px-8">
-          <Text className="text-center font-display-bold text-xl" style={{ color: theme.ink }}>
+          <Text className="text-center font-sans-bold text-xl" style={{ color: theme.ink }}>
             رواية {riwayaLabel}
           </Text>
           <Text className="text-center font-sans text-sm leading-7" style={{ color: theme.ink, opacity: 0.7 }}>
@@ -184,20 +234,20 @@ export default function MushafScreen() {
                 />
               )
             ) : (
-            <MushafPageView
-              page={item}
-              width={width}
-              theme={state.prefs.theme}
-              fontSize={fontSize}
-              // The default size (and smaller) shows the whole page like a printed mushaf; larger sizes scroll.
-              fit={state.prefs.fontStep <= DEFAULT_FONT_STEP}
-              selected={selected?.id ?? null}
-              playingId={playingId}
-              tajweed={state.prefs.tajweed}
-              riwaya={riwaya}
-              onTap={toggleChrome}
-              onAyahLongPress={openAyah}
-            />
+              <MushafPageView
+                page={item}
+                width={width}
+                theme={state.prefs.theme}
+                fontSize={fontSize}
+                // The default size (and smaller) shows the whole page like a printed mushaf; larger sizes scroll.
+                fit={state.prefs.fontStep <= DEFAULT_FONT_STEP}
+                selected={selected?.id ?? null}
+                playingId={playingId}
+                tajweed={state.prefs.tajweed}
+                riwaya={riwaya}
+                onTap={toggleChrome}
+                onAyahLongPress={openAyah}
+              />
             )
           }
         />
@@ -205,14 +255,12 @@ export default function MushafScreen() {
 
       {chrome && (
         <Animated.View
-          entering={FadeIn.duration(180)}
-          exiting={FadeOut.duration(180)}
-          className="absolute inset-x-0 flex-row items-center gap-2 px-3 py-2"
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(260)}
+          className="absolute inset-x-0 flex-row items-center gap-3 px-4 py-2"
           style={{ top: insets.top, backgroundColor: theme.shell }}
         >
-          <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
-            <ChevronRight size={26} color={theme.ink} />
-          </Pressable>
+          <ReaderIconButton icon={ChevronRight} label="رجوع" ink={theme.ink} onPress={() => router.back()} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="الانتقال إلى سورة أو جزء أو صفحة"
@@ -222,7 +270,7 @@ export default function MushafScreen() {
             className="flex-1 flex-row items-center gap-1.5"
           >
             <View className="shrink">
-              <Text className="font-display-bold text-base" style={{ color: theme.ink }} numberOfLines={1}>
+              <Text className="font-sans-bold text-base" style={{ color: theme.ink }} numberOfLines={1}>
                 {first ? `سورة ${getSurah(first.surah)?.name ?? ""} · الجزء ${toArabicDigits(first.juz)}` : ""}
               </Text>
               <Text className="font-sans text-xs" style={{ color: theme.accent }}>
@@ -233,33 +281,23 @@ export default function MushafScreen() {
             {(riwayaKey === "hafs" || riwaya) && <ChevronDown size={18} color={theme.accent} />}
           </Pressable>
           {riwayaKey === "hafs" && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={pageBookmarked ? "إزالة العلامة" : "حفظ علامة على هذه الصفحة"}
+            <ReaderIconButton
+              icon={pageBookmarked ? BookmarkCheck : Bookmark}
+              label={pageBookmarked ? "إزالة العلامة" : "حفظ علامة على هذه الصفحة"}
+              ink={theme.ink}
+              color={pageBookmarked ? theme.accent : theme.ink}
               onPress={() => first && reader.toggleBookmark({ surah: first.surah, ayah: first.ayah, page })}
-              hitSlop={10}
-              className="p-1.5"
-            >
-              {pageBookmarked ? <BookmarkCheck size={22} color={theme.accent} /> : <Bookmark size={22} color={theme.ink} />}
-            </Pressable>
+            />
           )}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="إعدادات القراءة"
-            onPress={() => setSettingsOpen(true)}
-            hitSlop={10}
-            className="p-1.5"
-          >
-            <ALargeSmall size={24} color={theme.ink} />
-          </Pressable>
+          <ReaderIconButton icon={ALargeSmall} label="إعدادات القراءة" ink={theme.ink} onPress={() => setSettingsOpen(true)} />
         </Animated.View>
       )}
 
       {/* The khatm: on the last page, with the reader chrome, so the fixed 15-line page is left untouched. */}
       {chrome && page === TOTAL_PAGES && (
         <Animated.View
-          entering={FadeIn.duration(180)}
-          exiting={FadeOut.duration(180)}
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(260)}
           pointerEvents="box-none"
           className="absolute inset-x-0 items-center"
           style={{ bottom: insets.bottom + footerSpace + 16 }}
@@ -276,12 +314,11 @@ export default function MushafScreen() {
 
       <AyahSheet ayah={selected} riwaya={riwayaKey === "hafs" ? null : riwayaLabel} onClose={() => setSelected(null)} />
 
-      <Modal visible={settingsOpen} transparent animationType="fade" onRequestClose={() => setSettingsOpen(false)}>
-        <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setSettingsOpen(false)}>
-          <Pressable className="rounded-t-[32px] bg-surface px-5 pt-5" style={{ paddingBottom: insets.bottom + 20 }}>
-            <Text className="font-display-bold text-lg text-fg">إعدادات القراءة</Text>
-            <Text className="mt-4 font-sans-bold text-sm text-fg-muted">الرواية</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 8 }}>
+      <BottomSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} title="إعدادات القراءة" icon={ALargeSmall}>
+        <View className="gap-6">
+          <View className="gap-3">
+            <SettingLabel>الرواية</SettingLabel>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {RIWAYAT.map((entry) => {
                 const active = entry.key === riwayaKey;
                 const local = entry.key === "hafs" || isRiwayaDownloaded(entry.key);
@@ -291,16 +328,20 @@ export default function MushafScreen() {
                     accessibilityRole="radio"
                     accessibilityState={{ selected: active }}
                     onPress={() => reader.setRiwaya(entry.key)}
-                    className={`flex-row items-center gap-1.5 rounded-full border px-3 py-2 ${active ? "border-primary bg-primary" : "border-border bg-bg"}`}
+                    className={`flex-row items-center gap-1.5 rounded-full border px-3.5 py-2 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+                    style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
                   >
-                    <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{entry.short}</Text>
-                    {!local && <Download size={13} color={active ? "#fbf8f1" : theme.accent} />}
+                    <Text className={`font-sans-semibold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{entry.short}</Text>
+                    {!local && <Download size={13} color={active ? onPrimary : primaryColor} />}
                   </Pressable>
                 );
               })}
             </ScrollView>
-            <Text className="mt-5 font-sans-bold text-sm text-fg-muted">لون الصفحة</Text>
-            <View className="mt-2 flex-row flex-wrap gap-2">
+          </View>
+
+          <View className="gap-3">
+            <SettingLabel>لون الصفحة</SettingLabel>
+            <View className="flex-row flex-wrap gap-2.5">
               {(Object.keys(READER_THEMES) as ReaderTheme[]).map((key) => {
                 const option = READER_THEMES[key];
                 const active = key === state.prefs.theme;
@@ -316,8 +357,8 @@ export default function MushafScreen() {
                       setSettingsOpen(false);
                       router.push("/support");
                     }}
-                    className={`min-w-[30%] flex-1 items-center rounded-2xl border-2 py-3 ${active ? "border-primary" : "border-border"}`}
-                    style={{ backgroundColor: option.page }}
+                    className={`min-w-[30%] flex-1 items-center rounded-2xl py-3 ${active ? "border-2 border-primary" : "border border-border"}`}
+                    style={({ pressed }) => ({ backgroundColor: option.page, transform: [{ scale: pressed ? 0.97 : 1 }] })}
                   >
                     {locked && (
                       <View className="absolute end-2 top-2">
@@ -334,37 +375,44 @@ export default function MushafScreen() {
                 );
               })}
             </View>
-            <View className="mt-5 flex-row items-center justify-between">
-              <Text className="font-sans-bold text-sm text-fg">تلوين أحكام التجويد</Text>
+          </View>
+
+          <View className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <SettingLabel>تلوين أحكام التجويد</SettingLabel>
               <Switch
                 value={state.prefs.tajweed}
                 onValueChange={reader.setTajweed}
-                trackColor={{ false: "#e5e6dc", true: "#005544" }}
+                trackColor={{ false: borderColor, true: primaryColor }}
                 thumbColor="#ffffff"
               />
             </View>
             {state.prefs.tajweed && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingTop: 8 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                 {/* One chip per colour: several rules share a colour (the idgham greens, for instance). */}
                 {Object.values(TAJWEED_RULES)
                   .filter((rule, index, all) => all.findIndex((other) => other.color === rule.color) === index)
                   .map((rule) => (
-                    <View key={rule.color} className="flex-row items-center gap-1.5 rounded-full border border-border px-2.5 py-1">
+                    <View key={rule.color} className="flex-row items-center gap-1.5 rounded-full border border-border px-3 py-1.5">
                       <View className="size-2.5 rounded-full" style={{ backgroundColor: rule.color }} />
                       <Text className="font-sans text-xs text-fg">{rule.label}</Text>
                     </View>
                   ))}
               </ScrollView>
             )}
-            <Text className="mt-5 font-sans-bold text-sm text-fg-muted">حجم الخط</Text>
-            <View className="mt-2 flex-row items-center justify-between rounded-2xl border border-border px-2 py-1">
+          </View>
+
+          <View className="gap-3">
+            <SettingLabel>حجم الخط</SettingLabel>
+            <View className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-2 py-1.5">
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="تكبير الخط"
                 onPress={() => reader.setFontStep(state.prefs.fontStep + 1)}
-                className="p-3"
+                className="size-11 items-center justify-center rounded-xl border border-border"
+                style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
               >
-                <Plus size={20} color={theme.accent} />
+                <Plus size={20} color={primaryColor} />
               </Pressable>
               <Text className="font-quran text-fg" style={{ fontSize }}>
                 ٱلْحَمْدُ لِلَّهِ
@@ -373,14 +421,15 @@ export default function MushafScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="تصغير الخط"
                 onPress={() => reader.setFontStep(state.prefs.fontStep - 1)}
-                className="p-3"
+                className="size-11 items-center justify-center rounded-xl border border-border"
+                style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
               >
-                <Minus size={20} color={theme.accent} />
+                <Minus size={20} color={primaryColor} />
               </Pressable>
             </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          </View>
+        </View>
+      </BottomSheet>
     </View>
   );
 }

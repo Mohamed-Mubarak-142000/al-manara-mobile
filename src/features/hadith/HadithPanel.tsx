@@ -4,18 +4,25 @@ import { Text, View } from "react-native";
 
 import { useThemeColor } from "@/theme/useThemeColor";
 
-/** The website's HadithPanel: a gold tab with the title above a framed parchment box. */
+/**
+ * The website's HadithPanel, in the app's card style: a white card with a hairline border, its title row
+ * (a small tinted icon and the title) set apart from the body by a hairline.
+ */
 export function HadithPanel({ title, icon: Icon, children }: { title: string; icon?: LucideIcon; children: ReactNode }) {
-  const onTab = useThemeColor("on-primary");
+  const accent = useThemeColor("accent-strong");
   return (
-    <View className="pt-6">
-      <View className="absolute start-0 top-0 z-10 flex-row items-center gap-2 rounded-t-2xl rounded-be-2xl bg-accent-strong px-4 py-2 shadow-soft">
-        {Icon && <Icon size={18} color={onTab} />}
-        <Text className="font-sans-bold text-base text-on-primary">{title}</Text>
+    <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
+      <View className="flex-row items-center gap-3 border-b border-border px-5 py-3.5">
+        {Icon && (
+          <View className="size-9 items-center justify-center rounded-xl bg-accent-soft">
+            <Icon size={18} color={accent} />
+          </View>
+        )}
+        <Text accessibilityRole="header" className="flex-1 font-sans-bold text-base text-fg">
+          {title}
+        </Text>
       </View>
-      <View className="rounded-3xl rounded-ss-none border border-e-4 border-accent/30 border-e-primary bg-surface-alt px-5 pb-5 pt-9">
-        {children}
-      </View>
+      <View className="p-5">{children}</View>
     </View>
   );
 }
@@ -38,10 +45,10 @@ export function HadithText({ text, numberOfLines }: { text: string; numberOfLine
   );
 }
 
-/** "التخريج: …" and "الدرجة: …" under the hadith. */
+/** "التخريج: …" and "الدرجة: …" under the hadith, as outlined pills. */
 export function HadithChip({ label, value }: { label: string; value: string }) {
   return (
-    <View className="rounded-full bg-surface px-3 py-1">
+    <View className="rounded-full border border-border px-3 py-1.5">
       <Text className="font-sans text-sm text-fg-muted">
         {label}: <Text className="font-sans-bold text-primary-strong">{value}</Text>
       </Text>

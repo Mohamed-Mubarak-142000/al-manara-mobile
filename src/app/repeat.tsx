@@ -1,12 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronDown, Minus, Plus, Repeat } from "lucide-react-native";
+import { ChevronDown, Mic, Minus, Plus, Repeat } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AYAH_VOICES, type AyahVoice } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { IconButton, enterSoft } from "@/components/ui/PageHeader";
 import { audio, type Track } from "@/features/audio/playerStore";
 import { AyahPackButton } from "@/features/downloads/AyahPackButton";
 import { ayahSource } from "@/features/downloads/ayahPacks";
@@ -36,7 +38,7 @@ function Stepper({
 }) {
   const primary = useThemeColor("primary");
   return (
-    <View className="flex-1 items-center rounded-2xl border border-border bg-surface py-2">
+    <View className="flex-1 items-center gap-2 rounded-3xl border border-border bg-surface px-2 py-3">
       <Text className="font-sans text-xs text-fg-muted">{label}</Text>
       <View className="flex-row items-center gap-2">
         <Pressable
@@ -44,17 +46,19 @@ function Stepper({
           accessibilityLabel={`زيادة ${label}`}
           onPress={() => onChange(Math.min(max, value + 1))}
           hitSlop={8}
-          className="p-2"
+          className="size-9 items-center justify-center rounded-xl border border-border"
+          style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.95 : 1 }] })}
         >
           <Plus size={18} color={primary} />
         </Pressable>
-        <Text className="min-w-10 text-center font-display-bold text-xl text-fg">{toArabicDigits(value)}</Text>
+        <Text className="min-w-10 text-center font-sans-bold text-xl text-fg">{toArabicDigits(value)}</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`إنقاص ${label}`}
           onPress={() => onChange(Math.max(min, value - 1))}
           hitSlop={8}
-          className="p-2"
+          className="size-9 items-center justify-center rounded-xl border border-border"
+          style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.95 : 1 }] })}
         >
           <Minus size={18} color={primary} />
         </Pressable>
@@ -89,7 +93,7 @@ export function repeatQueue(ayahs: MushafAyah[], voice: Voice, eachTimes: number
 export default function RepeatScreen() {
   const params = useLocalSearchParams<{ surah?: string; from?: string }>();
   const insets = useSafeAreaInsets();
-  const fg = useThemeColor("fg");
+  const primary = useThemeColor("primary");
   const surahNumber = Number(params.surah) || 1;
   const surah = getSurah(surahNumber);
   const count = surah?.ayahCount ?? 1;
@@ -110,36 +114,38 @@ export default function RepeatScreen() {
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32, paddingHorizontal: 16, gap: 16 }}
+      contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: insets.bottom + 32, paddingHorizontal: 16, gap: 16 }}
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="إغلاق"
-        onPress={() => router.back()}
-        hitSlop={12}
-        className="self-start p-1"
-      >
-        <ChevronDown size={28} color={fg} />
-      </Pressable>
-      <View>
-        <Text className="font-sans-bold text-sm text-accent-strong">كرّر للحفظ</Text>
-        <Text className="mt-1 font-display-bold text-2xl text-fg">سورة {surah?.name}</Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-fg-muted">
+      <View className="flex-row">
+        <IconButton icon={ChevronDown} label="إغلاق" onPress={() => router.back()} />
+      </View>
+      <Animated.View entering={enterSoft(0)}>
+        <View className="flex-row items-center gap-2">
+          <Repeat size={16} color={primary} />
+          <Text className="font-sans-bold text-sm text-primary">كرّر للحفظ</Text>
+        </View>
+        <Text className="mt-2 font-sans-bold text-[28px] leading-[42px] text-fg">سورة {surah?.name}</Text>
+        <Text className="mt-1 font-sans text-base leading-7 text-fg-muted">
           استمع للمقطع مرات متتالية حتى يثبت، ويستمر التشغيل والشاشة مغلقة.
         </Text>
-      </View>
+      </Animated.View>
 
-      <View className="flex-row gap-3">
-        <Stepper label="من الآية" value={from} min={1} max={to} onChange={setFrom} />
-        <Stepper label="إلى الآية" value={to} min={from} max={count} onChange={setTo} />
-      </View>
-      <View className="flex-row gap-3">
-        <Stepper label="تكرار كل آية" value={eachTimes} min={1} max={20} onChange={setEachTimes} />
-        <Stepper label="تكرار المقطع كله" value={rangeTimes} min={1} max={20} onChange={setRangeTimes} />
-      </View>
+      <Animated.View entering={enterSoft(1)} className="gap-3">
+        <View className="flex-row gap-3">
+          <Stepper label="من الآية" value={from} min={1} max={to} onChange={setFrom} />
+          <Stepper label="إلى الآية" value={to} min={from} max={count} onChange={setTo} />
+        </View>
+        <View className="flex-row gap-3">
+          <Stepper label="تكرار كل آية" value={eachTimes} min={1} max={20} onChange={setEachTimes} />
+          <Stepper label="تكرار المقطع كله" value={rangeTimes} min={1} max={20} onChange={setRangeTimes} />
+        </View>
+      </Animated.View>
 
-      <Text className="font-sans-bold text-sm text-fg">القارئ</Text>
-      <View className="gap-2">
+      <Animated.View entering={enterSoft(2)} className="gap-3">
+        <View className="flex-row items-center gap-2">
+          <Mic size={16} color={primary} />
+          <Text className="font-sans-bold text-base text-fg">القارئ</Text>
+        </View>
         {(Object.keys(VOICES) as Voice[]).map((key) => {
           const active = key === voice;
           return (
@@ -148,14 +154,15 @@ export default function RepeatScreen() {
               accessibilityRole="radio"
               accessibilityState={{ selected: active }}
               onPress={() => setVoice(key)}
-              className={`rounded-2xl border p-3 ${active ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+              className={`rounded-3xl border p-4 ${active ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
             >
-              <Text className={`font-display-bold text-base ${active ? "text-primary" : "text-fg"}`}>{VOICES[key].label}</Text>
+              <Text className={`font-sans-bold text-base ${active ? "text-primary" : "text-fg"}`}>{VOICES[key].label}</Text>
               <Text className="font-sans text-xs text-fg-muted">{VOICES[key].note}</Text>
             </Pressable>
           );
         })}
-      </View>
+      </Animated.View>
 
       <AyahPackButton surah={surahNumber} voices={[voice]} />
 

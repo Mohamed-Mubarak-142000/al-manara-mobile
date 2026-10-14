@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Check, ChevronLeft, ChevronRight, Lightbulb } from "lucide-react-native";
+import { Check, ChevronLeft, Lightbulb } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 import { Button } from "@/components/ui/Button";
+import { ScreenHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { useAsync } from "@/features/hadith/useAsync";
@@ -18,7 +19,8 @@ export default function StoryScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
   const { width } = useWindowDimensions();
-  const fg = useThemeColor("fg");
+  const primary = useThemeColor("primary");
+  const accent = useThemeColor("accent-strong");
   const learnerId = activeLearnerId(useAccount());
   const { state, reload } = useAsync(learnerId ?? "guest", () => (learnerId ? loadStories(learnerId) : Promise.resolve(null)));
   const [justWatched, setJustWatched] = useState(false);
@@ -39,20 +41,8 @@ export default function StoryScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + miniPlayer + 32 }}
-    >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="رجوع إلى كل القصص"
-        onPress={() => router.back()}
-        hitSlop={12}
-        className="mx-3 mb-2 flex-row items-center gap-1 self-start p-1"
-      >
-        <ChevronRight size={24} color={fg} />
-        <Text className="font-sans-bold text-sm text-fg">كل القصص</Text>
-      </Pressable>
+    <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
+      <ScreenHeader title="كل القصص" subtitle={story?.prophet ?? undefined} />
 
       {state.status === "loading" ? (
         <StateMessage loading />
@@ -67,8 +57,8 @@ export default function StoryScreen() {
       ) : !story ? (
         <StateMessage message="لم نجد هذه القصة." />
       ) : (
-        <View className="gap-4">
-          <View style={{ width, height: (width * 9) / 16 }} className="bg-black">
+        <View className="gap-4 pt-1">
+          <View style={{ width: width - 32, height: ((width - 32) * 9) / 16 }} className="mx-4 overflow-hidden rounded-3xl bg-black">
             <WebView
               source={{ html: playerHtml(story.youtube_id), baseUrl: "https://www.youtube-nocookie.com" }}
               onMessage={onMessage}
@@ -81,12 +71,12 @@ export default function StoryScreen() {
           <View className="gap-4 px-4">
             <View>
               <Text className="font-sans-bold text-sm text-accent-strong">{story.prophet ?? "القصص"}</Text>
-              <Text className="mt-1 font-display-bold text-2xl text-fg">{story.title}</Text>
+              <Text className="mt-1 font-sans-bold text-2xl leading-10 text-fg">{story.title}</Text>
               {story.summary ? <Text className="mt-2 font-sans text-base leading-8 text-fg-muted">{story.summary}</Text> : null}
             </View>
             {story.lesson ? (
-              <View className="flex-row gap-3 rounded-3xl border border-gold/40 bg-accent-soft p-4">
-                <Lightbulb size={22} color={fg} />
+              <View className="flex-row gap-3 rounded-3xl border border-accent/40 bg-accent-soft p-4">
+                <Lightbulb size={22} color={accent} />
                 <Text className="flex-1 font-sans text-base leading-7 text-fg">
                   <Text className="font-sans-bold">ماذا تعلّمنا؟ </Text>
                   {story.lesson}
@@ -94,18 +84,19 @@ export default function StoryScreen() {
               </View>
             ) : null}
             {watched ? (
-              <View className="flex-row items-center justify-center gap-2 rounded-2xl bg-primary-soft py-3">
-                <Check size={18} color={fg} />
+              <View className="h-13 flex-row items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary-soft">
+                <Check size={18} color={primary} />
                 <Text className="font-sans-bold text-sm text-primary">أحسنت! شاهدت هذه القصة</Text>
               </View>
             ) : (
-              <Button icon={Check} onPress={finish}>
+              <Button size="lg" icon={Check} onPress={finish}>
                 أنهيت القصة
               </Button>
             )}
             {next && (
               <Button
-                variant="outline"
+                variant="secondary"
+                size="lg"
                 icon={ChevronLeft}
                 onPress={() => router.replace({ pathname: "/stories/[id]", params: { id: next.id } })}
               >

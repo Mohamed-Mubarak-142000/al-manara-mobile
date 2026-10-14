@@ -1,12 +1,15 @@
 import { router } from "expo-router";
-import { BookMarked, BookOpen, Check, ChevronRight, Flame, Trophy } from "lucide-react-native";
+import { BookMarked, BookOpen, Check, Flame, Trophy } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
+import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { PageHeader, enterSoft } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount } from "@/features/account/accountStore";
 import { KhatmDuas } from "@/features/khatmDua/KhatmDuas";
@@ -20,19 +23,20 @@ import { useThemeColor } from "@/theme/useThemeColor";
 const SURAH_NAMES = () => Object.fromEntries(getSurahs().map((surah) => [surah.number, surah.name]));
 
 function Ring({ percent }: { percent: number }) {
-  const gold = useThemeColor("gold");
+  const primary = useThemeColor("primary");
+  const track = useThemeColor("border");
   const r = 42;
   const c = 2 * Math.PI * r;
   return (
-    <View className="size-28">
+    <View className="size-24">
       <Svg viewBox="0 0 100 100" width="100%" height="100%" style={{ transform: [{ rotate: "-90deg" }] }}>
-        <Circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth={8} />
+        <Circle cx="50" cy="50" r={r} fill="none" stroke={track} strokeWidth={8} />
         <Circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke={gold}
+          stroke={primary}
           strokeWidth={8}
           strokeLinecap="round"
           strokeDasharray={c}
@@ -40,7 +44,7 @@ function Ring({ percent }: { percent: number }) {
         />
       </Svg>
       <View className="absolute inset-0 items-center justify-center">
-        <Text className="font-display-bold text-2xl text-white">{toArabicDigits(percent)}٪</Text>
+        <Text className="font-sans-bold text-xl text-fg">{toArabicDigits(percent)}٪</Text>
       </View>
     </View>
   );
@@ -48,8 +52,7 @@ function Ring({ percent }: { percent: number }) {
 
 export default function KhatmaScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const gold = useThemeColor("accent-strong");
   const primary = useThemeColor("primary");
   const account = useAccount();
   const state = useKhatma();
@@ -68,36 +71,33 @@ export default function KhatmaScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-4">
-          <View className="flex-1">
-            <View className="flex-row items-center gap-2">
-              <BookMarked size={16} color={gold} />
-              <Text className="font-sans-bold text-sm text-gold-soft">الختمة</Text>
+      <PageHeader
+        back
+        kicker="الختمة"
+        icon={BookMarked}
+        title={view ? (view.status === "completed" ? "ختمت القرآن" : "ختمتك الجارية") : "اختم القرآن"}
+        description={view ? undefined : "بوِرد يومي تختاره، ونذكّرك بوردك كل يوم."}
+      />
+
+      {(view || account.status === "signed-in" || (account.status === "guest" && account.configured)) && (
+        <Animated.View entering={enterSoft(3)} className="mx-4 rounded-3xl border border-border bg-surface p-5 shadow-card">
+          {view && (
+            <View className="flex-row items-center gap-4">
+              <View className="flex-1">
+                <Text className="font-sans-bold text-base text-fg">{view.amount}</Text>
+                <Text className="mt-1 font-sans text-sm leading-6 text-fg-muted">{view.daysLabel}</Text>
+              </View>
+              <Ring percent={view.percent} />
             </View>
-            <Text className="mt-2 font-display-bold text-3xl text-hero-fg">
-              {view ? (view.status === "completed" ? "ختمت القرآن" : "ختمتك الجارية") : "اختم القرآن"}
+          )}
+          {account.status === "signed-in" && <SyncBadge />}
+          {account.status === "guest" && account.configured && (
+            <Text className={`${view ? "mt-3" : ""} font-sans text-xs leading-5 text-fg-muted`}>
+              ختمتك محفوظة على هذا الجهاز. سجّل الدخول لمزامنتها مع الموقع.
             </Text>
-            <Text className="mt-1 font-sans text-sm leading-6 text-white/70">
-              {view ? `${view.amount} · ${view.daysLabel}` : "بوِرد يومي تختاره، ونذكّرك بوردك كل يوم."}
-            </Text>
-          </View>
-          {view && <Ring percent={view.percent} />}
-        </View>
-        {account.status === "signed-in" && <SyncBadge />}
-        {account.status === "guest" && account.configured && (
-          <Text className="mt-4 font-sans text-xs text-white/60">ختمتك محفوظة على هذا الجهاز. سجّل الدخول لمزامنتها مع الموقع.</Text>
-        )}
-      </View>
+          )}
+        </Animated.View>
+      )}
 
       <View className="gap-4 px-4 pt-5">
         {state.status === "loading" ? (
@@ -109,19 +109,19 @@ export default function KhatmaScreen() {
         ) : (
           <>
             {view.status === "completed" ? (
-              <View className="items-center rounded-3xl border border-gold/40 bg-accent-soft p-6">
+              <View className="items-center rounded-3xl border border-border bg-accent-soft p-6">
                 <Trophy size={40} color={gold} />
-                <Text className="mt-3 font-display-bold text-2xl text-fg">تقبّل الله منك</Text>
+                <Text className="mt-3 font-sans-bold text-2xl text-fg">تقبّل الله منك</Text>
                 <Text className="mt-1 text-center font-sans text-sm text-fg-muted">
                   أتممت ختمتك. هذه ختمتك رقم {toArabicDigits(view.finished)}.
                 </Text>
               </View>
             ) : view.portion ? (
-              <View className="rounded-3xl border border-border bg-surface p-5 shadow-soft">
-                <Text className="font-sans-bold text-sm text-accent-strong">
+              <View className="rounded-3xl border border-border bg-surface p-5 shadow-card">
+                <Text className="font-sans-bold text-sm text-primary">
                   {view.portion.done ? "قرأت ورد اليوم" : view.readsToday ? "ورد اليوم" : `وردك القادم ${view.nextDay ?? ""}`}
                 </Text>
-                <Text className="mt-2 font-display-bold text-xl leading-9 text-fg">
+                <Text className="mt-2 font-sans-bold text-xl leading-9 text-fg">
                   من {view.portion.from.surahName} {toArabicDigits(view.portion.from.ayah)}
                   {"\n"}إلى {view.portion.to.surahName} {toArabicDigits(view.portion.to.ayah)}
                 </Text>
@@ -131,7 +131,7 @@ export default function KhatmaScreen() {
                 <View className="mt-4 flex-row flex-wrap gap-3">
                   <Button
                     icon={BookOpen}
-                    variant="outline"
+                    variant="secondary"
                     onPress={() => router.push({ pathname: "/mushaf", params: { page: String(view.portion!.startPage) } })}
                   >
                     اقرأ الآن
@@ -148,12 +148,12 @@ export default function KhatmaScreen() {
             <View className="flex-row gap-3">
               <View className="flex-1 items-center rounded-3xl border border-border bg-surface p-4">
                 <Flame size={22} color={primary} />
-                <Text className="mt-1 font-display-bold text-xl text-fg">{toArabicDigits(view.streak)}</Text>
+                <Text className="mt-1 font-sans-bold text-xl text-fg">{toArabicDigits(view.streak)}</Text>
                 <Text className="font-sans text-xs text-fg-muted">أيام متتالية</Text>
               </View>
               <View className="flex-1 items-center rounded-3xl border border-border bg-surface p-4">
                 <BookOpen size={22} color={primary} />
-                <Text className="mt-1 font-display-bold text-xl text-fg">{toArabicDigits(view.pagesDone)}</Text>
+                <Text className="mt-1 font-sans-bold text-xl text-fg">{toArabicDigits(view.pagesDone)}</Text>
                 <Text className="font-sans text-xs text-fg-muted">صفحة من ٦٠٤</Text>
               </View>
             </View>
@@ -166,20 +166,24 @@ export default function KhatmaScreen() {
                 ابدأ ختمة جديدة
               </Button>
             ) : (
-              // Ending a running khatma loses its place, so it takes a second, explicit tap.
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onPress={() => (confirmArchive ? run(khatma.archive).then(() => setConfirmArchive(false)) : setConfirmArchive(true))}
-              >
-                {confirmArchive ? "اضغط مرة أخرى لتأكيد إنهاء الختمة" : "إنهاء هذه الختمة والبدء من جديد"}
+              // Ending a running khatma loses its place, so it asks first.
+              <Button variant="ghost" size="sm" disabled={busy} onPress={() => setConfirmArchive(true)}>
+                إنهاء هذه الختمة والبدء من جديد
               </Button>
             )}
+            <ConfirmSheet
+              visible={confirmArchive}
+              title="إنهاء الختمة"
+              message="ستُنهى ختمتك الجارية ويضيع موضعك فيها، ثم تبدأ ختمة جديدة."
+              confirmLabel="أنهِ الختمة"
+              destructive
+              onConfirm={() => void run(khatma.archive)}
+              onClose={() => setConfirmArchive(false)}
+            />
             {/* Last, so the new-khatma button above stays in reach. */}
             {view.status === "completed" && view.fullMushaf && (
               <View className="mt-2 gap-4">
-                <Text accessibilityRole="header" className="font-display-bold text-2xl text-fg">
+                <Text accessibilityRole="header" className="font-sans-bold text-xl text-fg">
                   دعاء ختم القرآن
                 </Text>
                 <KhatmDuas />

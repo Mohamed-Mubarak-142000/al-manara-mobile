@@ -21,14 +21,14 @@ function ReciterRow({ reciter, riwayaCount }: { reciter: Reciter; riwayaCount: n
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push({ pathname: "/listen/[reciterId]", params: { reciterId: String(reciter.id) } })}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
-      <View className="mx-4 mb-2.5 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+      <View className="mx-4 mb-3 flex-row items-center gap-3 rounded-3xl border border-border bg-surface px-4 py-3.5">
         <View className="size-11 items-center justify-center rounded-full bg-primary-soft">
-          <Text className="font-display-bold text-base text-primary">{reciter.letter}</Text>
+          <Text className="font-sans-bold text-base text-primary">{reciter.letter}</Text>
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">{reciter.name}</Text>
+          <Text className="font-sans-bold text-base text-fg">{reciter.name}</Text>
           <Text className="font-sans text-xs text-fg-muted">
             {riwayaCount > 1 ? `${toArabicDigits(riwayaCount)} روايات · ` : ""}
             {toArabicDigits(surahCount)} سورة
@@ -70,7 +70,7 @@ export default function ListenScreen() {
               title="تلاوات القرّاء"
               description={reciters ? `${toArabicDigits(reciters.length)} قارئًا بمختلف الروايات.` : "تلاوات لأكثر من مئتي قارئ."}
             />
-            <View className="-mt-6 px-4">
+            <View className="px-4">
               <SearchField value={query} onChangeText={setQuery} placeholder="ابحث عن قارئ" />
             </View>
           </View>

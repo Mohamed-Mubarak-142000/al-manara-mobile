@@ -41,13 +41,13 @@ export function StreakCard() {
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-xs text-accent-strong">وِرد القراءة</Text>
-          <Text className="font-display-bold text-2xl text-fg">
+          <Text className="font-sans-bold text-2xl text-fg">
             {toArabicDigits(streak)} {streak === 1 ? "يوم" : "أيام متتالية"}
           </Text>
         </View>
         <View className="items-end">
           <Text className="font-sans text-xs text-fg-muted">أفضل سلسلة</Text>
-          <Text className="font-display-bold text-base text-fg">{toArabicDigits(Math.max(best, streak))}</Text>
+          <Text className="font-sans-bold text-base text-fg">{toArabicDigits(Math.max(best, streak))}</Text>
         </View>
       </View>
 
@@ -66,13 +66,13 @@ export function StreakCard() {
       </View>
 
       <View className="flex-row gap-2">
-        <View className="flex-1 rounded-2xl bg-bg px-3 py-2">
+        <View className="flex-1 rounded-2xl border border-border bg-surface px-3 py-2.5">
           <Text className="font-sans text-xs text-fg-muted">صفحات هذا الأسبوع</Text>
-          <Text className="font-display-bold text-lg text-fg">{toArabicDigits(week.pages)}</Text>
+          <Text className="font-sans-bold text-lg text-fg">{toArabicDigits(week.pages)}</Text>
         </View>
-        <View className="flex-1 rounded-2xl bg-bg px-3 py-2">
+        <View className="flex-1 rounded-2xl border border-border bg-surface px-3 py-2.5">
           <Text className="font-sans text-xs text-fg-muted">أيام القراءة</Text>
-          <Text className="font-display-bold text-lg text-fg">{toArabicDigits(week.days)} / ٧</Text>
+          <Text className="font-sans-bold text-lg text-fg">{toArabicDigits(week.days)} / ٧</Text>
         </View>
       </View>
 

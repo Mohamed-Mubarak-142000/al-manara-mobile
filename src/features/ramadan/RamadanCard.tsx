@@ -54,8 +54,9 @@ export function RamadanCard() {
   }
 
   return (
-    <View className="gap-4 overflow-hidden rounded-[28px] bg-emerald-night p-5">
-      <View className="absolute -end-10 -top-10 size-40 rounded-full bg-gold/10" />
+    // A deliberately dark accent card (like the next-prayer card), inside the page gutter.
+    <View className="gap-4 overflow-hidden rounded-4xl bg-emerald-night p-5">
+      <View className="absolute -inset-e-10 -top-10 size-40 rounded-full bg-gold/10" />
       <View className="flex-row items-center gap-2">
         <Moon size={18} color={gold} />
         <Text className="font-sans-bold text-sm text-gold-soft">رمضان كريم · اليوم {toArabicDigits(hijri.day)} من رمضان</Text>
@@ -65,20 +66,20 @@ export function RamadanCard() {
         <View className="flex-row gap-3">
           <View className="flex-1 rounded-2xl bg-white/10 p-3">
             <Text className="font-sans text-xs text-white/65">الإمساك</Text>
-            <Text className="font-display-bold text-xl text-white">
+            <Text className="font-sans-bold text-xl text-white">
               {toArabicDigits(formatPrayerClock(`${pad2(imsak.getHours())}:${pad2(imsak.getMinutes())}`))}
             </Text>
           </View>
           <View className="flex-1 rounded-2xl bg-white/10 p-3">
             <Text className="font-sans text-xs text-white/65">الإفطار (المغرب)</Text>
-            <Text className="font-display-bold text-xl text-white">{toArabicDigits(formatPrayerClock(times.maghrib))}</Text>
+            <Text className="font-sans-bold text-xl text-white">{toArabicDigits(formatPrayerClock(times.maghrib))}</Text>
           </View>
         </View>
       ) : null}
       {fasting && iftar ? (
-        <Text className="font-display-bold text-lg text-gold-soft">باقٍ على الإفطار {countdown(iftar.getTime() - now.getTime())}</Text>
+        <Text className="font-sans-bold text-lg text-gold-soft">باقٍ على الإفطار {countdown(iftar.getTime() - now.getTime())}</Text>
       ) : imsak && now < imsak ? (
-        <Text className="font-display-bold text-lg text-gold-soft">باقٍ على الإمساك {countdown(imsak.getTime() - now.getTime())}</Text>
+        <Text className="font-sans-bold text-lg text-gold-soft">باقٍ على الإمساك {countdown(imsak.getTime() - now.getTime())}</Text>
       ) : null}
 
       <View className="rounded-2xl bg-white/5 p-3">

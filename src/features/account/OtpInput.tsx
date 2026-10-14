@@ -44,14 +44,10 @@ export function OtpInput({ value, onChange, onComplete, length = 6, invalid = fa
           return (
             <View
               key={index}
-              className={`h-14 flex-1 items-center justify-center rounded-2xl border-2 ${border} ${isActive ? "bg-primary-soft" : "bg-bg"}`}
+              className={`h-14 flex-1 items-center justify-center rounded-2xl border-[1.5px] ${border} ${isActive ? "bg-primary-soft" : "bg-surface"}`}
               style={{ maxWidth: 56 }}
             >
-              {digit ? (
-                <Text className="font-display-bold text-2xl text-fg">{digit}</Text>
-              ) : isActive ? (
-                <Caret />
-              ) : null}
+              {digit ? <Text className="font-sans-bold text-2xl text-fg">{digit}</Text> : isActive ? <Caret /> : null}
             </View>
           );
         })}

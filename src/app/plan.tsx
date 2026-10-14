@@ -1,11 +1,14 @@
 import { router } from "expo-router";
-import { BookOpen, CalendarRange, Check, ChevronLeft, ChevronRight, Flame, Lock, Trophy } from "lucide-react-native";
+import { BookOpen, CalendarRange, Check, ChevronLeft, Flame, Lock, Trophy } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
+import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { PageHeader, enterSoft } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { formatDay } from "@/features/khatma/CreateKhatmaForm";
@@ -25,8 +28,12 @@ function openPage(page: number) {
 function PageRow({ link }: { link: PageLink }) {
   const muted = useThemeColor("fg-muted");
   return (
-    <Pressable accessibilityRole="button" onPress={() => openPage(link.page)} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-      <View className="flex-row items-center justify-between rounded-2xl border border-border bg-bg px-3 py-2.5">
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => openPage(link.page)}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
+    >
+      <View className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
         <Text className="font-sans-semibold text-sm text-fg">
           صفحة {toArabicDigits(link.page)}
           {HALF[link.half]} · {link.surahName}
@@ -39,8 +46,7 @@ function PageRow({ link }: { link: PageLink }) {
 
 export default function PlanScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const gold = useThemeColor("accent-strong");
   const primary = useThemeColor("primary");
   const state = usePlan();
   const [busy, setBusy] = useState(false);
@@ -59,44 +65,45 @@ export default function PlanScreen() {
 
   return (
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <CalendarRange size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">خطة الحفظ</Text>
-        </View>
-        <Text className="mt-2 font-display-bold text-3xl text-hero-fg">
-          {view
+      <PageHeader
+        back
+        kicker="خطة الحفظ"
+        icon={CalendarRange}
+        title={
+          view
             ? view.kind === "memorize"
               ? `حفظ الأجزاء ${toArabicDigits(view.startJuz ?? 0)}–${toArabicDigits(view.endJuz ?? 0)}`
               : "تثبيت الحفظ"
-            : "وردك اليومي"}
-        </Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-white/70">
-          {view
+            : "وردك اليومي"
+        }
+        description={
+          view
             ? view.kind === "memorize"
               ? `${view.dailyLabel} · ${view.newDays.label}`
               : `${view.reviewLabel} مراجعة · ${view.reviewDays.label}`
-            : "خطة حفظ ومراجعة على أيامك، ونخبرك كل يوم بوردك."}
-        </Text>
-        {view?.kind === "memorize" && (
-          <View className="mt-4">
-            <ProgressBar tone="light" value={view.percent / 100} />
-            <Text className="mt-1 font-sans text-xs text-white/60">
-              {toArabicDigits(view.pagesDone)} من {toArabicDigits(view.totalPages)} صفحة ({toArabicDigits(view.percent)}٪)
-            </Text>
+            : "خطة حفظ ومراجعة على أيامك، ونخبرك كل يوم بوردك."
+        }
+      />
+      {view?.kind === "memorize" && (
+        <Animated.View entering={enterSoft(3)} className="mx-4 rounded-3xl border border-border bg-surface p-5 shadow-card">
+          <View className="flex-row items-baseline justify-between">
+            <Text className="font-sans-bold text-base text-fg">تقدّمك</Text>
+            <Text className="font-sans-bold text-base text-primary">{toArabicDigits(view.percent)}٪</Text>
           </View>
-        )}
-        {state.status !== "guest" && <SyncBadge />}
-      </View>
+          <View className="mt-2">
+            <ProgressBar value={view.percent / 100} />
+          </View>
+          <Text className="mt-1 font-sans text-xs text-fg-muted">
+            {toArabicDigits(view.pagesDone)} من {toArabicDigits(view.totalPages)} صفحة ({toArabicDigits(view.percent)}٪)
+          </Text>
+          {state.status !== "guest" && <SyncBadge />}
+        </Animated.View>
+      )}
+      {view?.kind !== "memorize" && state.status !== "guest" && (
+        <View className="px-5">
+          <SyncBadge />
+        </View>
+      )}
 
       <View className="gap-4 px-4 pt-5">
         {state.status === "loading" ? (
@@ -118,25 +125,30 @@ export default function PlanScreen() {
         ) : (
           <>
             {view.status === "completed" && (
-              <View className="items-center rounded-3xl border border-gold/40 bg-accent-soft p-6">
+              <View className="items-center rounded-3xl border border-border bg-accent-soft p-6">
                 <Trophy size={40} color={gold} />
-                <Text className="mt-3 font-display-bold text-2xl text-fg">أتممت خطتك، بارك الله فيك</Text>
+                <Text className="mt-3 text-center font-sans-bold text-2xl text-fg">أتممت خطتك، بارك الله فيك</Text>
                 <Text className="mt-1 text-center font-sans text-sm text-fg-muted">اختبر حفظك الآن واحصل على شهادات الأجزاء.</Text>
-                <Button className="mt-4" variant="gold" onPress={() => router.push("/exams")}>
+                <Button className="mt-4" onPress={() => router.push("/exams")}>
                   اختبارات الأجزاء
                 </Button>
               </View>
             )}
 
             {view.newPortion && (
-              <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-soft">
-                <Text className="font-sans-bold text-sm text-accent-strong">
+              <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
+                <Text className="font-sans-bold text-sm text-primary">
                   {view.newPortion.done ? "حفظت ورد اليوم" : view.newDays.today ? "حفظ اليوم" : `حفظك القادم ${view.newDays.next ?? ""}`}
                 </Text>
                 {view.newPortion.parts?.map((part) => (
-                  <Pressable key={`${part.page}-${part.half}`} accessibilityRole="button" onPress={() => openPage(part.page)}>
-                    <View className="gap-1 rounded-2xl bg-primary-soft p-3">
-                      <Text className="font-display-bold text-base text-fg">
+                  <Pressable
+                    key={`${part.page}-${part.half}`}
+                    accessibilityRole="button"
+                    onPress={() => openPage(part.page)}
+                    style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
+                  >
+                    <View className="gap-1 rounded-2xl bg-primary-soft p-4">
+                      <Text className="font-sans-bold text-base text-fg">
                         صفحة {toArabicDigits(part.page)}
                         {HALF[part.half]}
                       </Text>
@@ -156,8 +168,8 @@ export default function PlanScreen() {
             )}
 
             {(view.recent.length > 0 || view.far.length > 0) && (
-              <View className="gap-3 rounded-3xl border border-border bg-surface p-5">
-                <Text className="font-sans-bold text-sm text-accent-strong">
+              <View className="gap-3 rounded-3xl border border-border bg-surface p-5 shadow-card">
+                <Text className="font-sans-bold text-sm text-primary">
                   {view.reviewDone
                     ? "راجعت اليوم"
                     : view.reviewDays.today
@@ -181,7 +193,7 @@ export default function PlanScreen() {
                   </>
                 )}
                 {!view.reviewDone && (
-                  <Button variant="outline" icon={BookOpen} onPress={() => run(planActions.completeReview)} disabled={busy}>
+                  <Button variant="secondary" icon={BookOpen} onPress={() => run(planActions.completeReview)} disabled={busy}>
                     أتممت المراجعة
                   </Button>
                 )}
@@ -191,26 +203,31 @@ export default function PlanScreen() {
             <View className="flex-row gap-3">
               <View className="flex-1 items-center rounded-3xl border border-border bg-surface p-4">
                 <Flame size={22} color={primary} />
-                <Text className="mt-1 font-display-bold text-xl text-fg">{toArabicDigits(view.streak)}</Text>
+                <Text className="mt-1 font-sans-bold text-xl text-fg">{toArabicDigits(view.streak)}</Text>
                 <Text className="font-sans text-xs text-fg-muted">أيام متتالية</Text>
               </View>
               {view.finishDay && (
                 <View className="flex-1 items-center rounded-3xl border border-border bg-surface p-4">
                   <CalendarRange size={22} color={primary} />
-                  <Text className="mt-1 text-center font-display-bold text-sm text-fg">{formatDay(view.finishDay)}</Text>
+                  <Text className="mt-1 text-center font-sans-bold text-sm text-fg">{formatDay(view.finishDay)}</Text>
                   <Text className="font-sans text-xs text-fg-muted">موعد الختم المتوقع</Text>
                 </View>
               )}
             </View>
             {error ? <Text className="text-center font-sans text-sm text-danger">{error}</Text> : null}
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onPress={() => (confirmArchive ? run(planActions.archive).then(() => setConfirmArchive(false)) : setConfirmArchive(true))}
-            >
-              {confirmArchive ? "اضغط مرة أخرى لتأكيد إنهاء الخطة" : "إنهاء الخطة وإنشاء خطة جديدة"}
+            {/* Ending a plan loses its place, so it asks first. */}
+            <Button variant="ghost" size="sm" disabled={busy} onPress={() => setConfirmArchive(true)}>
+              إنهاء الخطة وإنشاء خطة جديدة
             </Button>
+            <ConfirmSheet
+              visible={confirmArchive}
+              title="إنهاء الخطة"
+              message="ستُنهى خطتك الحالية ويضيع موضعك فيها، ثم تنشئ خطة جديدة."
+              confirmLabel="أنهِ الخطة"
+              destructive
+              onConfirm={() => void run(planActions.archive)}
+              onClose={() => setConfirmArchive(false)}
+            />
           </>
         )}
       </View>

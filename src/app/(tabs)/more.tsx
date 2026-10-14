@@ -10,7 +10,7 @@ import { shareApp } from "@/features/legal/site";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 function GroupTitle({ children }: { children: string }) {
-  return <Text className="mb-1 mt-4 px-1 font-sans-bold text-sm text-accent-strong">{children}</Text>;
+  return <Text className="mb-1 mt-4 px-1 font-sans-bold text-base text-fg">{children}</Text>;
 }
 
 /** One row of a grouped list: icon, title, optional hint, and a chevron. */
@@ -30,13 +30,13 @@ function LinkRow({
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   return (
-    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-      <View className={`flex-row items-center gap-3 px-4 py-3.5 ${last ? "" : "border-b border-border"}`}>
-        <View className="size-9 items-center justify-center rounded-xl bg-primary-soft">
+    <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+      <View className={`flex-row items-center gap-3 px-4 py-4 ${last ? "" : "border-b border-border"}`}>
+        <View className="size-10 items-center justify-center rounded-2xl bg-primary-soft">
           <Icon size={18} color={primary} />
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-[15px] text-fg">{title}</Text>
+          <Text className="font-sans-bold text-[15px] text-fg">{title}</Text>
           {hint && <Text className="font-sans text-xs text-fg-muted">{hint}</Text>}
         </View>
         <ChevronLeft size={18} color={muted} />
@@ -46,22 +46,26 @@ function LinkRow({
 }
 
 function Group({ children }: { children: React.ReactNode }) {
-  return <View className="overflow-hidden rounded-3xl border border-border bg-surface">{children}</View>;
+  return <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">{children}</View>;
 }
 
 function SupportLink() {
-  const gold = useThemeColor("gold-soft");
+  const accent = useThemeColor("accent-strong");
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push("/support")} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-      <View className="flex-row items-center gap-3 rounded-3xl bg-hero p-4 shadow-lift">
-        <View className="size-11 items-center justify-center rounded-2xl bg-white/10">
-          <HandHeart size={22} color={gold} />
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push("/support")}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
+    >
+      <View className="flex-row items-center gap-3 rounded-3xl border border-gold/40 bg-accent-soft p-4">
+        <View className="size-11 items-center justify-center rounded-2xl bg-surface">
+          <HandHeart size={22} color={accent} />
         </View>
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-hero-fg">ادعم المنارة</Text>
-          <Text className="font-sans text-xs text-white/70">صدقة جارية تبقي التطبيق مجانيًا بلا إعلانات</Text>
+          <Text className="font-sans-bold text-base text-fg">ادعم المنارة</Text>
+          <Text className="font-sans text-xs text-fg-muted">صدقة جارية تبقي التطبيق مجانيًا بلا إعلانات</Text>
         </View>
-        <ChevronLeft size={18} color={gold} />
+        <ChevronLeft size={18} color={accent} />
       </View>
     </Pressable>
   );
@@ -72,12 +76,7 @@ export default function MoreScreen() {
   const version = Constants.expoConfig?.version;
   return (
     <Screen bleed>
-      <PageHeader
-        kicker="المزيد"
-        icon={Settings2}
-        title="حسابك والإعدادات"
-        description="حسابك، وتفضيلات التطبيق، وعن المنارة."
-      />
+      <PageHeader kicker="المزيد" icon={Settings2} title="حسابك والإعدادات" description="حسابك، وتفضيلات التطبيق، وعن المنارة." />
       <Section className="mt-5 gap-3">
         <AccountCard />
         <SupportLink />

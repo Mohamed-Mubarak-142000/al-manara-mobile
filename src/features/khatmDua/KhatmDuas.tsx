@@ -33,11 +33,11 @@ export function KhatmDuas() {
       </View>
 
       <View className="gap-3">
-        <Text accessibilityRole="header" className="font-display-bold text-xl text-fg">
+        <Text accessibilityRole="header" className="font-sans-bold text-base text-fg">
           من القرآن الكريم
         </Text>
         {QURAN_DUAS.map((dua) => (
-          <View key={dua.key} className="rounded-3xl border border-border bg-surface p-5 shadow-soft">
+          <View key={dua.key} className="rounded-3xl border border-border bg-surface p-5 shadow-card">
             <Text className="font-quran text-fg" style={quranText}>
               {/* The ellipsis in the UI face: it is not a Quranic character, and it is its own word. */}
               {dua.partial && <Text className="font-sans">… </Text>}
@@ -53,11 +53,11 @@ export function KhatmDuas() {
       </View>
 
       <View className="gap-3">
-        <Text accessibilityRole="header" className="font-display-bold text-xl text-fg">
+        <Text accessibilityRole="header" className="font-sans-bold text-base text-fg">
           من السنة النبوية
         </Text>
         {SUNNAH_DUAS.map((dua) => (
-          <View key={dua.id} className="rounded-3xl border border-border bg-surface p-5 shadow-soft">
+          <View key={dua.id} className="rounded-3xl border border-border bg-surface p-5 shadow-card">
             <Text className="font-sans-bold text-sm text-accent-strong">{dua.title}</Text>
             {/* Amiri Quran: the Hafs face draws the Arabic comma these duas use as a dotted circle. */}
             <Text className="mt-2 font-quran-fallback text-fg" style={duaText}>

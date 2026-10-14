@@ -26,9 +26,9 @@ export function AyahPackButton({ surah, voices }: { surah: number; voices: reado
   const label = AYAH_VOICES[voice].label;
 
   return (
-    <View className="gap-2 rounded-2xl border border-border bg-surface p-3">
+    <View className="gap-3 rounded-2xl border border-border bg-surface p-4">
       {voices.length > 1 && (
-        <View className="flex-row gap-1.5">
+        <View className="flex-row gap-2">
           {voices.map((key) => {
             const active = key === voice;
             return (
@@ -37,9 +37,9 @@ export function AyahPackButton({ surah, voices }: { surah: number; voices: reado
                 accessibilityRole="radio"
                 accessibilityState={{ selected: active }}
                 onPress={() => setPicked(key)}
-                className={`rounded-full px-3 py-1 ${active ? "bg-primary-soft" : ""}`}
+                className={`rounded-full border px-3 py-1.5 ${active ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
               >
-                <Text className={`font-sans-bold text-xs ${active ? "text-primary" : "text-fg-muted"}`}>{AYAH_VOICES[key].label}</Text>
+                <Text className={`font-sans-semibold text-xs ${active ? "text-primary" : "text-fg"}`}>{AYAH_VOICES[key].label}</Text>
               </Pressable>
             );
           })}
@@ -87,11 +87,7 @@ export function AyahPackButton({ surah, voices }: { surah: number; voices: reado
             onPress={() => void downloadSurah(voice, surah)}
             className="flex-1 flex-row items-center gap-2"
           >
-            {state.status === "partial" && state.failed ? (
-              <RotateCcw size={18} color={primary} />
-            ) : (
-              <Download size={18} color={primary} />
-            )}
+            {state.status === "partial" && state.failed ? <RotateCcw size={18} color={primary} /> : <Download size={18} color={primary} />}
             <View className="flex-1">
               <Text className="font-sans-bold text-sm text-primary">
                 {state.status === "partial" ? "أكمل تنزيل آيات السورة" : "تنزيل آيات السورة للاستماع بدون إنترنت"}

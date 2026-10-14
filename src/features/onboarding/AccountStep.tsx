@@ -22,7 +22,7 @@ const PERKS = [
  */
 export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
   const state = useAccount();
-  const gold = useThemeColor("gold-soft");
+  const primary = useThemeColor("primary");
   const signedIn = state.status === "signed-in";
   // Only a sign-in made on this step moves on by itself; coming back to it while signed in stays put.
   const wasSignedIn = useRef(signedIn);
@@ -38,9 +38,9 @@ export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
     const name = state.profile?.full_name?.trim() || state.email;
     return (
       <StepLayout icon={Check} eyebrow="حسابك" title="أهلًا بك في المنارة" subtitle="كل ما تحفظه من الآن يُحفظ على حسابك.">
-        <View className="items-center gap-2 rounded-2xl border border-gold/30 bg-gold/10 p-5">
-          <Text className="font-display-bold text-lg text-white">{name}</Text>
-          <Text className="font-sans text-xs text-white/70">تم تسجيل الدخول ✓</Text>
+        <View className="items-center gap-2 rounded-2xl border border-primary/20 bg-primary-soft p-5">
+          <Text className="font-sans-bold text-lg text-fg">{name}</Text>
+          <Text className="font-sans text-xs text-primary">تم تسجيل الدخول ✓</Text>
         </View>
       </StepLayout>
     );
@@ -48,19 +48,21 @@ export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
 
   return (
     <StepLayout icon={CloudUpload} eyebrow="حسابك" title="احفظ تقدّمك في حسابك" subtitle="حساب مجاني يحفظ كل شيء لك، ويمكنك المتابعة كضيف.">
-      <View className="gap-2.5">
+      <View className="gap-3">
         {PERKS.map(({ icon: Icon, text }) => (
           <View key={text} className="flex-row items-center gap-3">
-            <Icon size={18} color={gold} />
-            <Text className="flex-1 font-sans text-sm leading-6 text-white/85">{text}</Text>
+            <View className="size-9 items-center justify-center rounded-xl bg-primary-soft">
+              <Icon size={18} color={primary} />
+            </View>
+            <Text className="flex-1 font-sans text-sm leading-6 text-fg">{text}</Text>
           </View>
         ))}
       </View>
       <GoogleButton onDone={() => {}} />
-      <Button variant="gold" size="lg" icon={Mail} onPress={() => router.push("/register")}>
+      <Button size="lg" icon={Mail} onPress={() => router.push("/register")}>
         إنشاء حساب بالبريد
       </Button>
-      <Button variant="light" icon={LogIn} onPress={() => router.push("/login")}>
+      <Button variant="secondary" icon={LogIn} onPress={() => router.push("/login")}>
         لديّ حساب بالفعل
       </Button>
     </StepLayout>

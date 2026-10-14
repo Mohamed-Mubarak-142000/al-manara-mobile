@@ -1,7 +1,7 @@
 import { router } from "expo-router";
-import { ChevronRight, Pause, Play, Radio } from "lucide-react-native";
+import { ListMusic, Pause, Play, Radio } from "lucide-react-native";
 import { useEffect } from "react";
-import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -13,7 +13,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { audio, currentTrack, usePlayer } from "@/features/audio/playerStore";
 import { RADIO_STATION, RADIO_TRACK } from "@/features/radio/station";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -44,8 +46,8 @@ function Bar({ index, active }: { index: number; active: boolean }) {
 /** Live Cairo Quran Radio, with the website's automatic switch to a backup stream. */
 export default function RadioScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const accent = useThemeColor("accent-strong");
+  const onPrimary = useThemeColor("on-primary");
   const state = usePlayer();
   const onRadio = currentTrack(state)?.id === RADIO_TRACK.id;
   const playing = onRadio && state.playing;
@@ -57,75 +59,88 @@ export default function RadioScreen() {
   }
 
   return (
-    <View className="flex-1 bg-emerald-night" style={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="رجوع"
-        onPress={() => router.back()}
-        hitSlop={12}
-        className="mx-3 self-start p-1"
-      >
-        <ChevronRight size={26} color={heroFg} />
-      </Pressable>
+    <View className="flex-1 bg-bg">
+      <ScreenHeader title="الإذاعة" subtitle="بث مباشر" />
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}>
+        <Animated.View
+          entering={enterSoft(0)}
+          className="mt-2 items-center gap-7 rounded-3xl border border-border bg-surface px-5 py-8 shadow-card"
+        >
+          <View
+            className={`flex-row items-center gap-2 rounded-full border px-4 py-1.5 ${playing ? "border-rose/40 bg-rose/10" : "border-border bg-accent-soft"}`}
+          >
+            {playing ? <View className="size-2 rounded-full bg-rose" /> : <Radio size={14} color={accent} />}
+            <Text className={`font-sans-bold text-sm ${playing ? "text-rose" : "text-accent-strong"}`}>
+              {playing ? "على الهواء الآن" : "بث مباشر على مدار الساعة"}
+            </Text>
+          </View>
 
-      <View className="flex-1 items-center justify-center gap-8 px-6">
-        <View className={`flex-row items-center gap-2 rounded-full px-4 py-1.5 ${playing ? "bg-rose/20" : "bg-white/10"}`}>
-          {playing ? <View className="size-2 rounded-full bg-rose" /> : <Radio size={14} color={gold} />}
-          <Text className="font-sans-bold text-sm text-gold-soft">{playing ? "على الهواء الآن" : "بث مباشر على مدار الساعة"}</Text>
-        </View>
+          <View className="items-center gap-1.5">
+            <Text className="text-center font-sans-bold text-3xl leading-12 text-fg">إذاعة القرآن الكريم</Text>
+            <Text className="text-center font-sans text-base text-fg-muted">{RADIO_STATION.name}</Text>
+          </View>
 
-        <View className="items-center gap-2">
-          <Text className="text-center font-display-black text-4xl leading-[56px] text-hero-fg">إذاعة القرآن الكريم</Text>
-          <Text className="text-center font-sans text-base text-white/70">{RADIO_STATION.name}</Text>
+          <View className="h-20 flex-row items-center gap-1">
+            {Array.from({ length: BARS }, (_, index) => (
+              <Bar key={index} index={index} active={playing} />
+            ))}
+          </View>
+
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={playing ? "إيقاف الإذاعة" : "تشغيل الإذاعة"}
+            onPress={toggle}
+            className="size-24 items-center justify-center rounded-full bg-primary"
+            style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
+          >
+            {connecting ? (
+              <ActivityIndicator color={onPrimary} size="large" />
+            ) : playing ? (
+              <Pause size={40} color={onPrimary} fill={onPrimary} />
+            ) : (
+              <Play size={40} color={onPrimary} fill={onPrimary} />
+            )}
+          </Pressable>
+
+          <View className="min-h-12 items-center px-2">
+            {onRadio && state.error ? (
+              <Text className="text-center font-sans text-sm leading-6 text-fg-muted">
+                البث متوقف من المصدر الآن، وسنعيد المحاولة تلقائيًا.
+              </Text>
+            ) : onRadio && state.streamIndex > 0 ? (
+              <Text className="text-center font-sans text-sm leading-6 text-fg-muted">
+                البث الرسمي متوقف مؤقتًا، ونشغّل لك من مصدر بديل حتى يعود.
+              </Text>
+            ) : (
+              <Text className="text-center font-sans text-sm leading-6 text-fg-muted">
+                يستمر البث وأنت تتنقّل في التطبيق أو تغلق الشاشة.
+              </Text>
+            )}
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={enterSoft(1)} className="mt-4">
+          <Button
+            variant="secondary"
+            size="lg"
+            icon={ListMusic}
             accessibilityRole="link"
             onPress={() => router.push({ pathname: "/sounds/[category]", params: { category: "recordings" } })}
-            className="mt-2 rounded-full border border-gold/40 bg-white/10 px-5 py-2.5"
           >
-            <Text className="font-sans-bold text-sm text-gold-soft">استمع إلى تسجيلات الإذاعة</Text>
+            استمع إلى تسجيلات الإذاعة
+          </Button>
+        </Animated.View>
+
+        <View className="flex-1" />
+        <View className="mt-8 items-center gap-3 px-8">
+          <View className="w-1/2">
+            <Divider />
+          </View>
+          <Pressable accessibilityRole="link" onPress={() => Linking.openURL(RADIO_STATION.providerUrl)}>
+            <Text className="font-sans text-xs text-fg-muted">مصدر البث: {RADIO_STATION.providerName}</Text>
           </Pressable>
         </View>
-
-        <View className="h-20 flex-row items-center gap-1">
-          {Array.from({ length: BARS }, (_, index) => (
-            <Bar key={index} index={index} active={playing} />
-          ))}
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={playing ? "إيقاف الإذاعة" : "تشغيل الإذاعة"}
-          onPress={toggle}
-          className="size-24 items-center justify-center rounded-full bg-gold shadow-gold"
-        >
-          {connecting ? (
-            <ActivityIndicator color="#012a22" size="large" />
-          ) : playing ? (
-            <Pause size={40} color="#012a22" fill="#012a22" />
-          ) : (
-            <Play size={40} color="#012a22" fill="#012a22" />
-          )}
-        </Pressable>
-
-        <View className="min-h-12 items-center px-4">
-          {onRadio && state.error ? (
-            <Text className="text-center font-sans text-sm text-white/80">البث متوقف من المصدر الآن، وسنعيد المحاولة تلقائيًا.</Text>
-          ) : onRadio && state.streamIndex > 0 ? (
-            <Text className="text-center font-sans text-sm text-white/80">البث الرسمي متوقف مؤقتًا، ونشغّل لك من مصدر بديل حتى يعود.</Text>
-          ) : (
-            <Text className="text-center font-sans text-sm text-white/60">يستمر البث وأنت تتنقّل في التطبيق أو تغلق الشاشة.</Text>
-          )}
-        </View>
-      </View>
-
-      <View className="items-center gap-3 px-8">
-        <View className="w-1/2">
-          <Divider tone="light" />
-        </View>
-        <Pressable accessibilityRole="link" onPress={() => Linking.openURL(RADIO_STATION.providerUrl)}>
-          <Text className="font-sans text-xs text-white/60">مصدر البث: {RADIO_STATION.providerName}</Text>
-        </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }

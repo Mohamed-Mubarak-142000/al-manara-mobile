@@ -1,16 +1,15 @@
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { ChevronRight } from "lucide-react-native";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
+import { ScreenHeader } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { MAX_RESULTS, isSearchIndexReady, prepareSearchIndex, searchQuran } from "@/features/mushaf/search";
-import { useThemeColor } from "@/theme/useThemeColor";
 
 const NO_RESULTS = { results: [] as MushafAyah[], total: 0 };
 
@@ -19,9 +18,9 @@ function ResultRow({ item }: { item: MushafAyah }) {
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push({ pathname: "/mushaf", params: { page: String(item.page) } })}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
     >
-      <View className="mx-4 mb-2.5 gap-1 rounded-2xl border border-border bg-surface p-4">
+      <View className="mx-4 mb-3 gap-1 rounded-3xl border border-border bg-surface p-4">
         <Text className="font-sans-bold text-xs text-accent-strong">
           سورة {getSurah(item.surah)?.name} · الآية {toArabicDigits(item.ayah)} · ص {toArabicDigits(item.page)}
         </Text>
@@ -36,7 +35,6 @@ function ResultRow({ item }: { item: MushafAyah }) {
 /** Search the words of the Quran, offline, with or without tashkeel. */
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
-  const fg = useThemeColor("fg");
   const [query, setQuery] = useState("");
   const [ready, setReady] = useState(isSearchIndexReady);
   // Typing stays smooth: the search runs on the deferred value.
@@ -59,14 +57,9 @@ export default function SearchScreen() {
   const { results, total } = useMemo(() => (ready ? searchQuran(deferred) : NO_RESULTS), [ready, deferred]);
 
   return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8 }}>
+    <View className="flex-1 bg-bg">
+      <ScreenHeader title="البحث في القرآن" />
       <View className="gap-3 px-4 pb-3">
-        <View className="flex-row items-center gap-2">
-          <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
-            <ChevronRight size={26} color={fg} />
-          </Pressable>
-          <Text className="font-display-bold text-xl text-fg">البحث في القرآن</Text>
-        </View>
         <SearchField value={query} onChangeText={setQuery} placeholder="اكتب كلمة أو جزءًا من آية" />
         {searching && ready && total > 0 && (
           <Text className="font-sans text-xs text-fg-muted">

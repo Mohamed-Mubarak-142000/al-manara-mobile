@@ -28,7 +28,7 @@ export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }
       {android && (
         <View className="mb-4 flex-row items-center gap-3 border-b border-border pb-4">
           <View className="flex-1">
-            <Text className="font-display-bold text-base text-fg">إشعارات أذكار خارج التطبيق</Text>
+            <Text className="font-sans-bold text-base text-fg">إشعارات أذكار خارج التطبيق</Text>
             <Text className="mt-1 font-sans text-xs leading-5 text-fg-muted">
               ذكر كل ساعة من ٧ صباحًا إلى ١٠ مساءً، حتى والتطبيق مقفول أو الشاشة مقفولة. اسمح بالإشعارات لإظهار التذكير.
             </Text>
@@ -55,7 +55,7 @@ export function OutsideReminderCard({ embedded = false }: { embedded?: boolean }
       )}
       <View className="flex-row items-center gap-3">
         <View className="flex-1">
-          <Text className="font-display-bold text-base text-fg">{android ? "ذكر كل ١٠ دقائق فوق التطبيقات" : "إشعارات أذكار اليوم"}</Text>
+          <Text className="font-sans-bold text-base text-fg">{android ? "ذكر كل ١٠ دقائق فوق التطبيقات" : "إشعارات أذكار اليوم"}</Text>
           <Text className="mt-1 font-sans text-xs leading-5 text-fg-muted">
             {android
               ? "بطاقة لمدة ٥ ثوانٍ كل ١٠ دقائق من ٧ صباحًا إلى ١٠ مساءً، حتى والتطبيق مقفول، طالما الشاشة مفتوحة. اضغط عليها لإغلاقها."

@@ -1,7 +1,6 @@
-import { router } from "expo-router";
 import { ChevronLeft, ChevronRight, Moon } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getHijriDate } from "@/core/calendar/hijriDate";
@@ -9,6 +8,7 @@ import { IMSAK_MINUTES, calcSettingsKey, shiftClock } from "@/core/prayer/calcul
 import { locationKey } from "@/core/prayer/location";
 import { PRAYER_LABELS, PRAYER_ORDER, formatPrayerClock, getPrayerMonth, type PrayerMonthDay } from "@/core/prayer/prayerTimesApi";
 import { toArabicDigits } from "@/core/text/arabic";
+import { IconButton, ScreenHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useUserLocation } from "@/features/prayer/locationStore";
 import { usePrayerCalcSettings } from "@/features/prayer/prayerCalcSettings";
@@ -24,7 +24,6 @@ function clock(hhmm: string): string {
 /** The month's prayer times for the saved location, a row per day, today highlighted; in Ramadan, an إمساكية. */
 export default function PrayerMonthScreen() {
   const insets = useSafeAreaInsets();
-  const heroFg = useThemeColor("hero-fg");
   const gold = useThemeColor("gold");
   const location = useUserLocation();
   const calc = usePrayerCalcSettings();
@@ -76,38 +75,16 @@ export default function PrayerMonthScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       ListHeaderComponent={
         <View className="bg-bg">
-          <View className="rounded-b-[32px] bg-hero px-5 pb-5" style={{ paddingTop: insets.top + 8 }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="رجوع"
-              onPress={() => router.back()}
-              hitSlop={12}
-              className="mb-2 self-start p-1"
-            >
-              <ChevronRight size={26} color={heroFg} />
-            </Pressable>
-            <Text className="font-display-bold text-2xl text-hero-fg">
-              {imsakiya ? `إمساكية رمضان ${toArabicDigits(ramadan.year ?? "")}` : "مواقيت الشهر"}
+          <ScreenHeader
+            title={imsakiya ? `إمساكية رمضان ${toArabicDigits(ramadan.year ?? "")}` : "مواقيت الشهر"}
+            subtitle={`${location.label}${imsakiya ? ` · الإمساك قبل الفجر بـ${toArabicDigits(IMSAK_MINUTES)} دقائق` : ""}`}
+          />
+          <View className="mx-4 mt-1 flex-row items-center justify-between gap-3">
+            <IconButton icon={ChevronRight} label="الشهر السابق" onPress={() => shift(-1)} />
+            <Text className="flex-1 text-center font-sans-bold text-base text-fg">
+              {MONTHS.format(new Date(month.year, month.month - 1, 1))}
             </Text>
-            <Text className="font-sans text-sm text-white/70">
-              {location.label}
-              {imsakiya ? ` · الإمساك قبل الفجر بـ${toArabicDigits(IMSAK_MINUTES)} دقائق` : ""}
-            </Text>
-            <View className="mt-4 flex-row items-center justify-between">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="الشهر السابق"
-                onPress={() => shift(-1)}
-                hitSlop={10}
-                className="p-1"
-              >
-                <ChevronRight size={22} color={heroFg} />
-              </Pressable>
-              <Text className="font-display-bold text-lg text-hero-fg">{MONTHS.format(new Date(month.year, month.month - 1, 1))}</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="الشهر التالي" onPress={() => shift(1)} hitSlop={10} className="p-1">
-                <ChevronLeft size={22} color={heroFg} />
-              </Pressable>
-            </View>
+            <IconButton icon={ChevronLeft} label="الشهر التالي" onPress={() => shift(1)} />
           </View>
           <View className="mx-3 mt-3 flex-row rounded-xl bg-surface-alt py-2">
             <Text className="w-14 text-center font-sans-bold text-[11px] text-fg-muted">اليوم</Text>
@@ -139,7 +116,7 @@ export default function PrayerMonthScreen() {
             className={`mx-3 flex-row items-center border-b border-border py-2.5 ${current ? "rounded-xl border-transparent bg-primary-soft" : ""}`}
           >
             <View className="w-14 items-center">
-              <Text className={`font-display-bold text-sm ${current ? "text-primary" : "text-fg"}`}>{toArabicDigits(item.day)}</Text>
+              <Text className={`font-sans-bold text-sm ${current ? "text-primary" : "text-fg"}`}>{toArabicDigits(item.day)}</Text>
               <Text className="font-sans text-[10px] text-fg-muted">{WEEKDAY.format(date)}</Text>
               {ramadanDay !== undefined && (
                 <View className="mt-0.5 flex-row items-center gap-0.5">

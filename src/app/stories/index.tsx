@@ -1,11 +1,12 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Check, ChevronRight, Clapperboard, Lock, Play } from "lucide-react-native";
+import { Check, Clapperboard, Lock, Play } from "lucide-react-native";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { useAsync } from "@/features/hadith/useAsync";
@@ -18,7 +19,7 @@ export default function StoriesScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
   const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const onPrimary = useThemeColor("on-primary");
   const primary = useThemeColor("primary");
   const accent = useThemeColor("accent");
   const learnerId = activeLearnerId(useAccount());
@@ -34,27 +35,17 @@ export default function StoriesScreen() {
       refreshControl={learnerId ? <RefreshControl refreshing={false} onRefresh={reload} tintColor={accent} colors={[accent]} /> : undefined}
       contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32, gap: 12 }}
       ListHeaderComponent={
-        <View className="mb-2 rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
-            onPress={() => router.back()}
-            hitSlop={12}
-            className="mb-3 self-start p-1"
-          >
-            <ChevronRight size={26} color={heroFg} />
-          </Pressable>
-          <View className="flex-row items-center gap-2">
-            <Clapperboard size={16} color={gold} />
-            <Text className="font-sans-bold text-sm text-gold-soft">القصص</Text>
-          </View>
-          <Text className="mt-2 font-display-bold text-3xl text-hero-fg">قصص الأنبياء</Text>
-          {data && data.stories.length > 0 && (
-            <Text className="mt-1 font-sans text-sm text-white/75">
-              شاهدت {toArabicDigits(watchedCount)} من {toArabicDigits(data.stories.length)} قصة — اختر قصتك!
-            </Text>
-          )}
-        </View>
+        <PageHeader
+          back
+          icon={Clapperboard}
+          kicker="القصص"
+          title="قصص الأنبياء"
+          description={
+            data && data.stories.length > 0
+              ? `شاهدت ${toArabicDigits(watchedCount)} من ${toArabicDigits(data.stories.length)} قصة — اختر قصتك!`
+              : undefined
+          }
+        />
       }
       ListEmptyComponent={
         !learnerId ? (
@@ -82,7 +73,7 @@ export default function StoriesScreen() {
             style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
             className="mx-4"
           >
-            <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-soft">
+            <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
               <View>
                 <Image source={{ uri: thumbnail(item.youtube_id) }} style={{ width: "100%", aspectRatio: 16 / 9 }} contentFit="cover" />
                 <View className="absolute inset-0 items-center justify-center">
@@ -92,14 +83,14 @@ export default function StoriesScreen() {
                 </View>
                 {watched && (
                   <View className="absolute end-3 top-3 flex-row items-center gap-1 rounded-full bg-primary px-2.5 py-1">
-                    <Check size={13} color="#fbf8f1" />
+                    <Check size={13} color={onPrimary} />
                     <Text className="font-sans-bold text-xs text-on-primary">شاهدتها</Text>
                   </View>
                 )}
               </View>
               <View className="gap-1 p-4">
                 {item.prophet ? <Text className="font-sans-bold text-xs text-accent-strong">{item.prophet}</Text> : null}
-                <Text className="font-display-bold text-lg text-fg">{item.title}</Text>
+                <Text className="font-sans-bold text-base text-fg">{item.title}</Text>
                 {item.summary ? (
                   <Text className="font-sans text-sm leading-6 text-fg-muted" numberOfLines={2}>
                     {item.summary}

@@ -1,39 +1,16 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Check, ListPlus, Plus, Trash2, X } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Check, ListPlus, Palette, Plus, Trash2 } from "lucide-react-native";
+import { useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 import { allAdhkar, currentDhikr, MAX_TEXT, parseTarget } from "@/core/tasbih/tasbih";
 import { TASBIH_THEMES } from "@/core/tasbih/tasbihData";
 import { toArabicDigits } from "@/core/text/arabic";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { updateTasbih, useTasbih } from "./tasbihStore";
-
-/** The bottom sheet both pickers open in, like the adhkar ChapterPicker. */
-function Sheet({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
-  const insets = useSafeAreaInsets();
-  const muted = useThemeColor("fg-muted");
-  return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-        <Pressable accessibilityLabel="إغلاق" onPress={onClose} className="flex-1 bg-black/50" />
-        <View className="max-h-[85%] rounded-t-[28px] bg-surface px-4 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
-          <View className="mb-3 h-1 w-10 self-center rounded-full bg-border" />
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="font-display-bold text-lg text-fg">{title}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="إغلاق" onPress={onClose} hitSlop={10} className="p-1">
-              <X size={20} color={muted} />
-            </Pressable>
-          </View>
-          {children}
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
 
 /** "أضف ذكرًا خاصًا بك": the text and its own target (empty for open counting). */
 function AddDhikrForm({ onDone }: { onDone: () => void }) {
@@ -49,7 +26,7 @@ function AddDhikrForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <View className="gap-3 rounded-3xl bg-primary-soft p-4">
+    <View className="gap-3 rounded-3xl border border-border bg-surface-alt p-4">
       <Text className="font-sans-bold text-sm text-fg">نص الذكر</Text>
       <TextInput
         value={text}
@@ -59,7 +36,7 @@ function AddDhikrForm({ onDone }: { onDone: () => void }) {
         maxLength={MAX_TEXT}
         multiline
         autoFocus
-        className="min-h-16 rounded-2xl border border-border bg-surface p-3 font-sans text-base"
+        className="min-h-16 rounded-2xl border border-border bg-surface px-4 py-3 font-sans text-base"
         style={{ color: fg, textAlign: "right", textAlignVertical: "top" }}
       />
       <Text className="font-sans-bold text-sm text-fg">العدد (اتركه فارغًا للعدّ المفتوح)</Text>
@@ -68,15 +45,15 @@ function AddDhikrForm({ onDone }: { onDone: () => void }) {
         onChangeText={setTarget}
         keyboardType="number-pad"
         maxLength={6}
-        className="rounded-2xl border border-border bg-surface p-3 font-sans text-base"
+        className="h-14 rounded-2xl border border-border bg-surface px-4 font-sans text-base"
         style={{ color: fg, textAlign: "right" }}
       />
-      <View className="flex-row gap-2">
-        <Button size="sm" icon={Plus} onPress={add} disabled={!text.trim()}>
-          إضافة
-        </Button>
-        <Button size="sm" variant="ghost" onPress={onDone}>
+      <View className="flex-row gap-3">
+        <Button className="flex-1" variant="secondary" onPress={onDone}>
           إلغاء
+        </Button>
+        <Button className="flex-1" icon={Plus} onPress={add} disabled={!text.trim()}>
+          إضافة
         </Button>
       </View>
     </View>
@@ -98,12 +75,12 @@ export function AdhkarSheet({ open, onClose }: { open: boolean; onClose: () => v
   }
 
   return (
-    <Sheet open={open} title="اختر الذكر" onClose={close}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+    <BottomSheet visible={open} title="اختر الذكر" icon={ListPlus} onClose={close} maxHeight={0.85}>
+      <View className="gap-2">
         {adding ? (
           <AddDhikrForm onDone={() => setAdding(false)} />
         ) : (
-          <Button variant="outline" size="sm" icon={ListPlus} onPress={() => setAdding(true)}>
+          <Button variant="secondary" icon={ListPlus} onPress={() => setAdding(true)}>
             أضف ذكرًا خاصًا بك
           </Button>
         )}
@@ -145,8 +122,8 @@ export function AdhkarSheet({ open, onClose }: { open: boolean; onClose: () => v
             </View>
           );
         })}
-      </ScrollView>
-    </Sheet>
+      </View>
+    </BottomSheet>
   );
 }
 
@@ -154,8 +131,8 @@ export function AdhkarSheet({ open, onClose }: { open: boolean; onClose: () => v
 export function ThemeSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const state = useTasbih();
   return (
-    <Sheet open={open} title="شكل السبحة" onClose={onClose}>
-      <ScrollView contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 12, paddingBottom: 8 }}>
+    <BottomSheet visible={open} title="شكل السبحة" icon={Palette} onClose={onClose} primary={{ label: "تم", onPress: onClose }}>
+      <View className="flex-row flex-wrap gap-3">
         {TASBIH_THEMES.map((entry) => {
           const active = entry.id === state.theme;
           return (
@@ -165,8 +142,8 @@ export function ThemeSheet({ open, onClose }: { open: boolean; onClose: () => vo
               accessibilityState={{ selected: active }}
               accessibilityLabel={entry.label}
               onPress={() => updateTasbih({ type: "theme", theme: entry.id })}
-              className={`aspect-[4/3] w-[47%] overflow-hidden rounded-3xl border-2 ${active ? "border-accent" : "border-transparent"}`}
-              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
+              className={`aspect-[4/3] w-[47%] overflow-hidden rounded-3xl border-2 ${active ? "border-primary" : "border-border"}`}
+              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
             >
               {/* The stage's own palette: a preview, not app chrome. */}
               <LinearGradient colors={entry.background} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 8 }}>
@@ -187,7 +164,7 @@ export function ThemeSheet({ open, onClose }: { open: boolean; onClose: () => vo
             </Pressable>
           );
         })}
-      </ScrollView>
-    </Sheet>
+      </View>
+    </BottomSheet>
   );
 }

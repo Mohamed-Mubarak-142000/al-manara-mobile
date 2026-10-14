@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Bell, Check, ChevronRight, ExternalLink, Pause, RotateCcw, Share2, Volume2 } from "lucide-react-native";
+import { Bell, Check, ExternalLink, Pause, RotateCcw, Share2, Volume2 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, duaAudioUrl, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
 import { toArabicDigits } from "@/core/text/arabic";
+import { IconButton, ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { AdhkarCelebration, claimCelebration } from "@/features/adhkar/AdhkarCelebration";
 import { countDhikr, getAdhkarCounts, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
@@ -86,7 +87,7 @@ function DhikrCard({ dua, count, onCounted }: { dua: Dua; count: number; onCount
     <Pressable accessibilityRole="button" accessibilityLabel={`${dua.title}، ${done ? "تم" : `باقي ${target - count}`}`} onPress={tap}>
       <Animated.View
         style={animated}
-        className={`mx-4 mb-3 rounded-3xl border p-5 ${done ? "border-primary/30 bg-primary-soft" : "border-border bg-surface shadow-soft"}`}
+        className={`mx-4 mb-3 rounded-3xl border p-5 ${done ? "border-primary/30 bg-primary-soft" : "border-border bg-surface shadow-card"}`}
       >
         <View className="flex-row items-center justify-between">
           <Text className="font-sans-bold text-sm text-accent-strong">{dua.title}</Text>
@@ -97,7 +98,7 @@ function DhikrCard({ dua, count, onCounted }: { dua: Dua; count: number; onCount
             </View>
           ) : (
             <View className="min-w-12 items-center rounded-full bg-accent-soft px-3 py-1">
-              <Text className="font-display-bold text-sm text-accent-strong">
+              <Text className="font-sans-bold text-sm text-accent-strong">
                 {toArabicDigits(target - count)}
                 {target > 1 ? ` / ${toArabicDigits(target)}` : ""}
               </Text>
@@ -155,7 +156,6 @@ export default function AdhkarScreen() {
   const selectedToast = TOAST_ADHKAR.find((entry) => entry.id === params.toast);
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
   const [category, setCategory] = useState<DuaCategory>(defaultCategory);
   const [chapter, setChapter] = useState(DUA_CHAPTERS[0]?.id ?? 0);
   const counts = useAdhkarCounts();
@@ -184,42 +184,30 @@ export default function AdhkarScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
         ListHeaderComponent={
           <View className="mb-4">
-            <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-              <View className="flex-row items-center justify-between">
-                <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
-                  <ChevronRight size={26} color={heroFg} />
-                </Pressable>
-                <View className="flex-row items-center gap-3">
+            <ScreenHeader
+              title={DUA_CATEGORY_LABELS[category]}
+              subtitle="من حصن المسلم"
+              actions={
+                <>
                   {/* Reminders live with every other setting; this only points there. */}
-                  <Pressable
-                    accessibilityRole="link"
-                    accessibilityLabel="تذكيرات الأذكار في الإعدادات"
-                    onPress={() => router.push("/settings")}
-                    hitSlop={12}
-                    className="p-1"
-                  >
-                    <Bell size={20} color={heroFg} />
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="إعادة العدّ"
-                    onPress={() => resetDhikr(list.map((dua) => dua.id))}
-                    hitSlop={12}
-                    className="p-1"
-                  >
-                    <RotateCcw size={20} color={heroFg} />
-                  </Pressable>
-                </View>
+                  <IconButton icon={Bell} label="تذكيرات الأذكار في الإعدادات" onPress={() => router.push("/settings")} />
+                  <IconButton icon={RotateCcw} label="إعادة العدّ" onPress={() => resetDhikr(list.map((dua) => dua.id))} />
+                </>
+              }
+            />
+            <Animated.View entering={enterSoft(0)} className="mx-4 mt-1 rounded-3xl border border-border bg-surface p-4 shadow-card">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-sans-semibold text-sm text-fg">
+                  أتممت {toArabicDigits(finished)} من {toArabicDigits(list.length)}
+                </Text>
+                <Text className="font-sans-bold text-sm text-primary">
+                  {toArabicDigits(list.length ? Math.round((finished / list.length) * 100) : 0)}٪
+                </Text>
               </View>
-              <Text className="mt-2 font-display-bold text-3xl text-hero-fg">{DUA_CATEGORY_LABELS[category]}</Text>
-              <Text className="mt-1 font-sans text-xs text-gold-soft">من حصن المسلم</Text>
-              <Text className="mt-1 font-sans text-sm text-white/70">
-                أتممت {toArabicDigits(finished)} من {toArabicDigits(list.length)}
-              </Text>
-              <View className="mt-3">
-                <ProgressBar tone="light" value={list.length ? finished / list.length : 0} />
+              <View className="mt-2">
+                <ProgressBar value={list.length ? finished / list.length : 0} />
               </View>
-            </View>
+            </Animated.View>
             {selectedToast && (
               <View className="mx-4 mt-3 rounded-3xl border border-primary bg-surface p-4">
                 <Text className="font-quran-fallback text-xl leading-9 text-fg">{selectedToast.text}</Text>
@@ -239,7 +227,7 @@ export default function AdhkarScreen() {
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                     onPress={() => setCategory(key)}
-                    className={`rounded-full border px-4 py-2 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+                    className={`rounded-full border px-4 py-1.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
                   >
                     <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{DUA_CATEGORY_LABELS[key]}</Text>
                   </Pressable>

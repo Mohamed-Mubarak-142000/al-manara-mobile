@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getSoundLibrary } from "@/core/sounds/soundsApi";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
+import { IconButton, ScreenHeader } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { RADIO_REF, audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
@@ -18,7 +19,6 @@ import { reportReminderError } from "@/features/notifications/backgroundReminder
 /** Pick the muezzin whose adhan plays at prayer time: the app's adhan library, with a preview. */
 export default function AdhanVoiceScreen() {
   const insets = useSafeAreaInsets();
-  const fg = useThemeColor("fg");
   const primary = useThemeColor("primary");
   const chosen = useAdhanVoice();
   const player = usePlayer();
@@ -65,42 +65,39 @@ export default function AdhanVoiceScreen() {
       data={list}
       keyExtractor={(track) => track.id}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
       ListHeaderComponent={
-        <View className="gap-3 px-4 pb-3">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="إغلاق"
-            onPress={() => router.back()}
-            hitSlop={12}
-            className="self-start p-1"
-          >
-            <ChevronDown size={28} color={fg} />
-          </Pressable>
-          <Text className="font-display-bold text-2xl text-fg">صوت الأذان</Text>
-          <Text className="font-sans text-sm leading-6 text-fg-muted">
-            {Platform.OS === "android"
-              ? "اختر المؤذن لتنزيل الأذان كاملًا وتشغيله عند دخول الوقت حتى والتطبيق مغلق، دون إنترنت."
-              : "آيفون يستخدم مقطع أذان قصيرًا موحدًا في الإشعار. يمكنك الاستماع إلى تسجيل المؤذن كاملًا هنا."}
-          </Text>
-          {saving && <Text className="font-sans text-sm text-primary">جارٍ تنزيل تسجيل الأذان وحفظه…</Text>}
-          {!!saveError && <Text className="font-sans text-sm text-accent-strong">{saveError}</Text>}
-          <Pressable
-            accessibilityRole="radio"
-            accessibilityState={{ selected: chosen === null }}
-            disabled={saving}
-            onPress={() => {
-              void choose(null);
-            }}
-            className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 ${chosen === null ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
-          >
-            <View className="flex-1">
-              <Text className="font-display-bold text-base text-fg">الأذان الافتراضي</Text>
-              <Text className="font-sans text-xs text-fg-muted">مدمج في التطبيق، يعمل دون تنزيل أو إنترنت</Text>
-            </View>
-            {chosen === null && <Check size={18} color={primary} />}
-          </Pressable>
-          <SearchField value={query} onChangeText={setQuery} placeholder="ابحث باسم المؤذن" />
+        <View>
+          <ScreenHeader
+            back={false}
+            title="صوت الأذان"
+            actions={<IconButton icon={ChevronDown} label="إغلاق" onPress={() => router.back()} />}
+          />
+          <View className="gap-3 px-4 pb-3">
+            <Text className="font-sans text-sm leading-6 text-fg-muted">
+              {Platform.OS === "android"
+                ? "اختر المؤذن لتنزيل الأذان كاملًا وتشغيله عند دخول الوقت حتى والتطبيق مغلق، دون إنترنت."
+                : "آيفون يستخدم مقطع أذان قصيرًا موحدًا في الإشعار. يمكنك الاستماع إلى تسجيل المؤذن كاملًا هنا."}
+            </Text>
+            {saving && <Text className="font-sans text-sm text-primary">جارٍ تنزيل تسجيل الأذان وحفظه…</Text>}
+            {!!saveError && <Text className="font-sans text-sm text-accent-strong">{saveError}</Text>}
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ selected: chosen === null }}
+              disabled={saving}
+              onPress={() => {
+                void choose(null);
+              }}
+              className={`flex-row items-center justify-between rounded-3xl border px-4 py-3.5 ${chosen === null ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+            >
+              <View className="flex-1">
+                <Text className="font-sans-bold text-base text-fg">الأذان الافتراضي</Text>
+                <Text className="font-sans text-xs text-fg-muted">مدمج في التطبيق، يعمل دون تنزيل أو إنترنت</Text>
+              </View>
+              {chosen === null && <Check size={18} color={primary} />}
+            </Pressable>
+            <SearchField value={query} onChangeText={setQuery} placeholder="ابحث باسم المؤذن" />
+          </View>
         </View>
       }
       ListEmptyComponent={
@@ -117,13 +114,13 @@ export default function AdhanVoiceScreen() {
         const previewing = playing?.id === item.id && player.playing;
         return (
           <View
-            className={`mx-4 mb-2 flex-row items-center gap-3 rounded-2xl border px-3 py-2.5 ${selected ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+            className={`mx-4 mb-2.5 flex-row items-center gap-3 rounded-3xl border px-4 py-3 ${selected ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
           >
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={previewing ? "إيقاف" : "استمع"}
               onPress={() => (playing?.id === item.id ? audio.toggle() : audio.playTrack(item))}
-              className="size-10 items-center justify-center rounded-full bg-primary-soft"
+              className="size-11 items-center justify-center rounded-2xl bg-primary-soft"
             >
               {previewing ? <Pause size={16} color={primary} fill={primary} /> : <Play size={16} color={primary} fill={primary} />}
             </Pressable>
@@ -137,7 +134,7 @@ export default function AdhanVoiceScreen() {
               className="flex-1 flex-row items-center gap-2"
             >
               <View className="flex-1">
-                <Text numberOfLines={1} className="font-display-bold text-sm text-fg">
+                <Text numberOfLines={1} className="font-sans-bold text-sm text-fg">
                   {item.artist}
                 </Text>
                 <Text numberOfLines={1} className="font-sans text-xs text-fg-muted">

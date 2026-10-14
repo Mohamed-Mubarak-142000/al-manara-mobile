@@ -3,7 +3,6 @@ import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 import {
   BookmarkCheck,
   Check,
-  ChevronRight,
   Eye,
   Hand,
   Lightbulb,
@@ -18,7 +17,7 @@ import {
   X,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Modal, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { FlatList, Pressable, Switch, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, cancelAnimation } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -26,7 +25,9 @@ import { splitAyahWords } from "@/core/quran/words";
 import { buildExpected, matchChunk, matchPreview, type ExpectedWord, type Mistake } from "@/core/tasmee/recitation";
 import { clampRange, countsAsReview, describeMistake, heardInAyah, overrideTarget, shownCount } from "@/core/tasmee/session";
 import { toArabicDigits } from "@/core/text/arabic";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { audio, currentTrack, getPlayerState, usePlayerValue } from "@/features/audio/playerStore";
@@ -128,6 +129,16 @@ function Ping({ active }: { active: boolean }) {
   return <Animated.View pointerEvents="none" style={style} className="absolute inset-0 rounded-full bg-danger" />;
 }
 
+function ListenAyahButton({ ayah, surahName }: { ayah: MushafAyah; surahName: string }) {
+  const { playing, loading, toggle } = useAyahAudio(ayah, surahName);
+  return (
+    <Button className="flex-1" variant="secondary" size="lg" icon={loading ? LoaderCircle : playing ? Pause : Play} onPress={toggle}>
+      استمع للآية
+    </Button>
+  );
+}
+
+/** What was said and what is right, as a bottom sheet; closing it (✕, drag, back) means "continue". */
 function MistakeSheet({
   mistake,
   expected,
@@ -137,7 +148,7 @@ function MistakeSheet({
   onContinue,
   onOverride,
 }: {
-  mistake: Mistake;
+  mistake: Mistake | null;
   expected: ExpectedWord[];
   sessionAyahs: MushafAyah[];
   words: string[][];
@@ -145,51 +156,56 @@ function MistakeSheet({
   onContinue: () => void;
   onOverride: () => void;
 }) {
-  const danger = useThemeColor("danger");
   const primary = useThemeColor("primary");
   const mistakeText = useScaledText(22, 46);
-  const at = expected[mistake.at]!;
-  const ayah = sessionAyahs[at.ayah]!;
+  // The sheet glides out after the mistake is cleared: it keeps showing it meanwhile.
+  const [shown, setShown] = useState(mistake);
+  if (mistake && mistake !== shown) setShown(mistake);
+  const current = mistake ?? shown;
+  const at = current ? expected[current.at] : undefined;
+  const ayah = at ? sessionAyahs[at.ayah] : undefined;
+  if (!current || !at || !ayah) return null;
+
   const ayahNumber = toArabicDigits(ayah.ayah);
-  const view = describeMistake(mistake, expected, ayahNumber);
+  const view = describeMistake(current, expected, ayahNumber);
   const highlight = new Set(view.highlight);
-  const { playing, loading, toggle } = useAyahAudio(ayah, surahName);
   const skippedTo = view.skippedToAyah !== null ? sessionAyahs[view.skippedToAyah] : undefined;
 
   return (
-    <View className="flex-1 justify-center px-4">
-      <Pressable accessibilityLabel="فهمت، أكمل" onPress={onContinue} className="absolute inset-0 bg-black/55" />
-      <ScrollView
-        className="max-h-[90%] grow-0 rounded-4xl bg-bg"
-        contentContainerStyle={{ padding: 20, gap: 16 }}
-        accessibilityRole="alert"
-      >
-        <View className="flex-row items-center gap-3">
-          <View className="size-11 items-center justify-center rounded-2xl bg-danger/10">
-            <TriangleAlert size={24} color={danger} />
-          </View>
-          <Text className="flex-1 font-display-bold text-xl text-fg">{view.title}</Text>
+    <BottomSheet
+      visible={mistake !== null}
+      onClose={onContinue}
+      title={view.title}
+      icon={TriangleAlert}
+      footer={
+        <View className="flex-row gap-3">
+          <ListenAyahButton ayah={ayah} surahName={surahName} />
+          <Button className="flex-1" size="lg" onPress={onContinue}>
+            فهمت، أكمل
+          </Button>
         </View>
-
-        {mistake.kind === "wrong" && (
+      }
+    >
+      <View className="gap-4" accessibilityRole="alert">
+        {current.kind === "wrong" && (
           <View className="flex-row gap-3">
-            <View className="flex-1 items-center rounded-2xl bg-danger/10 p-3">
+            <View className="flex-1 items-center rounded-2xl border border-danger/30 bg-danger/5 p-3">
               <Text className="font-sans-bold text-xs text-danger">قلتَ</Text>
-              <Text className="mt-1 text-center font-sans-bold text-xl text-danger line-through">{mistake.heard}</Text>
+              <Text className="mt-1 text-center font-sans-bold text-xl text-danger line-through">{current.heard}</Text>
             </View>
-            <View className="flex-1 items-center rounded-2xl bg-primary-soft p-3">
+            <View className="flex-1 items-center rounded-2xl border border-primary/30 bg-primary-soft p-3">
               <Text className="font-sans-bold text-xs text-primary">الصحيح</Text>
               <Text className="mt-1 text-center font-quran text-2xl text-fg">{at.text}</Text>
             </View>
           </View>
         )}
-        {mistake.kind === "missed" && (
-          <View className="items-center rounded-2xl bg-primary-soft p-3">
+        {current.kind === "missed" && (
+          <View className="items-center rounded-2xl border border-primary/30 bg-primary-soft p-3">
             <Text className="font-sans-bold text-xs text-primary">لم نسمع</Text>
             <Text className="mt-1 text-center font-quran text-2xl text-fg">{view.missed.join(" ")}</Text>
           </View>
         )}
-        {mistake.kind === "skipped-ayah" && (
+        {current.kind === "skipped-ayah" && (
           <Text className="rounded-2xl bg-accent-soft p-3 text-center font-sans text-sm leading-7 text-accent-strong">
             انتقلتَ إلى الآية {toArabicDigits(skippedTo?.ayah ?? ayah.ayah)} قبل أن تقرأ هذه الآية. اقرأها ثم أكمل.
           </Text>
@@ -215,19 +231,13 @@ function MistakeSheet({
 
         <Text className="font-sans text-sm leading-6 text-fg-muted">{view.instruction}</Text>
 
-        <View className="gap-2">
-          <Button onPress={onContinue}>فهمت، أكمل</Button>
-          <Button variant="outline" icon={loading ? LoaderCircle : playing ? Pause : Play} onPress={toggle}>
-            استمع للآية
-          </Button>
-          {view.canOverride && (
-            <Pressable accessibilityRole="button" onPress={onOverride} hitSlop={8} className="self-center py-2">
-              <Text className="font-sans-bold text-sm text-fg-muted">قرأتها صحيحة، أكمل</Text>
-            </Pressable>
-          )}
-        </View>
-      </ScrollView>
-    </View>
+        {view.canOverride && (
+          <Pressable accessibilityRole="button" onPress={onOverride} hitSlop={8} className="self-center py-1">
+            <Text className="font-sans-bold text-sm text-primary">قرأتها صحيحة، أكمل</Text>
+          </Pressable>
+        )}
+      </View>
+    </BottomSheet>
   );
 }
 
@@ -266,7 +276,7 @@ function AyahRow({
           : item.mark === "mistake"
             ? "border-danger/30 bg-danger/5"
             : isCurrent
-              ? "border-primary/40 bg-surface shadow-lift"
+              ? "border-primary/40 bg-surface shadow-card"
               : "border-border bg-surface"
       } ${upcoming ? "opacity-55" : ""}`}
     >
@@ -282,7 +292,7 @@ function AyahRow({
           ) : item.mark === "mistake" ? (
             <X size={16} color="#fff" />
           ) : (
-            <Text className="font-display-bold text-sm text-accent-strong">{toArabicDigits(item.ayah.ayah)}</Text>
+            <Text className="font-sans-bold text-sm text-accent-strong">{toArabicDigits(item.ayah.ayah)}</Text>
           )}
         </View>
         <Text
@@ -356,20 +366,21 @@ export default function TasmeeSessionScreen() {
 }
 
 function MissingSurah() {
-  const insets = useSafeAreaInsets();
   return (
-    <View className="flex-1 items-center justify-center gap-4 bg-bg px-6" style={{ paddingTop: insets.top }}>
-      <Text className="text-center font-sans text-base text-fg-muted">تعذّر تحميل هذه السورة الآن، حاول مرة أخرى.</Text>
-      <Button variant="outline" onPress={() => (router.canGoBack() ? router.back() : router.replace("/tasmee"))}>
-        اختر سورة
-      </Button>
+    <View className="flex-1 bg-bg">
+      <ScreenHeader title="التسميع" />
+      <View className="flex-1 items-center justify-center gap-4 px-6">
+        <Text className="text-center font-sans text-base text-fg-muted">تعذّر تحميل هذه السورة الآن، حاول مرة أخرى.</Text>
+        <Button variant="secondary" onPress={() => (router.canGoBack() ? router.back() : router.replace("/tasmee"))}>
+          اختر سورة
+        </Button>
+      </View>
     </View>
   );
 }
 
 function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: number; surahName: string; from: number; to: number }) {
   const insets = useSafeAreaInsets();
-  const fg = useThemeColor("fg");
   const primary = useThemeColor("primary");
   const onPrimary = useThemeColor("on-primary");
   const surface = useThemeColor("surface");
@@ -558,21 +569,11 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
   const onMark = useCallback((index: number, mark: Mark) => actions.current.markMany(new Map([[index, mark]])), []);
 
   return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 8 }}>
-      <View className="flex-row items-center gap-2 px-3">
-        <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
-          <ChevronRight size={26} color={fg} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="font-display-bold text-lg text-fg">سورة {surahName}</Text>
-          <Text className="font-sans text-xs text-fg-muted">
-            {toArabicDigits(answered)} من {toArabicDigits(items.length)} آية
-          </Text>
-        </View>
-      </View>
+    <View className="flex-1 bg-bg">
+      <ScreenHeader title={`سورة ${surahName}`} subtitle={`${toArabicDigits(answered)} من ${toArabicDigits(items.length)} آية`} />
 
-      <View className="gap-3 px-4 pt-3">
-        <View className="flex-row rounded-full border border-border bg-surface p-1">
+      <View className="gap-3 px-4 pt-1">
+        <View className="flex-row gap-2">
           {(
             [
               ["voice", Mic, "بصوتك (تلقائي)"],
@@ -587,10 +588,11 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
                 if (value === "manual") speech.stop();
                 setModeChoice(value);
               }}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-full py-2 ${mode === value ? "bg-primary" : ""}`}
+              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-full border py-2 ${mode === value ? "border-primary bg-primary" : "border-border bg-surface"}`}
+              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
             >
               <Icon size={15} color={mode === value ? onPrimary : primary} />
-              <Text className={`font-sans-bold text-sm ${mode === value ? "text-on-primary" : "text-fg-muted"}`}>{label}</Text>
+              <Text className={`font-sans-semibold text-sm ${mode === value ? "text-on-primary" : "text-fg"}`}>{label}</Text>
             </Pressable>
           ))}
         </View>
@@ -639,10 +641,19 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
         }}
         ListFooterComponent={
           finished ? (
-            <View className="rounded-4xl bg-hero p-6" accessibilityLiveRegion="polite">
-              <Text className="font-display-bold text-2xl text-hero-fg">انتهى التسميع — بارك الله فيك</Text>
-              <Text className="mt-2 font-sans text-base text-white/80">
-                <Text className="font-sans-bold text-gold-soft">{toArabicDigits(correct.length)}</Text> آية صحيحة
+            <Animated.View
+              entering={enterSoft(0)}
+              className="rounded-3xl border border-border bg-surface p-5 shadow-card"
+              accessibilityLiveRegion="polite"
+            >
+              <View className="flex-row items-center gap-3">
+                <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
+                  <Check size={22} color={primary} />
+                </View>
+                <Text className="flex-1 font-sans-bold text-xl text-fg">انتهى التسميع — بارك الله فيك</Text>
+              </View>
+              <Text className="mt-3 font-sans text-base text-fg">
+                <Text className="font-sans-bold text-primary">{toArabicDigits(correct.length)}</Text> آية صحيحة
                 {mistakes.length > 0 && (
                   <>
                     {" "}
@@ -652,12 +663,12 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
                 من {toArabicDigits(items.length)}.
               </Text>
               {mistakes.length > 0 && (
-                <Text className="mt-2 font-sans text-sm text-white/70">
+                <Text className="mt-2 font-sans text-sm text-fg-muted">
                   راجع الآيات: {mistakes.map((item) => toArabicDigits(item.ayah.ayah)).join("، ")}
                 </Text>
               )}
-              {countedAsReview && <Text className="mt-3 font-sans-bold text-sm text-gold-soft">سُجّلت مراجعة السورة لليوم ✓</Text>}
-              <Text className="mt-3 font-sans text-xs text-white/60">
+              {countedAsReview && <Text className="mt-3 font-sans-bold text-sm text-primary">سُجّلت مراجعة السورة لليوم ✓</Text>}
+              <Text className="mt-3 font-sans text-xs text-fg-muted">
                 {!learnerId
                   ? "سجّل الدخول لتُحفظ جلسات التسميع في حسابك."
                   : saved === "saving"
@@ -671,7 +682,6 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
               <View className="mt-5 flex-row flex-wrap gap-2">
                 {correct.length > 0 && learnerId && (
                   <Button
-                    variant="gold"
                     size="sm"
                     icon={BookmarkCheck}
                     disabled={memorized === "saving" || memorized === "done"}
@@ -681,15 +691,15 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
                   </Button>
                 )}
                 {mistakes.length > 0 && (
-                  <Button variant="light" size="sm" icon={RotateCcw} onPress={() => restart(true)}>
+                  <Button variant="secondary" size="sm" icon={RotateCcw} onPress={() => restart(true)}>
                     سمّع آيات المراجعة فقط
                   </Button>
                 )}
-                <Button variant="light" size="sm" icon={RotateCcw} onPress={() => restart(false)}>
+                <Button variant="outline" size="sm" icon={RotateCcw} onPress={() => restart(false)}>
                   من جديد
                 </Button>
               </View>
-            </View>
+            </Animated.View>
           ) : null
         }
         extraData={`${pos}|${preview}|${hint}|${mode}|${currentIndex}`}
@@ -706,8 +716,8 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
                 accessibilityLabel={speech.listening ? "أوقف الاستماع" : "ابدأ التسميع بصوتك"}
                 disabled={mistake !== null}
                 onPress={() => (speech.listening ? speech.stop() : listen())}
-                className={`size-14 items-center justify-center rounded-full shadow-lift ${speech.listening ? "bg-danger" : "bg-primary"}`}
-                style={{ opacity: mistake !== null ? 0.5 : 1 }}
+                className={`size-14 items-center justify-center rounded-full shadow-card ${speech.listening ? "bg-danger" : "bg-primary"}`}
+                style={({ pressed }) => ({ opacity: mistake !== null ? 0.5 : 1, transform: [{ scale: pressed ? 0.96 : 1 }] })}
               >
                 <Ping active={speech.listening} />
                 {speech.listening ? <MicOff size={24} color="#fff" /> : <Mic size={24} color="#fff" />}
@@ -734,19 +744,15 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
         </View>
       )}
 
-      <Modal visible={mistake !== null} transparent animationType="fade" onRequestClose={() => closeMistake(false)} statusBarTranslucent>
-        {mistake && (
-          <MistakeSheet
-            mistake={mistake}
-            expected={expected}
-            sessionAyahs={sessionAyahs}
-            words={items.map((item) => item.words)}
-            surahName={surahName}
-            onContinue={() => closeMistake(false)}
-            onOverride={() => closeMistake(true)}
-          />
-        )}
-      </Modal>
+      <MistakeSheet
+        mistake={mistake}
+        expected={expected}
+        sessionAyahs={sessionAyahs}
+        words={items.map((item) => item.words)}
+        surahName={surahName}
+        onContinue={() => closeMistake(false)}
+        onOverride={() => closeMistake(true)}
+      />
     </View>
   );
 }

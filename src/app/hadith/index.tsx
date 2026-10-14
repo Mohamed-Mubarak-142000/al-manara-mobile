@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ArrowLeft, ChevronRight, ScrollText, Sparkles } from "lucide-react-native";
+import { ArrowLeft, LayoutGrid, ScrollText, Sparkles } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,6 +7,7 @@ import { planDay } from "@/core/plan/schedule";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { HadithDownloadAllCard, HadithPackButton } from "@/features/hadith/HadithPackControls";
 import { HadithPanel, HadithText } from "@/features/hadith/HadithPanel";
@@ -19,8 +20,7 @@ import { useThemeColor } from "@/theme/useThemeColor";
 export default function HadithIndexScreen() {
   const insets = useSafeAreaInsets();
   const miniPlayer = useMiniPlayerInset();
-  const heroFg = useThemeColor("hero-fg");
-  const gold = useThemeColor("gold-soft");
+  const primary = useThemeColor("primary");
   const accent = useThemeColor("accent");
   const today = planDay();
   const daily = useAsync(today, () => getHadithOfTheDayOffline(today));
@@ -50,27 +50,15 @@ export default function HadithIndexScreen() {
         />
       }
     >
-      <View className="rounded-b-[32px] bg-hero px-5 pb-6" style={{ paddingTop: insets.top + 8 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-          hitSlop={12}
-          className="mb-3 self-start p-1"
-        >
-          <ChevronRight size={26} color={heroFg} />
-        </Pressable>
-        <View className="flex-row items-center gap-2">
-          <ScrollText size={16} color={gold} />
-          <Text className="font-sans-bold text-sm text-gold-soft">السنة النبوية</Text>
-        </View>
-        <Text className="mt-2 font-display-bold text-3xl text-hero-fg">الأحاديث النبوية</Text>
-        <Text className="mt-1 font-sans text-sm leading-6 text-white/75">
-          أحاديث نبوية صحيحة مع شرحها وفوائدها ودرجتها، مرتّبة حسب الموضوع.
-        </Text>
-      </View>
+      <PageHeader
+        back
+        icon={ScrollText}
+        kicker="السنة النبوية"
+        title="الأحاديث النبوية"
+        description="أحاديث نبوية صحيحة مع شرحها وفوائدها ودرجتها، مرتّبة حسب الموضوع."
+      />
 
-      <View className="gap-4 px-4 pt-5">
+      <View className="gap-4 px-4">
         {daily.state.status === "ready" && (
           <HadithPanel title="حديث اليوم" icon={Sparkles}>
             <Text className="mb-3 font-sans-bold text-sm text-accent-strong">{daily.state.data.title}</Text>
@@ -93,7 +81,12 @@ export default function HadithIndexScreen() {
           </HadithPanel>
         )}
 
-        <Text className="mt-4 font-display-bold text-2xl text-primary-strong">الموضوعات</Text>
+        <View className="mt-2 flex-row items-center gap-2">
+          <LayoutGrid size={18} color={primary} />
+          <Text accessibilityRole="header" className="font-sans-bold text-base text-fg">
+            الموضوعات
+          </Text>
+        </View>
         {categories.state.status === "loading" ? (
           <StateMessage loading />
         ) : categories.state.status === "error" ? (
@@ -104,16 +97,16 @@ export default function HadithIndexScreen() {
             {topLevel.map((category) => {
               const children = childrenOf(category.id);
               return (
-                <View key={category.id} className="rounded-4xl border border-border bg-surface p-5 shadow-soft">
+                <View key={category.id} className="rounded-3xl border border-border bg-surface p-5 shadow-card">
                   <View className="flex-row items-center gap-2">
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: category.id, title: category.title } })}
                       className="flex-1 flex-row items-center justify-between gap-3"
                     >
-                      <Text className="shrink font-sans-bold text-xl leading-9 text-primary-strong">{category.title}</Text>
+                      <Text className="shrink font-sans-bold text-lg leading-8 text-fg">{category.title}</Text>
                       <View className="rounded-full bg-accent-soft px-3 py-1">
-                        <Text className="font-sans-bold text-sm text-accent-strong">{toArabicDigits(category.count)} حديث</Text>
+                        <Text className="font-sans-bold text-xs text-accent-strong">{toArabicDigits(category.count)} حديث</Text>
                       </View>
                     </Pressable>
                     <HadithPackButton category={category} />
@@ -125,9 +118,9 @@ export default function HadithIndexScreen() {
                           key={child.id}
                           accessibilityRole="button"
                           onPress={() => router.push({ pathname: "/hadith/category/[id]", params: { id: child.id, title: child.title } })}
-                          className="flex-row items-center gap-1.5 rounded-full border border-border bg-bg px-3 py-1.5"
+                          className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5"
                         >
-                          <Text className="font-sans-bold text-sm text-fg">{child.title}</Text>
+                          <Text className="font-sans-medium text-sm text-fg">{child.title}</Text>
                           <Text className="font-sans text-xs text-fg-muted">{toArabicDigits(child.count)}</Text>
                         </Pressable>
                       ))}
