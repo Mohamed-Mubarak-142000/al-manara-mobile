@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "المنارة",
-    "slug": "almanara",
+    "slug": "mmubarakdev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/brand/icon.png",
@@ -330,9 +330,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a8c16d2a-5e1e-422f-970b-96d9bdb2cc29"
+        "projectId": "5b1c6666-c3ea-4479-8bb9-230b66e01410"
       }
     },
-    "owner": "mhamed_mubarak"
+    "owner": "mmubarakdevs-team"
   }
 }
