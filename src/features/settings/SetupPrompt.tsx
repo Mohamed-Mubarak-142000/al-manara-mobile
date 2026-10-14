@@ -8,6 +8,7 @@ import Animated from "react-native-reanimated";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { enterSoft } from "@/components/ui/PageHeader";
 import { useAccount } from "@/features/account/accountStore";
+import { useUpdatePromptOpen } from "@/features/appUpdate/AppUpdatePrompt";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { useSetupComplete } from "./preferences";
@@ -52,6 +53,8 @@ export function SetupPrompt() {
   const primary = useThemeColor("primary");
   const [due, setDue] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  // An app update offer goes first; this one waits until that sheet is gone.
+  const updateOpen = useUpdatePromptOpen();
 
   useEffect(() => {
     if (account.status === "loading" || complete || snoozed()) return;
@@ -59,7 +62,7 @@ export function SetupPrompt() {
     return () => clearTimeout(id);
   }, [account.status, complete]);
 
-  const visible = due && !complete && !dismissed && focused;
+  const visible = due && !complete && !dismissed && focused && !updateOpen;
   const later = () => {
     snoozeSetupPrompt();
     setDismissed(true);

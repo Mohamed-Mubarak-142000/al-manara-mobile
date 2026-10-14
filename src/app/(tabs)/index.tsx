@@ -5,6 +5,7 @@ import { LayoutGrid, Search, Settings } from "lucide-react-native";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
+import { AppUpdatePrompt } from "@/features/appUpdate/AppUpdatePrompt";
 import { getHijriDate } from "@/core/calendar/hijriDate";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
@@ -148,6 +149,7 @@ export default function HomeScreen() {
       </Section>
 
       <OfflineNotice />
+      <AppUpdatePrompt />
       <SetupPrompt />
     </Screen>
   );
