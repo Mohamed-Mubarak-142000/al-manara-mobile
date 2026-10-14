@@ -1,94 +1,38 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { ChevronRight } from "lucide-react-native";
-import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import { I18nManager, Pressable, Text, View, useWindowDimensions, type ImageSourcePropType } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSpring,
-  withTiming,
-  type SharedValue,
-} from "react-native-reanimated";
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withSpring, type SharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { Button } from "@/components/ui/Button";
 import { PagerDot } from "@/components/ui/Pager";
-import { SECTION_ART, type SectionArt } from "@/features/home/sectionArt";
 import { introButtonLabel } from "@/features/onboarding/steps";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 interface Slide {
   key: string;
   caption: string;
-  /** A photo filling the card; without one the card shows the sections' 3D art on emerald. */
-  photo?: ImageSourcePropType;
+  /** Locally bundled artwork for instant, offline onboarding. */
+  photo: ImageSourcePropType;
 }
 
 const SLIDES: Slide[] = [
-  { key: "quran", caption: "اقرأ القرآن، واستمع لأجمل التلاوات", photo: require("@/assets/images/scenes/quran-terrace.webp") },
-  { key: "kids", caption: "حديقة القرآن… لأطفالك", photo: require("@/assets/images/scenes/garden.jpg") },
-  { key: "sections", caption: "مواقيت، وأذكار، وإذاعة… في مكان واحد" },
+  { key: "quran", caption: "اقرأ القرآن، واستمع لأجمل التلاوات", photo: require("@/assets/images/onboarding/quran.jpg") },
+  { key: "kids", caption: "حديقة القرآن… لأطفالك", photo: require("@/assets/images/onboarding/kids.jpg") },
+  { key: "sections", caption: "مواقيت، وأذكار، وإذاعة… في مكان واحد", photo: require("@/assets/images/onboarding/sections.jpg") },
 ];
 
-/** The 3D art scattered over the last card: where each sits (in % of the card), its size, and its delay. */
-const COLLAGE: { art: SectionArt; top: `${number}%`; left: `${number}%`; size: number; delay: number }[] = [
-  { art: "quran", top: "14%", left: "34%", size: 110, delay: 0 },
-  { art: "adhan", top: "8%", left: "8%", size: 64, delay: 400 },
-  { art: "tasbih", top: "40%", left: "64%", size: 72, delay: 800 },
-  { art: "prayer", top: "46%", left: "10%", size: 68, delay: 200 },
-  { art: "radio", top: "66%", left: "40%", size: 70, delay: 600 },
-  { art: "hadith", top: "10%", left: "70%", size: 56, delay: 1000 },
-];
-
-/** A picture that bobs gently up and down, each on its own beat. */
-function FloatingArt({ art, size, delay, still }: { art: SectionArt; size: number; delay: number; still: boolean }) {
-  const lift = useSharedValue(0);
-  useEffect(() => {
-    if (still) return;
-    lift.set(withDelay(delay, withRepeat(withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }), -1, true)));
-  }, [delay, lift, still]);
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -10 * lift.get() }] }));
-  return (
-    <Animated.View style={style}>
-      <Image source={SECTION_ART[art]} style={{ width: size, height: size }} contentFit="contain" accessible={false} />
-    </Animated.View>
-  );
-}
-
-function SlideCard({ slide, still }: { slide: Slide; still: boolean }) {
-  const deep = useThemeColor("emerald-deep");
+function SlideCard({ slide }: { slide: Slide }) {
   const night = useThemeColor("emerald-night");
   return (
     <View className="flex-1 gap-5">
-      <View className="flex-1 overflow-hidden rounded-[32px] bg-emerald-night">
-        {slide.photo ? (
-          <>
-            <Image source={slide.photo} contentFit="cover" style={{ position: "absolute", inset: 0 }} accessible={false} />
-            <LinearGradient
-              colors={["transparent", "rgba(1,42,34,0.55)"]}
-              locations={[0.55, 1]}
-              style={{ position: "absolute", inset: 0 }}
-            />
-          </>
-        ) : (
-          <>
-            <LinearGradient colors={[deep, night]} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", inset: 0 }} />
-            <View className="absolute -end-12 -top-12 size-48 rounded-full bg-gold/15" />
-            <View className="absolute -bottom-16 -start-10 size-44 rounded-full bg-gold/10" />
-            {COLLAGE.map((item) => (
-              <View key={item.art} style={{ position: "absolute", top: item.top, left: item.left }}>
-                <FloatingArt art={item.art} size={item.size} delay={item.delay} still={still} />
-              </View>
-            ))}
-          </>
-        )}
+      <View className="flex-1 overflow-hidden rounded-[32px] bg-surface-alt">
+        <Image source={slide.photo} contentFit="cover" style={{ position: "absolute", inset: 0 }} accessible={false} />
+        <LinearGradient colors={["transparent", night]} locations={[0.65, 1]} style={{ position: "absolute", inset: 0, opacity: 0.25 }} />
       </View>
       <Text className="px-4 text-center font-sans-bold text-xl leading-9 text-fg">{slide.caption}</Text>
     </View>
@@ -172,7 +116,7 @@ function PeekCards({
       <View style={{ height }} className="overflow-hidden">
         {SLIDES.map((slide, slot) => (
           <PeekCard key={slide.key} slot={slot} span={span} width={cardWidth} height={height} position={position} direction={direction}>
-            <SlideCard slide={slide} still={still} />
+            <SlideCard slide={slide} />
           </PeekCard>
         ))}
       </View>

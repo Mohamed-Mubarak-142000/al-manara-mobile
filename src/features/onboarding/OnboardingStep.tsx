@@ -1,23 +1,36 @@
 import { Image } from "expo-image";
 import type { ReactNode } from "react";
-import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, Text, useWindowDimensions, View, type ImageSourcePropType } from "react-native";
 
-import { SECTION_ART, type SectionArt } from "@/features/home/sectionArt";
+/** A compact city scene leaves room for the location controls on small phones. */
+function LocationArt({ compact }: { compact: boolean }) {
+  return (
+    <View className="overflow-hidden rounded-2xl bg-surface-alt">
+      <Image
+        source={require("@/assets/images/onboarding/location.jpg")}
+        style={{ width: compact ? 132 : 168, height: compact ? 88 : 112 }}
+        contentFit="cover"
+        accessible={false}
+      />
+    </View>
+  );
+}
 
-/** A section's 3D art inside a soft primary ring: the visual anchor of an onboarding step. */
-function ArtBadge({ art, compact }: { art: SectionArt; compact: boolean }) {
-  const size = compact ? 44 : 56;
+/** A step's 3D picture on a soft primary disc. */
+function ArtBadge({ art, compact }: { art: ImageSourcePropType; compact: boolean }) {
+  const size = compact ? 48 : 60;
   return (
     <View
-      className={`${compact ? "size-18" : "size-22"} items-center justify-center rounded-full border border-primary/15 bg-primary-soft`}
+      className={`${compact ? "size-20" : "size-24"} items-center justify-center rounded-full border border-primary/15 bg-primary-soft`}
     >
-      <Image source={SECTION_ART[art]} style={{ width: size, height: size }} contentFit="contain" accessible={false} />
+      <Image source={art} style={{ width: size, height: size }} contentFit="contain" accessible={false} />
     </View>
   );
 }
 
 interface StepLayoutProps {
-  art: SectionArt;
+  /** The step's 3D picture; without one the step shows the city artwork (the location step). */
+  art?: ImageSourcePropType;
   eyebrow?: string;
   title: string;
   subtitle: string;
@@ -27,7 +40,7 @@ interface StepLayoutProps {
 }
 
 /**
- * Shared layout of the setup steps: the ringed art, title and subtitle on the white ground, then the
+ * Shared layout of the setup steps: the step's picture, title and subtitle on the themed ground, then the
  * step's content in a bordered card that takes the remaining height and scrolls on small phones.
  */
 export function StepLayout({ art, eyebrow, title, subtitle, children, scroll = true }: StepLayoutProps) {
@@ -37,7 +50,7 @@ export function StepLayout({ art, eyebrow, title, subtitle, children, scroll = t
   return (
     <View className={`flex-1 ${compact ? "gap-3" : "gap-5"}`} style={{ minHeight: 0 }}>
       <View className={`items-center ${compact ? "gap-1.5" : "gap-2.5"}`}>
-        <ArtBadge art={art} compact={compact} />
+        {art ? <ArtBadge art={art} compact={compact} /> : <LocationArt compact={compact} />}
         {eyebrow ? <Text className="mt-1 font-sans-bold text-sm text-primary">{eyebrow}</Text> : null}
         <Text
           accessibilityRole="header"

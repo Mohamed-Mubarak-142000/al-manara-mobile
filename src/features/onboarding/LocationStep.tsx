@@ -34,7 +34,7 @@ export function LocationStep() {
   }
 
   return (
-    <StepLayout art="prayer" eyebrow="مواقيت الصلاة" title="أين تصلّي؟" subtitle="لنضبط المواقيت والأذان على مدينتك.">
+    <StepLayout eyebrow="مواقيت الصلاة" title="أين تصلّي؟" subtitle="لنضبط المواقيت والأذان على مدينتك.">
       <Button size="lg" icon={LocateFixed} disabled={locating} onPress={locate}>
         {locating ? "جارٍ التحديد…" : "استخدم موقعي الحالي"}
       </Button>
