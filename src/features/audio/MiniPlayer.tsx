@@ -11,7 +11,8 @@ import { miniPlayerLayout, miniPlayerPlacement, useMiniPlayerLayout, type MiniPl
 import { audio, currentTrack, useHasTrack, usePlayer, type PlayerState } from "./playerStore";
 
 /** The stock bottom tab bar before it has been measured. */
-const TAB_BAR_FALLBACK = 49;
+/** The floating tab bar's height before it has been measured (the pill and its margins, without the inset). */
+const TAB_BAR_FALLBACK = 76;
 
 function usePlacement(): MiniPlayerPlacement {
   return miniPlayerPlacement(useSegments());
@@ -125,6 +126,18 @@ export function useMiniPlayerInset(): number {
   const { playerHeight } = useMiniPlayerLayout();
   if (!hasTrack || placement !== "bottom") return 0;
   return playerHeight || 72;
+}
+
+/**
+ * How much a tab screen's scroll content pads at the bottom: the floating tab bar drawn over it, and the
+ * mini player riding above the bar when something is loaded (0 off the tabs).
+ */
+export function useTabBarInset(): number {
+  const hasTrack = useHasTrack();
+  const placement = usePlacement();
+  const { tabBarHeight, playerHeight } = useMiniPlayerLayout();
+  if (placement !== "tabs") return 0;
+  return (tabBarHeight || TAB_BAR_FALLBACK) + (hasTrack ? playerHeight || 72 : 0);
 }
 
 /**

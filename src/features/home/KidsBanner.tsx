@@ -17,7 +17,8 @@ export function KidsBanner() {
       onPress={() => router.push("/kids")}
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}
     >
-      <View className="h-44 overflow-hidden rounded-4xl border border-border">
+      {/* Edge to edge: the garden scene runs the full width of the screen. */}
+      <View className="h-48 overflow-hidden">
         <Image
           source={require("@/assets/images/scenes/garden.jpg")}
           contentFit="cover"

@@ -1,27 +1,16 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
-import { useThemeColor } from "@/theme/useThemeColor";
+import { useThemeColor, withAlpha } from "@/theme/useThemeColor";
 
-import { SECTION_GROUPS, sectionsFor, type AppSection, type SectionGroup, type SectionTone } from "./sections";
+import { SECTION_ART } from "./sectionArt";
+import { SECTION_GROUPS, sectionsFor, type AppSection, type SectionGroup } from "./sections";
 
 const COLUMNS = 3;
 
-/** Literal class names, so Tailwind finds them. */
-const TONES: Record<SectionTone, string> = {
-  blue: "bg-tile-blue",
-  teal: "bg-tile-teal",
-  clay: "bg-tile-clay",
-  purple: "bg-tile-purple",
-  green: "bg-tile-green",
-  gold: "bg-tile-gold",
-  rose: "bg-tile-rose",
-  sky: "bg-tile-sky",
-};
-
 function SectionTile({ section }: { section: AppSection }) {
-  const ink = useThemeColor("tile-ink");
-  const Icon = section.icon;
+  const tone = useThemeColor(`tile-${section.tone}`);
   const href = section.href!;
   return (
     <Pressable
@@ -32,10 +21,10 @@ function SectionTile({ section }: { section: AppSection }) {
       className="flex-1"
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      {/* A clean white card: hairline border, the faintest shadow, the section's colour only in its circle. */}
+      {/* A clean white card: hairline border, the faintest shadow; the section's 3D art on a pale disc of its colour. */}
       <View className="min-h-32 items-center gap-2.5 rounded-3xl border border-border bg-surface px-1.5 pb-3 pt-4 shadow-card">
-        <View className={`size-14 items-center justify-center rounded-full ${TONES[section.tone]}`}>
-          <Icon size={26} color={ink} strokeWidth={2} />
+        <View className="size-16 items-center justify-center rounded-full" style={{ backgroundColor: withAlpha(tone, 0.12) }}>
+          <Image source={SECTION_ART[section.art]} style={{ width: 42, height: 42 }} contentFit="contain" accessible={false} />
         </View>
         <Text numberOfLines={2} className="text-center font-sans-bold text-[13px] leading-5 text-fg">
           {section.label}

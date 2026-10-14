@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { BookOpen, ChevronLeft, Headphones, LayoutGrid, Search, Settings } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { BookOpen, Headphones, LayoutGrid, Search, Settings } from "lucide-react-native";
+import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { getHijriDate } from "@/core/calendar/hijriDate";
@@ -17,7 +17,7 @@ import { OfflineNotice } from "@/features/home/OfflineNotice";
 import { SetupPrompt } from "@/features/settings/SetupPrompt";
 import { QuickActions } from "@/features/home/QuickActions";
 import { SectionTiles } from "@/features/home/SectionGrid";
-import { HOME_SECTIONS, sectionsFor } from "@/features/home/sections";
+import { SECTION_GROUPS, sectionsFor } from "@/features/home/sections";
 import { SponsorCarousel } from "@/features/home/SponsorCard";
 import { SupportersStrip } from "@/features/home/SupportersStrip";
 import { ContinueReadingCard } from "@/features/mushaf/ContinueReadingCard";
@@ -33,8 +33,8 @@ function hijriLine(): string | null {
   }
 }
 
-/** Home keeps the most-used sections in one flat grid; every section is on the كل الأقسام screen. */
-const HOME_TILES = sectionsFor(HOME_SECTIONS);
+/** Every section of the app, in the كل الأقسام screen's order, as one flat grid. */
+const HOME_TILES = sectionsFor(SECTION_GROUPS.flatMap((group) => group.labels));
 
 /** The light top bar: today's hijri date and a greeting at the start, search and settings at the end. */
 function HomeTopBar() {
@@ -55,10 +55,10 @@ function HomeTopBar() {
   );
 }
 
-/** The brand's scene as a rounded card in the gutter: the Quran terrace, the tagline, read and listen. */
+/** The brand's scene edge to edge: the Quran terrace, the tagline, read and listen. */
 function WelcomeCard() {
   return (
-    <View className="overflow-hidden rounded-4xl bg-emerald-night">
+    <View className="overflow-hidden bg-emerald-night">
       <Image
         source={require("@/assets/images/scenes/quran-terrace.webp")}
         contentFit="cover"
@@ -99,51 +99,50 @@ function SectionsTitle() {
     <View className="mb-3 flex-row items-center gap-2">
       <LayoutGrid size={16} color={primary} />
       <Text className="flex-1 font-sans-bold text-base text-fg">أقسام المنارة</Text>
-      <Pressable
-        accessibilityRole="link"
-        onPress={() => router.push("/sections")}
-        hitSlop={8}
-        className="flex-row items-center gap-0.5"
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-      >
-        <Text className="font-sans-bold text-sm text-primary">كل الأقسام</Text>
-        <ChevronLeft size={16} color={primary} />
-      </Pressable>
     </View>
   );
 }
 
+/**
+ * Home, top to bottom: the greeting, the scene (edge to edge), the next prayer, the shortcuts strip,
+ * continue reading, the day's hadith and the kids' garden (both edge to edge), sponsors, supporters, and
+ * every section of the app.
+ */
 export default function HomeScreen() {
   return (
     <Screen>
       <HomeTopBar />
 
-      <Section className="gap-4">
-        <Animated.View entering={enterSoft(1)}>
-          <WelcomeCard />
-        </Animated.View>
-        <Animated.View entering={enterSoft(2)}>
+      <Animated.View entering={enterSoft(1)}>
+        <WelcomeCard />
+      </Animated.View>
+      <Animated.View entering={enterSoft(2)}>
+        <Section className="mt-4">
           <NextPrayerCard />
-        </Animated.View>
-        <Animated.View entering={enterSoft(3)} className="gap-4">
-          <QuickActions />
+        </Section>
+      </Animated.View>
+      <Animated.View entering={enterSoft(3)} className="mt-2">
+        <QuickActions />
+      </Animated.View>
+      <Animated.View entering={enterSoft(4)}>
+        <Section className="gap-4">
           <ContinueReadingCard />
           <RamadanCard />
-          <DailyHadithBanner />
-          <KidsBanner />
-        </Animated.View>
-      </Section>
+        </Section>
+      </Animated.View>
+      <View className="mt-4 gap-0.5">
+        <DailyHadithBanner />
+        <KidsBanner />
+      </View>
 
       {/* Both render nothing (and no gap) when there is nothing to show. */}
       <SponsorCarousel className="mt-6 px-4" />
       <SupportersStrip className="mt-6" />
 
-      <Animated.View entering={enterSoft(4)}>
-        <Section className="mt-6">
-          <SectionsTitle />
-          <SectionTiles sections={HOME_TILES} />
-        </Section>
-      </Animated.View>
+      <Section className="mt-6">
+        <SectionsTitle />
+        <SectionTiles sections={HOME_TILES} />
+      </Section>
 
       <OfflineNotice />
       <SetupPrompt />

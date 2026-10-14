@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useTabBarInset } from "@/features/audio/MiniPlayer";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 interface ScreenProps {
@@ -16,11 +17,13 @@ interface ScreenProps {
 export function Screen({ children, bleed = false, refreshing, onRefresh }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const tint = useThemeColor("accent");
+  // On a tab, the floating tab bar (and the mini player above it) is drawn over the page's end.
+  const tabBar = useTabBarInset();
 
   return (
     <ScrollView
       className="flex-1 bg-bg"
-      contentContainerStyle={{ paddingTop: bleed ? 0 : insets.top, paddingBottom: 32 }}
+      contentContainerStyle={{ paddingTop: bleed ? 0 : insets.top, paddingBottom: 32 + tabBar }}
       contentInsetAdjustmentBehavior="never"
       showsVerticalScrollIndicator={false}
       refreshControl={

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 
+import { useTabBarInset } from "@/features/audio/MiniPlayer";
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { Button } from "@/components/ui/Button";
@@ -80,6 +81,8 @@ function IndexRow({ row, icon }: { row: Row; icon?: "bookmark" | "note" }) {
 }
 
 export default function QuranIndexScreen() {
+  // The floating tab bar (and the mini player above it) is drawn over the list's end.
+  const tabBar = useTabBarInset();
   const [tab, setTab] = useState<Tab>("surahs");
   const [query, setQuery] = useState("");
   const [undo, setUndo] = useState<Undo | null>(null);
@@ -173,7 +176,7 @@ export default function QuranIndexScreen() {
         keyExtractor={(row) => row.key}
         renderItem={({ item }) => <IndexRow row={item} icon={rowIcon} />}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 32 + tabBar }}
         ListHeaderComponent={
           <View className="mb-4">
             <PageHeader

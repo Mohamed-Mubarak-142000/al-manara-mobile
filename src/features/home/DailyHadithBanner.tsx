@@ -33,7 +33,8 @@ export function DailyHadithBanner() {
         onPress={() => router.push({ pathname: "/hadith/[id]", params: { id: hadith.id } })}
         style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}
       >
-        <View className="overflow-hidden rounded-4xl border border-gold/30">
+        {/* Edge to edge, like the other banners on Home. */}
+        <View className="overflow-hidden">
           <LinearGradient colors={[deep, night]} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", inset: 0 }} />
           {/* Soft gold halos in the corners, the brand's palette. */}
           <View className="absolute -end-10 -top-12 size-40 rounded-full bg-gold/15" />

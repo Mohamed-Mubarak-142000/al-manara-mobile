@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import type { Reciter } from "@/core/quran/api";
+import { useTabBarInset } from "@/features/audio/MiniPlayer";
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -41,6 +42,8 @@ function ReciterRow({ reciter, riwayaCount }: { reciter: Reciter; riwayaCount: n
 }
 
 export default function ListenScreen() {
+  // The floating tab bar (and the mini player above it) is drawn over the list's end.
+  const tabBar = useTabBarInset();
   const { reciters, failed, reload } = useReciters();
   const { favoriteReciterId } = useOnboarding();
   const [query, setQuery] = useState("");
@@ -61,7 +64,7 @@ export default function ListenScreen() {
         keyExtractor={(reciter) => String(reciter.id)}
         renderItem={({ item }) => <ReciterRow reciter={item} riwayaCount={item.moshaf.length} />}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 32 + tabBar }}
         ListHeaderComponent={
           <View className="mb-4">
             <PageHeader

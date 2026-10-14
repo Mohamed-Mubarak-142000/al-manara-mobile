@@ -4,7 +4,7 @@ import { useFonts } from "expo-font";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 
 import { AccountDisabledGate } from "@/features/account/AccountDisabledGate";
@@ -14,6 +14,7 @@ import { GlobalMiniPlayer } from "@/features/audio/MiniPlayer";
 import { ReadingStreakTracker } from "@/features/streak/streakStore";
 import { BackgroundReminders } from "@/features/notifications/BackgroundReminders";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
+import { AnimatedSplash } from "@/features/onboarding/AnimatedSplash";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
@@ -69,20 +70,26 @@ function RootLayout() {
   const border = useThemeColor("border");
   const primary = useThemeColor("primary");
 
+  // The animated splash plays once the static native one has gone, so none of it runs unseen behind it.
+  const [nativeSplashGone, setNativeSplashGone] = useState(false);
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
+    const hide = () =>
+      SplashScreen.hideAsync()
+        .catch(() => {})
+        .finally(() => setNativeSplashGone(true));
     // First launch: the three setup steps before anything else. The splash stays up until the
     // onboarding screen has replaced Home, so Home never flashes first.
     if (onboarding.isDone()) {
       // After Android ended the process in the background, reopen the screen the user left (on top of
       // Home) before the splash goes, so Home doesn't flash first.
-      void restoreLastRoute(true).finally(() => setTimeout(() => SplashScreen.hideAsync(), 50));
+      void restoreLastRoute(true).finally(() => setTimeout(hide, 50));
       // Never keep the splash up longer than this, whatever happens above.
-      const fallback = setTimeout(() => SplashScreen.hideAsync(), 1500);
+      const fallback = setTimeout(hide, 1500);
       return () => clearTimeout(fallback);
     }
     router.replace("/onboarding");
-    const id = setTimeout(() => SplashScreen.hideAsync(), 250);
+    const id = setTimeout(hide, 250);
     return () => clearTimeout(id);
   }, [fontsLoaded, fontError]);
 
@@ -116,6 +123,8 @@ function RootLayout() {
       <GlobalMiniPlayer />
       <AdhkarToaster />
       <AccountDisabledGate />
+      {/* Over everything, from the first frame (it matches the native splash), animating once that has gone. */}
+      <AnimatedSplash play={nativeSplashGone} />
     </ThemeProvider>
   );
 }
