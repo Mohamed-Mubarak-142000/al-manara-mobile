@@ -1,4 +1,4 @@
-import { BookOpenCheck, Gem, RefreshCw } from "lucide-react-native";
+import { RefreshCw } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
@@ -247,7 +247,7 @@ function BadgesTab() {
         })}
       </View>
       <View className="mt-6 items-center">
-        <KidsButton tone="white" icon={BookOpenCheck} onPress={() => go("/kids/progress")}>
+        <KidsButton tone="white" art="🏅" onPress={() => go("/kids/progress")}>
           ما حفظته من السور
         </KidsButton>
       </View>
@@ -323,7 +323,7 @@ function ShopItem({ item, index }: { item: RewardItem; index: number }) {
         )
       ) : (
         <>
-          <KidsButton tone="sky" size="sm" icon={Gem} className="mt-3" disabled={short > 0} onPress={buy}>
+          <KidsButton tone="sky" size="sm" art="💎" className="mt-3" disabled={short > 0} onPress={buy}>
             {toArabicDigits(item.price)}
           </KidsButton>
           {short > 0 && (

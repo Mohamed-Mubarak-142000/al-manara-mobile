@@ -80,7 +80,13 @@ export function KidsTabBar() {
               <View style={{ height: 38, justifyContent: "center", opacity: active ? 1 : 0.75 }}>
                 <KidsArt emoji={tab.emoji} size={active ? 35 : 31} />
               </View>
-              <Text className="font-kids-bold" style={{ color: KIDS.deep, fontSize: 13, lineHeight: 20 }} numberOfLines={1}>
+              <Text
+                className="font-kids-bold"
+                style={{ color: KIDS.deep, fontSize: 15, lineHeight: 22 }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
+              >
                 {tab.label}
               </Text>
               {tab.href === "/kids/rewards" && chests > 0 && (
@@ -89,10 +95,10 @@ export function KidsTabBar() {
                     position: "absolute",
                     top: 2,
                     start: 10,
-                    minWidth: 22,
-                    height: 22,
+                    minWidth: 24,
+                    height: 24,
                     paddingHorizontal: 5,
-                    borderRadius: 11,
+                    borderRadius: 12,
                     backgroundColor: KIDS.rose,
                     borderWidth: 2,
                     borderColor: KIDS.white,
@@ -100,7 +106,7 @@ export function KidsTabBar() {
                     justifyContent: "center",
                   }}
                 >
-                  <Text className="font-kids-bold" style={{ color: KIDS.white, fontSize: 11, lineHeight: 16 }}>
+                  <Text className="font-kids-bold" style={{ color: KIDS.white, fontSize: 13, lineHeight: 18 }}>
                     {toArabicDigits(chests)}
                   </Text>
                 </View>

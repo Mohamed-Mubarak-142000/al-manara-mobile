@@ -31,7 +31,7 @@ interface PagerProps<T> {
   ref?: Ref<PagerHandle>;
 }
 
-function Dot({ active, tone }: { active: boolean; tone: "gold" | "primary" }) {
+export function PagerDot({ active, tone }: { active: boolean; tone: "gold" | "primary" }) {
   const progress = useSharedValue(active ? 1 : 0);
   useEffect(() => {
     progress.set(withTiming(active ? 1 : 0, { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) }));
@@ -192,7 +192,7 @@ export function Pager<T>({
       {dots && count > 1 ? (
         <View className="flex-row justify-center gap-1.5" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {data.map((item, dotIndex) => (
-            <Dot key={keyExtractor(item)} tone={dots} active={dotIndex === Math.min(index, count - 1)} />
+            <PagerDot key={keyExtractor(item)} tone={dots} active={dotIndex === Math.min(index, count - 1)} />
           ))}
         </View>
       ) : null}

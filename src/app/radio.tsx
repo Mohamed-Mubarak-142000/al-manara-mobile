@@ -61,7 +61,7 @@ export default function RadioScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader title="الإذاعة" subtitle="بث مباشر" art={SECTION_ART.radio} />
+      <ScreenHeader title="الإذاعة" subtitle="بث مباشر" />
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}>
         <Animated.View
           entering={enterSoft(0)}

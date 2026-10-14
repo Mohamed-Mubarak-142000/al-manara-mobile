@@ -1,4 +1,3 @@
-import { Gift } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
@@ -53,7 +52,7 @@ export function ChestWatcher() {
       </View>
       <KidsButton
         tone="rose"
-        icon={Gift}
+        art="🎁"
         onPress={() => {
           setFresh(null);
           go("/kids/rewards");

@@ -1,5 +1,5 @@
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
-import { Mic, MicOff, SkipForward, ThumbsUp, Volume2 } from "lucide-react-native";
+import { Mic, MicOff, SkipForward, Volume2 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, ZoomIn } from "react-native-reanimated";
@@ -21,6 +21,7 @@ import { Celebration } from "../ui/Celebration";
 import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { KidsPanel, KidsText, QuranText } from "../ui/KidsPanel";
+import { KidsEnter } from "../ui/KidsMotion";
 import { KidsScroll } from "../ui/KidsScroll";
 import { KIDS, PANEL_SHADOW } from "../ui/kidsStyles";
 import { go } from "../ui/nav";
@@ -247,11 +248,13 @@ export function KidsRecite({ surahId }: { surahId: number }) {
   if (!ayah) {
     return (
       <KidsScroll>
-        <KidsPanel>
-          <KidsText tone="muted" center>
-            تعذّر تحميل آيات السورة الآن، جرّب بعد قليل.
-          </KidsText>
-        </KidsPanel>
+        <KidsEnter>
+          <KidsPanel>
+            <KidsText tone="muted" center>
+              تعذّر تحميل آيات السورة الآن، جرّب بعد قليل.
+            </KidsText>
+          </KidsPanel>
+        </KidsEnter>
       </KidsScroll>
     );
   }
@@ -259,34 +262,36 @@ export function KidsRecite({ surahId }: { surahId: number }) {
   if (!supported) {
     return (
       <KidsScroll>
-        <KidsPanel className="items-center">
-          <KidsArt emoji="🎤" size={60} />
-          <KidsText size={26} bold center className="mt-2">
-            سمّعني: سورة {surah.name}
-          </KidsText>
-          <KidsText size={17} tone="muted" center className="mt-2">
-            سجّل صوتك وأنت تقرأ، ثم استمع لنفسك. هل قرأتها جيدًا؟
-          </KidsText>
-          <View style={{ marginTop: 18, borderRadius: 24, backgroundColor: KIDS.paper, padding: 14, alignSelf: "stretch" }}>
-            <QuranText size={24}>{ayahs.map((entry) => entry.text).join(" ۝ ")}</QuranText>
-          </View>
-          <View className="mt-5">
-            <ReciteRecorder />
-          </View>
-          <KidsButton
-            tone="emerald"
-            icon={ThumbsUp}
-            className="mt-6"
-            onPress={() => {
-              sfx.win();
-              react("finish");
-              recordGame({ game: "kids_recite", surah: surah.id, score: 1, total: 1 });
-              setFinished(true);
-            }}
-          >
-            قرأتها جيدًا!
-          </KidsButton>
-        </KidsPanel>
+        <KidsEnter>
+          <KidsPanel className="items-center">
+            <KidsArt emoji="🎤" size={60} />
+            <KidsText size={26} bold center className="mt-2">
+              سمّعني: سورة {surah.name}
+            </KidsText>
+            <KidsText size={17} tone="muted" center className="mt-2">
+              سجّل صوتك وأنت تقرأ، ثم استمع لنفسك. هل قرأتها جيدًا؟
+            </KidsText>
+            <View style={{ marginTop: 18, borderRadius: 24, backgroundColor: KIDS.paper, padding: 14, alignSelf: "stretch" }}>
+              <QuranText size={24}>{ayahs.map((entry) => entry.text).join(" ۝ ")}</QuranText>
+            </View>
+            <View className="mt-5">
+              <ReciteRecorder />
+            </View>
+            <KidsButton
+              tone="emerald"
+              art="👏"
+              className="mt-6"
+              onPress={() => {
+                sfx.win();
+                react("finish");
+                recordGame({ game: "kids_recite", surah: surah.id, score: 1, total: 1 });
+                setFinished(true);
+              }}
+            >
+              قرأتها جيدًا!
+            </KidsButton>
+          </KidsPanel>
+        </KidsEnter>
         <Celebration open={finished} title="أحسنت يا بطل!" message="صوتك جميل بالقرآن" stars={3} onClose={() => setFinished(false)}>
           <KidsButton
             tone="emerald"
@@ -308,93 +313,97 @@ export function KidsRecite({ surahId }: { surahId: number }) {
 
   return (
     <KidsScroll gap={16}>
-      <View
-        style={[
-          {
-            borderRadius: 999,
-            backgroundColor: "rgba(255,255,255,0.95)",
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            borderWidth: 4,
-            borderColor: "rgba(255,255,255,0.6)",
-            gap: 2,
-            alignItems: "center",
-          },
-          PANEL_SHADOW,
-        ]}
-      >
-        <View className="flex-row items-center justify-center gap-2">
-          <KidsArt emoji="🎤" size={26} />
-          <KidsText size={19} bold center style={{ flexShrink: 1 }}>
-            سمّعني: سورة {surah.name}
+      <KidsEnter index={0}>
+        <View
+          style={[
+            {
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.95)",
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderWidth: 4,
+              borderColor: "rgba(255,255,255,0.6)",
+              gap: 2,
+              alignItems: "center",
+            },
+            PANEL_SHADOW,
+          ]}
+        >
+          <View className="flex-row items-center justify-center gap-2">
+            <KidsArt emoji="🎤" size={26} />
+            <KidsText size={19} bold center style={{ flexShrink: 1 }}>
+              سمّعني: سورة {surah.name}
+            </KidsText>
+          </View>
+          <KidsText size={14} bold tone="muted">
+            الآية {toArabicDigits(ayah.numberInSurah)} من {toArabicDigits(ayahs.length)}
           </KidsText>
         </View>
-        <KidsText size={14} bold tone="muted">
-          الآية {toArabicDigits(ayah.numberInSurah)} من {toArabicDigits(ayahs.length)}
-        </KidsText>
-      </View>
+      </KidsEnter>
 
-      <KidsPanel className="items-center">
-        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 10 }}>
-          {words.map((word, wordIndex) => (
-            <Word key={`${ayah.number}-${wordIndex}`} word={word} heard={wordIndex < shown} />
-          ))}
-        </View>
+      <KidsEnter index={1}>
+        <KidsPanel className="items-center">
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 10 }}>
+            {words.map((word, wordIndex) => (
+              <Word key={`${ayah.number}-${wordIndex}`} word={word} heard={wordIndex < shown} />
+            ))}
+          </View>
 
-        {verdict ? (
-          <Animated.View key="verdict" entering={ZoomIn} className="mt-6 items-center">
-            <KidsArt emoji={VERDICTS[verdict].emoji} size={58} />
-            <KidsText size={28} bold center className="mt-2">
-              {VERDICTS[verdict].title}
-            </KidsText>
-            <View className="mt-5 flex-row flex-wrap justify-center gap-3">
-              {verdict === "again" && (
-                <>
-                  <KidsButton tone="sky" icon={Volume2} onPress={listenFirst}>
-                    اسمعها
-                  </KidsButton>
-                  <KidsButton tone="gold" icon={Mic} onPress={retry}>
-                    مرة أخرى
-                  </KidsButton>
-                </>
-              )}
-              <KidsButton tone="emerald" onPress={next}>
-                {index + 1 >= ayahs.length ? "النتيجة" : "الآية التالية"}
-              </KidsButton>
-            </View>
-          </Animated.View>
-        ) : (
-          <Animated.View key="mic" entering={FadeIn} className="mt-6 items-center gap-4">
-            <MicButton listening={speech.listening} onPress={toggleMic} />
-            <KidsText size={17} bold tone="muted" center>
-              {speech.listening ? "أنا أسمعك… اقرأ الآية" : "اضغط على الميكروفون واقرأ الآية"}
-            </KidsText>
-            {speech.error === "not-allowed" && (
-              <KidsText size={15} center style={{ color: KIDS.honey }}>
-                نحتاج إذنًا لاستخدام الميكروفون. اطلب من أبيك أو أمك السماح بذلك من إعدادات الجهاز.
+          {verdict ? (
+            <Animated.View key="verdict" entering={ZoomIn} className="mt-6 items-center">
+              <KidsArt emoji={VERDICTS[verdict].emoji} size={58} />
+              <KidsText size={28} bold center className="mt-2">
+                {VERDICTS[verdict].title}
               </KidsText>
-            )}
-            {speech.error === "network" && (
-              <KidsText size={15} center style={{ color: KIDS.honey }}>
-                يحتاج التسميع إلى الإنترنت. تأكد من الاتصال وحاول مرة أخرى.
-              </KidsText>
-            )}
-            <View className="flex-row flex-wrap justify-center gap-3">
-              <KidsButton tone="white" size="sm" icon={Volume2} onPress={listenFirst}>
-                اسمعها أولًا
-              </KidsButton>
-              <KidsButton tone="white" size="sm" icon={SkipForward} onPress={skip}>
-                الآية التالية
-              </KidsButton>
-              {results.length >= MIN_AYAHS_TO_FINISH && (
-                <KidsButton tone="white" size="sm" onPress={() => finishSession(results)}>
-                  يكفي اليوم
+              <View className="mt-5 flex-row flex-wrap justify-center gap-3">
+                {verdict === "again" && (
+                  <>
+                    <KidsButton tone="sky" icon={Volume2} onPress={listenFirst}>
+                      اسمعها
+                    </KidsButton>
+                    <KidsButton tone="gold" icon={Mic} onPress={retry}>
+                      مرة أخرى
+                    </KidsButton>
+                  </>
+                )}
+                <KidsButton tone="emerald" onPress={next}>
+                  {index + 1 >= ayahs.length ? "النتيجة" : "الآية التالية"}
                 </KidsButton>
+              </View>
+            </Animated.View>
+          ) : (
+            <Animated.View key="mic" entering={FadeIn} className="mt-6 items-center gap-4">
+              <MicButton listening={speech.listening} onPress={toggleMic} />
+              <KidsText size={17} bold tone="muted" center>
+                {speech.listening ? "أنا أسمعك… اقرأ الآية" : "اضغط على الميكروفون واقرأ الآية"}
+              </KidsText>
+              {speech.error === "not-allowed" && (
+                <KidsText size={15} center style={{ color: KIDS.honey }}>
+                  نحتاج إذنًا لاستخدام الميكروفون. اطلب من أبيك أو أمك السماح بذلك من إعدادات الجهاز.
+                </KidsText>
               )}
-            </View>
-          </Animated.View>
-        )}
-      </KidsPanel>
+              {speech.error === "network" && (
+                <KidsText size={15} center style={{ color: KIDS.honey }}>
+                  يحتاج التسميع إلى الإنترنت. تأكد من الاتصال وحاول مرة أخرى.
+                </KidsText>
+              )}
+              <View className="flex-row flex-wrap justify-center gap-3">
+                <KidsButton tone="white" size="sm" icon={Volume2} onPress={listenFirst}>
+                  اسمعها أولًا
+                </KidsButton>
+                <KidsButton tone="white" size="sm" icon={SkipForward} onPress={skip}>
+                  الآية التالية
+                </KidsButton>
+                {results.length >= MIN_AYAHS_TO_FINISH && (
+                  <KidsButton tone="white" size="sm" onPress={() => finishSession(results)}>
+                    يكفي اليوم
+                  </KidsButton>
+                )}
+              </View>
+            </Animated.View>
+          )}
+        </KidsPanel>
+      </KidsEnter>
 
       <Celebration
         open={finished}

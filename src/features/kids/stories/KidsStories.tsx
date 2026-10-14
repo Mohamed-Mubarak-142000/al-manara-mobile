@@ -1,11 +1,12 @@
 import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
-import { ArrowLeft, ArrowRight, CheckCircle2, Clapperboard, Lightbulb } from "lucide-react-native";
+import { ArrowLeft, ArrowRight, CheckCircle2, Lightbulb } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 import { toArabicDigits } from "@/core/text/arabic";
+import { KidsArt } from "@/features/kids/ui/KidsArt";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { loadStories, markWatched, playerHtml, thumbnail, type Story } from "@/features/stories/storiesData";
 
@@ -51,7 +52,7 @@ export function KidsStories() {
       ListHeaderComponent={
         <KidsEnter style={{ marginBottom: 20 }}>
           <KidsTitlePanel
-            icon={<Clapperboard size={48} color={KIDS.violet} />}
+            icon={<KidsArt emoji="🎬" size={56} />}
             title="قصص الأنبياء"
             subtitle={data ? progressLine(data.stories, data.watched) : state.status === "loading" ? undefined : "تعذّر تحميل القصص الآن."}
           />
@@ -222,7 +223,7 @@ export function KidsStory({ id }: { id: string }) {
             </KidsText>
           </View>
         ) : (
-          <KidsButton tone="emerald" icon={CheckCircle2} disabled={saving} onPress={finish}>
+          <KidsButton tone="emerald" art="✅" disabled={saving} onPress={finish}>
             أنهيت القصة
           </KidsButton>
         )}

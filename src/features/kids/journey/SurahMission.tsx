@@ -313,7 +313,7 @@ export function SurahMission({ surahId }: { surahId: number }) {
         </KidsText>
       ) : null}
 
-      <View className="flex-row flex-wrap justify-center gap-3">
+      <KidsEnter index={6} className="flex-row flex-wrap justify-center gap-3">
         <KidsButton tone="white" icon={ArrowRight} onPress={() => go("/kids")}>
           الخريطة
         </KidsButton>
@@ -322,7 +322,7 @@ export function SurahMission({ surahId }: { surahId: number }) {
             المحطة التالية
           </KidsButton>
         )}
-      </View>
+      </KidsEnter>
     </KidsScroll>
   );
 }

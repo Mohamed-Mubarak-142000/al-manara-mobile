@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Check, Lock, ShoppingBag } from "lucide-react-native";
+import { Check, Lock } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -138,7 +138,7 @@ export function GardenView() {
       </View>
 
       <View className="items-center">
-        <KidsButton tone="sky" icon={ShoppingBag} onPress={() => go("/kids/rewards?tab=shop")}>
+        <KidsButton tone="sky" art="🛍️" onPress={() => go("/kids/rewards?tab=shop")}>
           زيّن حديقتك من المتجر
         </KidsButton>
       </View>

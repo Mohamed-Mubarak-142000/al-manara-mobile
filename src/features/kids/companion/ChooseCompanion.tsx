@@ -1,5 +1,4 @@
 import { router } from "expo-router";
-import { Rocket } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -105,7 +104,7 @@ export function ChooseCompanion() {
 
       <View className="items-center gap-4" style={{ minHeight: 128 }}>
         {picked && <SpeechBubble line={companionInfo(picked).intro} size={17} />}
-        <KidsButton tone="gold" size="lg" icon={Rocket} disabled={!picked} onPress={start}>
+        <KidsButton tone="gold" size="lg" art="🚀" disabled={!picked} onPress={start}>
           {changing ? "هذا رفيقي!" : "هيا نبدأ الرحلة!"}
         </KidsButton>
       </View>

@@ -1,5 +1,5 @@
 import { FlashList } from "@shopify/flash-list";
-import { BookOpen, Check, RefreshCw } from "lucide-react-native";
+import { Check, RefreshCw } from "lucide-react-native";
 import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -83,7 +83,7 @@ export function SurahChecklist({ surahId }: { surahId: number }) {
             حفظت {toArabicDigits(memorized.size)} من {toArabicDigits(ayahs.length)} آيات — اضغط على الآية التي حفظتها
           </KidsText>
           <View className="mt-5 flex-row flex-wrap justify-center gap-3">
-            <KidsButton tone="emerald" size="sm" icon={BookOpen} onPress={() => go(`/kids/learn/${surah.id}`)}>
+            <KidsButton tone="emerald" size="sm" art="📖" onPress={() => go(`/kids/learn/${surah.id}`)}>
               تعلّم السورة
             </KidsButton>
             {isDue && (

@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Check, Gift } from "lucide-react-native";
+import { Check } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 
@@ -99,7 +99,7 @@ export function DailyChallengeCard({ surahId }: { surahId: number | null }) {
         </View>
         {complete && (
           <Animated.View entering={ZoomIn} className="mt-4 items-center">
-            <KidsButton tone="rose" icon={Gift} onPress={() => go("/kids/rewards")}>
+            <KidsButton tone="rose" art="🎁" onPress={() => go("/kids/rewards")}>
               أحسنت! افتح صندوق اليوم
             </KidsButton>
           </Animated.View>

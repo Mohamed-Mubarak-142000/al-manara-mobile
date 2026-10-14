@@ -1,13 +1,25 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { ChevronRight } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View, type ImageSourcePropType } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from "react-native-reanimated";
+import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { I18nManager, Pressable, Text, View, useWindowDimensions, type ImageSourcePropType } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { Button } from "@/components/ui/Button";
-import { Pager, type PagerHandle } from "@/components/ui/Pager";
+import { PagerDot } from "@/components/ui/Pager";
 import { SECTION_ART, type SectionArt } from "@/features/home/sectionArt";
 import { introButtonLabel } from "@/features/onboarding/steps";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -83,6 +95,120 @@ function SlideCard({ slide, still }: { slide: Slide; still: boolean }) {
   );
 }
 
+/** How much of the neighbouring cards shows on each side, and the space between cards. */
+const PEEK = 22;
+const GAP = 12;
+const SNAP = { damping: 22, stiffness: 190, mass: 0.9 };
+
+interface CardsHandle {
+  goTo(index: number): void;
+}
+
+/**
+ * The cards side by side with the neighbours peeking in at the edges, moved by a finger or the buttons
+ * and settling with a spring. Built on transforms rather than a scroll view, so RTL needs no offset
+ * mirroring: the first card sits at the reading start, the next ones follow towards the end.
+ */
+function PeekCards({
+  height,
+  still,
+  onIndexChange,
+  ref,
+}: {
+  height: number;
+  still: boolean;
+  onIndexChange: (index: number) => void;
+  ref?: Ref<CardsHandle>;
+}) {
+  const { width } = useWindowDimensions();
+  const cardWidth = width - 2 * (PEEK + GAP);
+  const span = cardWidth + GAP;
+  const last = SLIDES.length - 1;
+  const direction = I18nManager.isRTL ? -1 : 1;
+  const position = useSharedValue(0);
+  const start = useSharedValue(0);
+  const current = useSharedValue(0);
+
+  const settle = (target: number, velocity = 0) => {
+    "worklet";
+    current.set(target);
+    position.set(still ? target * span : withSpring(target * span, { ...SNAP, velocity }));
+    scheduleOnRN(onIndexChange, target);
+  };
+
+  // The buttons run on the JS thread, so they move the cards directly rather than through the worklet.
+  useImperativeHandle(ref, () => ({
+    goTo: (index) => {
+      const target = Math.min(Math.max(index, 0), last);
+      current.set(target);
+      position.set(still ? target * span : withSpring(target * span, SNAP));
+      onIndexChange(target);
+    },
+  }));
+
+  const pan = Gesture.Pan()
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-16, 16])
+    .onBegin(() => {
+      cancelAnimation(position);
+      start.set(position.get());
+    })
+    .onUpdate((event) => {
+      // Past either end the cards resist, so the edge is felt rather than hit.
+      const raw = start.get() - direction * event.translationX;
+      const over = raw < 0 ? raw : raw > last * span ? raw - last * span : 0;
+      position.set(raw - over * 0.65);
+    })
+    .onEnd((event) => {
+      const velocity = -direction * event.velocityX;
+      const moved = position.get() - current.get() * span;
+      // One card per swipe: a short quick flick counts as much as a long drag.
+      const step = Math.abs(moved) > span * 0.22 || Math.abs(velocity) > 500 ? Math.sign(moved || velocity) : 0;
+      settle(Math.min(Math.max(current.get() + step, 0), last), velocity);
+    });
+
+  return (
+    <GestureDetector gesture={pan}>
+      <View style={{ height }} className="overflow-hidden">
+        {SLIDES.map((slide, slot) => (
+          <PeekCard key={slide.key} slot={slot} span={span} width={cardWidth} height={height} position={position} direction={direction}>
+            <SlideCard slide={slide} still={still} />
+          </PeekCard>
+        ))}
+      </View>
+    </GestureDetector>
+  );
+}
+
+function PeekCard({
+  slot,
+  span,
+  width,
+  height,
+  position,
+  direction,
+  children,
+}: {
+  slot: number;
+  span: number;
+  width: number;
+  height: number;
+  position: SharedValue<number>;
+  direction: number;
+  children: ReactNode;
+}) {
+  // The card in front is full size; its neighbours sit a touch smaller and softer.
+  const style = useAnimatedStyle(() => {
+    const offset = slot * span - position.get();
+    const distance = Math.min(Math.abs(offset) / span, 1);
+    return {
+      opacity: 1 - distance * 0.35,
+      transform: [{ translateX: direction * (offset + PEEK + GAP) }, { scale: 1 - distance * 0.08 }],
+    };
+  });
+  return <Animated.View style={[{ position: "absolute", top: 0, start: 0, width, height }, style]}>{children}</Animated.View>;
+}
+
 interface IntroCarouselProps {
   reduceMotion: boolean;
   onDone: () => void;
@@ -93,7 +219,7 @@ interface IntroCarouselProps {
 export function IntroCarousel({ reduceMotion, onDone, onSkip }: IntroCarouselProps) {
   const insets = useSafeAreaInsets();
   const primary = useThemeColor("primary");
-  const pager = useRef<PagerHandle>(null);
+  const pager = useRef<CardsHandle>(null);
   const [index, setIndex] = useState(0);
   const [height, setHeight] = useState(0);
   const last = index === SLIDES.length - 1;
@@ -118,16 +244,15 @@ export function IntroCarousel({ reduceMotion, onDone, onSkip }: IntroCarouselPro
 
       <View className="mt-4 flex-1" style={{ minHeight: 0 }} onLayout={(event) => setHeight(Math.floor(event.nativeEvent.layout.height))}>
         {height > 0 && (
-          <Pager
-            ref={pager}
-            data={SLIDES}
-            keyExtractor={(slide) => slide.key}
-            // The dots sit under the pages, inside the measured area.
-            height={height - 18}
-            gutter={20}
-            onIndexChange={setIndex}
-            renderItem={(slide) => <SlideCard slide={slide} still={reduceMotion} />}
-          />
+          <View className="gap-3">
+            {/* The dots sit under the cards, inside the measured area. */}
+            <PeekCards ref={pager} height={height - 18} still={reduceMotion} onIndexChange={setIndex} />
+            <View className="flex-row justify-center gap-1.5" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              {SLIDES.map((slide, dot) => (
+                <PagerDot key={slide.key} tone="primary" active={dot === index} />
+              ))}
+            </View>
+          </View>
         )}
       </View>
 
