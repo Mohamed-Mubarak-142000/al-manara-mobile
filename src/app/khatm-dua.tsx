@@ -1,7 +1,7 @@
-import { HandHeart } from "lucide-react-native";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { KhatmDuas } from "@/features/khatmDua/KhatmDuas";
@@ -15,7 +15,7 @@ export default function KhatmDuaScreen() {
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
       <PageHeader
         back
-        icon={HandHeart}
+        art={SECTION_ART["khatm-dua"]}
         kicker="دعاء ختم القرآن"
         title="ربنا تقبّل منا"
         description="أتممت القرآن؛ فادعُ الله بما تحب، وهذه أدعية جامعة من القرآن والسنة."

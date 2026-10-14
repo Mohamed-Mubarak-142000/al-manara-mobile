@@ -1,11 +1,12 @@
 import { router } from "expo-router";
-import { BookMarked, BookOpen, Check, Flame, Trophy } from "lucide-react-native";
+import { BookOpen, Check, Flame, Trophy } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { toArabicDigits } from "@/core/text/arabic";
 import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -74,7 +75,7 @@ export default function KhatmaScreen() {
       <PageHeader
         back
         kicker="الختمة"
-        icon={BookMarked}
+        art={SECTION_ART.khatma}
         title={view ? (view.status === "completed" ? "ختمت القرآن" : "ختمتك الجارية") : "اختم القرآن"}
         description={view ? undefined : "بوِرد يومي تختاره، ونذكّرك بوردك كل يوم."}
       />

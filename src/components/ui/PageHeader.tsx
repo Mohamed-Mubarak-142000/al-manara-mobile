@@ -1,7 +1,8 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, type ImageSourcePropType } from "react-native";
 import Animated, { Easing, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -92,6 +93,8 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   icon?: LucideIcon;
+  /** The section's full-colour 3D art beside the kicker, in place of `icon`. */
+  art?: ImageSourcePropType;
   actions?: ReactNode;
   /** A back button above the title (inner screens). */
   back?: boolean;
@@ -100,7 +103,7 @@ interface PageHeaderProps {
 }
 
 /** A page's opening: the small coloured kicker, a large title and a quiet description, on the white ground. */
-export function PageHeader({ kicker, title, description, icon: Icon, actions, back = false, onBack }: PageHeaderProps) {
+export function PageHeader({ kicker, title, description, icon: Icon, art, actions, back = false, onBack }: PageHeaderProps) {
   const insets = useSafeAreaInsets();
   const primary = useThemeColor("primary");
   const textScale = useTextScale();
@@ -117,7 +120,11 @@ export function PageHeader({ kicker, title, description, icon: Icon, actions, ba
         </View>
       )}
       <Animated.View entering={enterSoft(0)} className="flex-row items-center gap-2">
-        {Icon && <Icon size={16} color={primary} />}
+        {art ? (
+          <Image source={art} style={{ width: 26, height: 26 }} contentFit="contain" accessible={false} />
+        ) : (
+          Icon && <Icon size={16} color={primary} />
+        )}
         <Text className="font-sans-bold text-sm text-primary">{kicker}</Text>
       </Animated.View>
       <Animated.Text

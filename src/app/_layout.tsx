@@ -4,8 +4,9 @@ import { useFonts } from "expo-font";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AccountDisabledGate } from "@/features/account/AccountDisabledGate";
 import { useLastReadSync } from "@/features/account/useLastReadSync";
@@ -14,7 +15,6 @@ import { GlobalMiniPlayer } from "@/features/audio/MiniPlayer";
 import { ReadingStreakTracker } from "@/features/streak/streakStore";
 import { BackgroundReminders } from "@/features/notifications/BackgroundReminders";
 import { useNotificationLinks } from "@/features/notifications/useNotificationLinks";
-import { AnimatedSplash } from "@/features/onboarding/AnimatedSplash";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
@@ -33,6 +33,8 @@ import { useWidgetSync } from "@/widgets/useWidgetSync";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 SplashScreen.preventAutoHideAsync();
+// One calm splash: the logo on emerald, fading out (iOS; Android 12+ runs its own system exit).
+SplashScreen.setOptions({ fade: true, duration: 400 });
 applySavedTextScale();
 // Khatma/plan changes made offline are queued and sent when the connection returns.
 startOutbox();
@@ -70,15 +72,10 @@ function RootLayout() {
   const border = useThemeColor("border");
   const primary = useThemeColor("primary");
 
-  // The animated splash plays once the static native one has gone, so none of it runs unseen behind it.
-  const [nativeSplashGone, setNativeSplashGone] = useState(false);
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
-    const hide = () =>
-      SplashScreen.hideAsync()
-        .catch(() => {})
-        .finally(() => setNativeSplashGone(true));
-    // First launch: the three setup steps before anything else. The splash stays up until the
+    const hide = () => SplashScreen.hideAsync().catch(() => {});
+    // First launch: the intro and the city step before anything else. The splash stays up until the
     // onboarding screen has replaced Home, so Home never flashes first.
     if (onboarding.isDone()) {
       // After Android ended the process in the background, reopen the screen the user left (on top of
@@ -99,33 +96,40 @@ function RootLayout() {
   const theme = { ...base, colors: { ...base.colors, background: bg, card: surface, text: fg, border, primary } };
 
   return (
-    <ThemeProvider value={theme}>
-      <StatusBar style="auto" />
-      <BackgroundReminders />
-      <ReadingSync />
-      {/* A calm transition everywhere: the next screen fades in while rising a little (the same either way in RTL). */}
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg }, animation: "fade_from_bottom", animationDuration: 350 }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: "fade" }} />
-        <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="login" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="register" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="verify" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="forgot-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        {/* No swipe-down: leaving goes through the screen's own back, which closes the whole flow. */}
-        <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom", gestureEnabled: false }} />
-        <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="share-card" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-      </Stack>
-      <ReadingStreakTracker />
-      <GlobalMiniPlayer />
-      <AdhkarToaster />
-      <AccountDisabledGate />
-      {/* Over everything, from the first frame (it matches the native splash), animating once that has gone. */}
-      <AnimatedSplash play={nativeSplashGone} />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={theme}>
+        <StatusBar style="auto" />
+        <BackgroundReminders />
+        <ReadingSync />
+        {/* A calm transition everywhere: the next screen fades in while rising a little (the same either way in RTL). */}
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: bg },
+            animation: "fade_from_bottom",
+            animationDuration: 350,
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: "fade" }} />
+          <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="login" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="register" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="verify" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="forgot-password" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          {/* No swipe-down: leaving goes through the screen's own back, which closes the whole flow. */}
+          <Stack.Screen name="reset-password" options={{ presentation: "modal", animation: "slide_from_bottom", gestureEnabled: false }} />
+          <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="share-card" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+        </Stack>
+        <ReadingStreakTracker />
+        <GlobalMiniPlayer />
+        <AdhkarToaster />
+        <AccountDisabledGate />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 

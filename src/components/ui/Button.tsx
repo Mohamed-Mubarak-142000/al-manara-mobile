@@ -1,7 +1,8 @@
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
-import { Pressable, Text, View, type PressableProps } from "react-native";
+import { Pressable, Text, View, type ImageSourcePropType, type PressableProps } from "react-native";
 
 import { useTextScale } from "@/theme/textScale";
 import { useThemeColor, type ThemeColor } from "@/theme/useThemeColor";
@@ -32,6 +33,8 @@ interface ButtonProps extends Omit<PressableProps, "children" | "style"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: LucideIcon;
+  /** A small full-colour picture (a section's 3D art) in place of `icon`. */
+  image?: ImageSourcePropType;
   /**
    * Placement in the parent (flex-1, mt-4, self-start...), applied to an outer wrapper. On the inner box,
    * flex-1 sets a zero flex-basis inside the Pressable and the button collapsed to nothing.
@@ -39,7 +42,17 @@ interface ButtonProps extends Omit<PressableProps, "children" | "style"> {
   className?: string;
 }
 
-export function Button({ children, variant = "primary", size = "md", icon: Icon, className, onPress, disabled, ...rest }: ButtonProps) {
+export function Button({
+  children,
+  variant = "primary",
+  size = "md",
+  icon: Icon,
+  image,
+  className,
+  onPress,
+  disabled,
+  ...rest
+}: ButtonProps) {
   const v = VARIANTS[variant];
   const s = SIZES[size];
   const themed = useThemeColor(v.icon === "white" ? "hero-fg" : v.icon);
@@ -59,7 +72,11 @@ export function Button({ children, variant = "primary", size = "md", icon: Icon,
         {...rest}
       >
         <View className={`flex-row items-center justify-center rounded-xl ${v.box} ${s.box}`}>
-          {Icon && <Icon size={s.icon} color={iconColor} />}
+          {image ? (
+            <Image source={image} style={{ width: s.icon + 6, height: s.icon + 6 }} contentFit="contain" accessible={false} />
+          ) : (
+            Icon && <Icon size={s.icon} color={iconColor} />
+          )}
           <Text className={`font-sans-bold ${v.text} ${s.text}`} style={s.px ? { fontSize: Math.round(s.px * textScale) } : undefined}>
             {children}
           </Text>

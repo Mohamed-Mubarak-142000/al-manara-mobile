@@ -5,6 +5,7 @@ import { FlatList, Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
 import { Button } from "@/components/ui/Button";
@@ -89,7 +90,7 @@ export default function TasmeePickerScreen() {
           <PageHeader
             back
             kicker="التسميع"
-            icon={Mic}
+            art={SECTION_ART.tasmee}
             title="سمّع من حفظك"
             description="تختفي الآيات، وتظهر كل كلمة وأنت تقرؤها، ونوقفك عند أي خطأ ونريك الصحيح."
           />

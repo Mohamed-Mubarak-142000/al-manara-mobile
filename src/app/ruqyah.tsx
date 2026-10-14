@@ -1,8 +1,9 @@
-import { BookOpen, HandHeart, Pause, Play, ScrollText, ShieldCheck, type LucideIcon } from "lucide-react-native";
+import { BookOpen, HandHeart, Pause, Play, ScrollText, type LucideIcon } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { RUQYAH_QURAN, RUQYAH_SUNNAH, type RuqyahPassage } from "@/core/ruqyah/ruqyahData";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -83,7 +84,7 @@ export default function RuqyahScreen() {
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
       <PageHeader
         back
-        icon={ShieldCheck}
+        art={SECTION_ART.ruqyah}
         kicker="الرقية الشرعية"
         title="وننزّل من القرآن ما هو شفاء"
         description="آيات الرقية وأدعية النبي ﷺ الثابتة للشفاء والتحصين، تقرؤها أو تستمع إليها."

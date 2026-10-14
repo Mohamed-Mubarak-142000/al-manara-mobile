@@ -1,11 +1,12 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
-import { Award, ChevronLeft, ChevronRight, Clock, GraduationCap, Info, Send, X } from "lucide-react-native";
+import { Award, ChevronLeft, ChevronRight, Clock, Info, Send, X } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { formatDuration, toArabicDigits } from "@/core/text/arabic";
 import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -224,7 +225,7 @@ export default function JuzExamScreen() {
       <PageHeader
         back
         kicker="اختبارات الأجزاء"
-        icon={GraduationCap}
+        art={SECTION_ART.exams}
         title={`اختبار الجزء ${juzOrdinal(juz)}`}
         description="اختبار حفظ من آيات الجزء، وشهادة موثّقة باسمك عند النجاح."
       />

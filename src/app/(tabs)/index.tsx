@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { BookOpen, Headphones, LayoutGrid, Search, Settings } from "lucide-react-native";
+import { LayoutGrid, Search, Settings } from "lucide-react-native";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -17,6 +17,7 @@ import { OfflineNotice } from "@/features/home/OfflineNotice";
 import { SetupPrompt } from "@/features/settings/SetupPrompt";
 import { QuickActions } from "@/features/home/QuickActions";
 import { SectionTiles } from "@/features/home/SectionGrid";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { SECTION_GROUPS, sectionsFor } from "@/features/home/sections";
 import { SponsorCarousel } from "@/features/home/SponsorCard";
 import { SupportersStrip } from "@/features/home/SupportersStrip";
@@ -80,11 +81,11 @@ function WelcomeCard() {
         </Text>
         <View className="mt-4 flex-row flex-wrap gap-3">
           {/* The index, not the last page: "continue reading" is the card below, once on Home. */}
-          <Button variant="gold" icon={BookOpen} onPress={() => router.push("/quran")}>
+          <Button variant="gold" image={SECTION_ART.quran} onPress={() => router.push("/quran")}>
             اقرأ القرآن
           </Button>
           {/* On the scene's dark overlay, so the light (translucent) button still fits here. */}
-          <Button variant="light" icon={Headphones} onPress={() => router.push("/listen")}>
+          <Button variant="light" image={SECTION_ART.listen} onPress={() => router.push("/listen")}>
             استمع
           </Button>
         </View>
@@ -104,8 +105,8 @@ function SectionsTitle() {
 }
 
 /**
- * Home, top to bottom: the greeting, the scene (edge to edge), the next prayer, the shortcuts strip,
- * continue reading, the day's hadith and the kids' garden (both edge to edge), sponsors, supporters, and
+ * Home, top to bottom: the greeting, the scene (edge to edge), the next prayer, the shortcuts strip, the
+ * kids' garden, continue reading, the day's hadith (both banners edge to edge), sponsors, supporters, and
  * every section of the app.
  */
 export default function HomeScreen() {
@@ -124,15 +125,17 @@ export default function HomeScreen() {
       <Animated.View entering={enterSoft(3)} className="mt-2">
         <QuickActions />
       </Animated.View>
-      <Animated.View entering={enterSoft(4)}>
+      <Animated.View entering={enterSoft(4)} className="mt-2">
+        <KidsBanner />
+      </Animated.View>
+      <Animated.View entering={enterSoft(5)}>
         <Section className="gap-4">
           <ContinueReadingCard />
           <RamadanCard />
         </Section>
       </Animated.View>
-      <View className="mt-4 gap-0.5">
+      <View className="mt-4">
         <DailyHadithBanner />
-        <KidsBanner />
       </View>
 
       {/* Both render nothing (and no gap) when there is nothing to show. */}

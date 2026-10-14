@@ -1,10 +1,11 @@
 import { router, useFocusEffect } from "expo-router";
-import { Award, CheckCircle2, GraduationCap, Lock, NotebookText, PlayCircle } from "lucide-react-native";
+import { Award, CheckCircle2, GraduationCap, Lock, PlayCircle } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { FINAL_PART, NAWAWI, NAWAWI_PARTS, partSlug, partTitle, type NawawiHadith } from "@/core/nawawi/nawawiData";
 import { partsPassed } from "@/core/nawawi/overview";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -98,7 +99,7 @@ export default function NawawiScreen() {
     <ScrollView className="flex-1 bg-bg" contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}>
       <PageHeader
         back
-        icon={NotebookText}
+        art={SECTION_ART.nawawi}
         kicker="الأربعون النووية"
         title="جوامع الكلم في اثنين وأربعين حديثًا"
         description="الأحاديث التي جمعها الإمام النووي رحمه الله، كل حديث بشرحه وفوائده. اقرأ مرحلة ثم اختبر نفسك فيها، وأتمّ المراحل الأربع لتدخل الاختبار النهائي وتنال الشهادة."

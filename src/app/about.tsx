@@ -100,6 +100,7 @@ export default function AboutScreen() {
         <CrashReport />
 
         {version && <Text className="mt-2 text-center font-sans text-xs text-fg-muted">المنارة · الإصدار {toArabicDigits(version)}</Text>}
+        <Text className="mt-1 text-center font-sans text-xs text-fg-muted">تطوير: محمد مبارك</Text>
       </Section>
     </Screen>
   );

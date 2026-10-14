@@ -1,10 +1,11 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { Music, Pause, Play, Radio } from "lucide-react-native";
+import { Pause, Play } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { SOUND_CATEGORIES, getSoundLibrary, type SoundCategoryKey, type SoundLibrary, type SoundTrack } from "@/core/sounds/soundsApi";
 import { formatDuration } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
@@ -106,7 +107,7 @@ export default function SoundsScreen() {
         <View className="mb-3">
           <PageHeader
             back
-            icon={category === "recordings" ? Radio : Music}
+            art={SECTION_ART[category === "recordings" ? "radio" : category]}
             kicker={category === "recordings" ? "مكتبة الإذاعة" : "أدعية وابتهالات"}
             title={info.title}
             description={info.description}

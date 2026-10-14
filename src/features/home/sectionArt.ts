@@ -29,6 +29,7 @@ export const SECTION_ART = {
   downloads: require("@/assets/images/sections/downloads.png"),
   kids: require("@/assets/images/sections/kids.png"),
   qibla: require("@/assets/images/sections/qibla.png"),
+  home: require("@/assets/images/sections/home.png"),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type SectionArt = keyof typeof SECTION_ART;

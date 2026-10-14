@@ -1,8 +1,9 @@
 import { router } from "expo-router";
-import { ArrowLeft, LayoutGrid, ScrollText, Sparkles } from "lucide-react-native";
+import { ArrowLeft, LayoutGrid, Sparkles } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { planDay } from "@/core/plan/schedule";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
@@ -52,7 +53,7 @@ export default function HadithIndexScreen() {
     >
       <PageHeader
         back
-        icon={ScrollText}
+        art={SECTION_ART.hadith}
         kicker="السنة النبوية"
         title="الأحاديث النبوية"
         description="أحاديث نبوية صحيحة مع شرحها وفوائدها ودرجتها، مرتّبة حسب الموضوع."

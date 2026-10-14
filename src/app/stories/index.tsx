@@ -1,9 +1,10 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Check, Clapperboard, Lock, Play } from "lucide-react-native";
+import { Check, Lock, Play } from "lucide-react-native";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -37,7 +38,7 @@ export default function StoriesScreen() {
       ListHeaderComponent={
         <PageHeader
           back
-          icon={Clapperboard}
+          art={SECTION_ART.stories}
           kicker="القصص"
           title="قصص الأنبياء"
           description={

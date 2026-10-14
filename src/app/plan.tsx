@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { toArabicDigits } from "@/core/text/arabic";
 import { ConfirmSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -68,7 +69,7 @@ export default function PlanScreen() {
       <PageHeader
         back
         kicker="خطة الحفظ"
-        icon={CalendarRange}
+        art={SECTION_ART.plan}
         title={
           view
             ? view.kind === "memorize"

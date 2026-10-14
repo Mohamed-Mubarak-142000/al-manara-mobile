@@ -1,9 +1,10 @@
 import { router } from "expo-router";
-import { Award, Clock, GraduationCap, Lock } from "lucide-react-native";
+import { Award, Clock, Lock } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -63,7 +64,7 @@ export default function ExamsScreen() {
         <PageHeader
           back
           kicker="اختبارات الأجزاء"
-          icon={GraduationCap}
+          art={SECTION_ART.exams}
           title="اختبر حفظك"
           description={learnerId ? `حصلت على ${toArabicDigits(certified)} من ٣٠ شهادة.` : "اختبار لكل جزء، وشهادة موثّقة عند النجاح."}
           actions={

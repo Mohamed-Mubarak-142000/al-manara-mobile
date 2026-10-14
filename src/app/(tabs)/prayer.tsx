@@ -1,8 +1,9 @@
 import { router } from "expo-router";
-import { CalendarRange, Clock, Compass, LocateFixed, Settings2, WifiOff } from "lucide-react-native";
+import { LocateFixed, Settings2, WifiOff } from "lucide-react-native";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { getHijriDate } from "@/core/calendar/hijriDate";
 import { calcMethodInfo } from "@/core/prayer/calculation";
 import { PRAYER_LABELS, PRAYER_ORDER, formatPrayerClock, getCurrentPrayerKey, getPrayerWindow } from "@/core/prayer/prayerTimesApi";
@@ -49,7 +50,7 @@ export default function PrayerScreen() {
     <Screen bleed refreshing={refreshing} onRefresh={refresh}>
       <PageHeader
         kicker="مواقيت الصلاة"
-        icon={Clock}
+        art={SECTION_ART.prayer}
         title={location.label}
         description={`حسب ${calcMethodInfo(calc.method).label}.`}
         actions={
@@ -115,10 +116,10 @@ export default function PrayerScreen() {
           <StateMessage loading />
         )}
         <View className="mt-4 flex-row gap-3">
-          <Button variant="outline" icon={CalendarRange} className="flex-1" onPress={() => router.push("/prayer-month")}>
+          <Button variant="outline" image={SECTION_ART.calendar} className="flex-1" onPress={() => router.push("/prayer-month")}>
             جدول الشهر
           </Button>
-          <Button variant="outline" icon={Compass} className="flex-1" onPress={() => router.push("/qibla")}>
+          <Button variant="outline" image={SECTION_ART.qibla} className="flex-1" onPress={() => router.push("/qibla")}>
             اتجاه القبلة
           </Button>
         </View>

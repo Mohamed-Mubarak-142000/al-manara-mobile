@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight, MoonStar } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, MoonStar } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +12,7 @@ import {
   upcomingOccasions,
   type CalendarCell,
 } from "@/core/calendar/calendarModel";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { dualDate } from "@/core/calendar/format";
 import { daysBetween, getHijriDate, getNextRamadanStart } from "@/core/calendar/hijriDate";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -94,7 +95,7 @@ export default function CalendarScreen() {
       <PageHeader
         back
         kicker="التقويم"
-        icon={CalendarDays}
+        art={SECTION_ART.calendar}
         title="الهجري والميلادي في مكان واحد"
         description={`${chosen.weekday} ${chosen.hijriDay} ${chosen.hijriMonth} ${chosen.hijriYear} هـ · ${chosen.gregorianDay} ${chosen.gregorianMonth} ${chosen.gregorianYear}`}
       />

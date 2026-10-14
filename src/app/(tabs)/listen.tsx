@@ -1,9 +1,10 @@
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { ChevronLeft, Headphones } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import type { Reciter } from "@/core/quran/api";
 import { useTabBarInset } from "@/features/audio/MiniPlayer";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -69,7 +70,7 @@ export default function ListenScreen() {
           <View className="mb-4">
             <PageHeader
               kicker="الاستماع"
-              icon={Headphones}
+              art={SECTION_ART.listen}
               title="تلاوات القرّاء"
               description={reciters ? `${toArabicDigits(reciters.length)} قارئًا بمختلف الروايات.` : "تلاوات لأكثر من مئتي قارئ."}
             />

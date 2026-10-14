@@ -1,9 +1,10 @@
-import { Download, Play, Repeat, Trash2 } from "lucide-react-native";
+import { Play, Repeat, Trash2 } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { AYAH_VOICES } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -127,7 +128,7 @@ export default function DownloadsScreen() {
           <PageHeader
             back
             kicker="دون إنترنت"
-            icon={Download}
+            art={SECTION_ART.downloads}
             title="المحفوظات"
             description={
               empty

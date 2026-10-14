@@ -6,6 +6,8 @@ import { Pressable, Text, View } from "react-native";
 
 import { useThemeColor } from "@/theme/useThemeColor";
 
+import { SECTION_ART } from "./sectionArt";
+
 /** The kids' Quran garden, one tap from Home: its own garden scene, so children recognise the door. */
 export function KidsBanner() {
   const night = useThemeColor("emerald-night");
@@ -36,7 +38,10 @@ export function KidsBanner() {
           <View className="self-start rounded-full bg-gold px-3 py-1">
             <Text className="font-kids text-xs text-emerald-night">للأطفال</Text>
           </View>
-          <Text className="font-kids text-2xl leading-10 text-white">حديقة القرآن 🌳</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="font-kids text-2xl leading-10 text-white">حديقة القرآن</Text>
+            <Image source={SECTION_ART.kids} style={{ width: 30, height: 30 }} contentFit="contain" accessible={false} />
+          </View>
           <Text className="w-2/3 font-sans text-xs leading-5 text-white/85">رحلة في السور، وألعاب، وقصص، وجوائز لطفلك</Text>
           <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-white px-3.5 py-1.5">
             <Text className="font-sans-bold text-xs text-emerald-night">ادخل الحديقة</Text>

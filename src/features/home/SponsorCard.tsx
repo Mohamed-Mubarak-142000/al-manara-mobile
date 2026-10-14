@@ -1,30 +1,19 @@
 import { Image } from "expo-image";
-import { useIsFocused } from "expo-router";
 import Storage from "expo-sqlite/kv-store";
 import { ExternalLink, HandHeart } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, AppState, FlatList, Linking, Text, View, type ViewToken } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { useEffect, useState } from "react";
+import { Linking, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
+import { Pager } from "@/components/ui/Pager";
 import { supabase } from "@/lib/supabase";
 import { useTextScale } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-import {
-  createAutoAdvance,
-  dayKey,
-  liveSponsors,
-  nextIndex,
-  parseSponsorCache,
-  type AutoAdvance,
-  type SponsorItem,
-} from "./SponsorRotation";
+import { dayKey, liveSponsors, parseSponsorCache, type SponsorItem } from "./SponsorRotation";
 
 const CACHE_KEY = "al-manara:sponsors:v1";
 const INTERVAL_MS = 5000;
-const RESUME_AFTER_MS = 3000;
-const VIEWABILITY = { itemVisiblePercentThreshold: 60 };
 
 function readCache(): SponsorItem[] {
   try {
@@ -66,31 +55,6 @@ function useSponsors(): SponsorItem[] {
     };
   }, []);
   return sponsors;
-}
-
-function useReduceMotion(): boolean {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((value) => alive && setReduce(value))
-      .catch(() => {});
-    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduce);
-    return () => {
-      alive = false;
-      subscription.remove();
-    };
-  }, []);
-  return reduce;
-}
-
-function useAppActive(): boolean {
-  const [active, setActive] = useState(AppState.currentState === "active");
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (state) => setActive(state === "active"));
-    return () => subscription.remove();
-  }, []);
-  return active;
 }
 
 function openLink(url: string) {
@@ -162,126 +126,21 @@ function SponsorSlide({ sponsor, height }: { sponsor: SponsorItem; height?: numb
   );
 }
 
-function Dot({ active }: { active: boolean }) {
-  const progress = useSharedValue(active ? 1 : 0);
-  useEffect(() => {
-    progress.set(withTiming(active ? 1 : 0, { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) }));
-  }, [active, progress]);
-  const box = useAnimatedStyle(() => ({ width: 6 + progress.get() * 14 }));
-  const fill = useAnimatedStyle(() => ({ opacity: progress.get() }));
-  return (
-    <Animated.View className="h-1.5 overflow-hidden rounded-full bg-border" style={box}>
-      <Animated.View className="absolute inset-0 rounded-full bg-gold" style={fill} />
-    </Animated.View>
-  );
-}
-
 /** Two or more sponsors: paged, auto-advancing every few seconds, paused while touched or out of view. */
 function SponsorPager({ sponsors }: { sponsors: SponsorItem[] }) {
   const textScale = useTextScale();
   // Image band + two-line name + two-line message + the button, grown with the text size.
   const height = IMAGE_HEIGHT + Math.round(190 * Math.max(1, textScale));
-  const [width, setWidth] = useState(0);
-  const [index, setIndex] = useState(0);
-  const listRef = useRef<FlatList<SponsorItem>>(null);
-  const indexRef = useRef(0);
-  const countRef = useRef(sponsors.length);
-  const timer = useRef<AutoAdvance | null>(null);
-
-  const focused = useIsFocused();
-  const appActive = useAppActive();
-  const reduceMotion = useReduceMotion();
-
-  useEffect(() => {
-    const controller = createAutoAdvance({
-      intervalMs: INTERVAL_MS,
-      resumeAfterMs: RESUME_AFTER_MS,
-      blocked: ["unmeasured"],
-      onAdvance: () => {
-        const next = nextIndex(indexRef.current, countRef.current);
-        indexRef.current = next;
-        setIndex(next);
-        listRef.current?.scrollToIndex({ index: next, animated: true });
-      },
-    });
-    timer.current = controller;
-    return () => {
-      controller.dispose();
-      timer.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    timer.current?.update({
-      unmeasured: width <= 0,
-      single: sponsors.length < 2,
-      unfocused: !focused,
-      background: !appActive,
-      reduceMotion,
-    });
-  }, [width, sponsors.length, focused, appActive, reduceMotion]);
-
-  useEffect(() => {
-    countRef.current = sponsors.length;
-  }, [sponsors.length]);
-
-  // FlatList measures in its own (RTL-aware) coordinates, so the visible item comes from viewability
-  // rather than from a raw scroll offset, which Android reports mirrored in RTL.
-  // Stable for the list's lifetime: FlatList does not accept a new callback after mount.
-  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken<SponsorItem>[] }) => {
-    const visible = viewableItems.find((item) => item.isViewable && item.index !== null);
-    if (visible?.index == null) return;
-    indexRef.current = visible.index;
-    setIndex(visible.index);
-  }, []);
-
-  const getItemLayout = useCallback(
-    (_: ArrayLike<SponsorItem> | null | undefined, itemIndex: number) => ({ length: width, offset: width * itemIndex, index: itemIndex }),
-    [width],
-  );
-
-  const touchStart = () => timer.current?.touchStart();
-  const touchEnd = () => timer.current?.touchEnd();
-
   return (
-    <View className="gap-3">
-      <View
-        style={{ height }}
-        onLayout={(event) => setWidth(Math.round(event.nativeEvent.layout.width))}
-        onTouchStart={touchStart}
-        onTouchEnd={touchEnd}
-        onTouchCancel={touchEnd}
-      >
-        {width > 0 && (
-          <FlatList
-            ref={listRef}
-            data={sponsors}
-            keyExtractor={(item) => item.id}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            decelerationRate="fast"
-            initialNumToRender={sponsors.length}
-            getItemLayout={getItemLayout}
-            onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={VIEWABILITY}
-            onScrollBeginDrag={touchStart}
-            onScrollEndDrag={touchEnd}
-            onScrollToIndexFailed={({ index: failed }) => listRef.current?.scrollToOffset({ offset: failed * width, animated: true })}
-            renderItem={({ item }) => (
-              <View style={{ width, height }}>
-                <SponsorSlide sponsor={item} height={height} />
-              </View>
-            )}
-          />
-        )}
-      </View>
-      <View className="flex-row justify-center gap-1.5" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {sponsors.map((sponsor, dotIndex) => (
-          <Dot key={sponsor.id} active={dotIndex === (index < sponsors.length ? index : sponsors.length - 1)} />
-        ))}
-      </View>
-    </View>
+    <Pager
+      data={sponsors}
+      keyExtractor={(sponsor) => sponsor.id}
+      height={height}
+      autoplayMs={INTERVAL_MS}
+      loop
+      dots="gold"
+      renderItem={(sponsor) => <SponsorSlide sponsor={sponsor} height={height} />}
+    />
   );
 }
 

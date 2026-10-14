@@ -1,225 +1,104 @@
 import { router } from "expo-router";
-import { HandHeart } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BackHandler, I18nManager, StyleSheet, View } from "react-native";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  SlideInLeft,
-  SlideInRight,
-  type ExitAnimationsValues,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { ChevronRight } from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
+import { BackHandler, Pressable, Text, View } from "react-native";
+import Animated, { FadeIn, FadeOut, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ALL_DAYS } from "@/core/plan/schedule";
 import { Button } from "@/components/ui/Button";
-import { useAccount } from "@/features/account/accountStore";
-import { khatma } from "@/features/khatma/khatmaStore";
-import { AccountStep } from "@/features/onboarding/AccountStep";
-import { DonationStep } from "@/features/onboarding/DonationStep";
-import { StepTopBar } from "@/features/onboarding/OnboardingStep";
-import { LocationStep, ReciterStep, WirdStep } from "@/features/onboarding/SetupSteps";
-import { WelcomeStep } from "@/features/onboarding/WelcomeStep";
-import { onboarding } from "@/features/onboarding/onboardingStore";
-import {
-  applyDelta,
-  canGoNext,
-  progressFraction,
-  onboardingSteps,
-  slideEdges,
-  stepCounter,
-  swipeDelta,
-  type StepDelta,
-} from "@/features/onboarding/steps";
+import { IconButton } from "@/components/ui/PageHeader";
 import { setAdhkarReminder } from "@/features/adhkar/adhkarReminders";
+import { IntroCarousel } from "@/features/onboarding/IntroCarousel";
+import { LocationStep } from "@/features/onboarding/LocationStep";
+import { onboarding } from "@/features/onboarding/onboardingStore";
+import { previousStep, type OnboardingStepId } from "@/features/onboarding/steps";
 import { ensureAdhanPermission } from "@/features/prayer/adhanScheduler";
-import { snoozeSetupPrompt } from "@/features/settings/SetupPrompt";
 import { writeAdhanSettings } from "@/features/prayer/adhanSettings";
+import { snoozeSetupPrompt } from "@/features/settings/SetupPrompt";
 import { track } from "@/lib/telemetry";
 
-const SLIDE_MS = 320;
-
 /**
- * First run: a welcome screen, then sign-in (or continue as a guest), city, favourite reciter, daily
- * wird + adhan, and an optional "support" step. Swipe or the buttons move between steps; everything but
- * the account step can be skipped, so sign-in is never passed over by accident.
+ * First run: three picture cards of a line each, then the city for the prayer times. Everything else
+ * (reciter, daily wird, account) waits for the "complete your settings" invitation on Home.
  */
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
-  const isRTL = I18nManager.isRTL;
-  const [{ step, direction }, setNav] = useState<{ step: number; direction: 1 | -1 }>({ step: 0, direction: 1 });
-  // Nothing preselected: a khatma is only created when the user picks a daily amount.
-  const [wird, setWird] = useState<number | null>(null);
-  const [adhan, setAdhan] = useState(true);
+  const [step, setStep] = useState<OnboardingStepId>("intro");
   const [busy, setBusy] = useState(false);
-  // State lags a render behind, so two quick taps would both pass `busy` and create two khatmas.
+  // State lags a render behind, so two quick taps would both pass `busy`.
   const finishing = useRef(false);
-  const accountState = useAccount();
-  // Decided once: the step list must not change under the user while the session loads.
-  const [steps] = useState(() => onboardingSteps(accountState.status !== "guest" || accountState.configured));
-  const count = steps.length;
-  const id = steps[step];
-  const signedIn = accountState.status === "signed-in";
 
-  // The leaving step keeps the props of its last render, so its exit side is read from a shared value set
-  // before the step changes; otherwise going back right after going forward would exit the wrong way.
-  const exitRight = useSharedValue(1);
-  const exitSlide = useCallback(
-    (values: ExitAnimationsValues) => {
-      "worklet";
-      const offset = exitRight.get() === 1 ? values.windowWidth : -values.windowWidth;
-      return {
-        initialValues: { originX: values.currentOriginX, opacity: 1 },
-        animations: {
-          originX: withTiming(values.currentOriginX + offset, { duration: SLIDE_MS }),
-          opacity: withTiming(0.3, { duration: SLIDE_MS }),
-        },
-      };
-    },
-    [exitRight],
-  );
-
-  const move = useCallback(
-    (delta: StepDelta) => {
-      if (delta === 0) return;
-      exitRight.set(slideEdges(delta, isRTL).exitTo === "right" ? 1 : 0);
-      setNav((current) => {
-        const target = applyDelta(current.step, delta, count);
-        return target === current.step ? current : { step: target, direction: delta };
-      });
-    },
-    [count, exitRight, isRTL],
-  );
-  const next = useCallback(() => move(1), [move]);
-
-  // Android back walks back through the steps before leaving the screen.
+  // Android back walks back to the intro before leaving the screen.
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (step === 0) return false;
-      move(-1);
+      const back = previousStep(step);
+      if (!back) return false;
+      setStep(back);
       return true;
     });
     return () => sub.remove();
-  }, [move, step]);
+  }, [step]);
 
-  const swipe = useMemo(
-    () =>
-      Gesture.Pan()
-        .runOnJS(true)
-        .activeOffsetX([-24, 24])
-        .failOffsetY([-16, 16])
-        .onEnd((event) => {
-          if (busy) return;
-          move(swipeDelta(event.translationX, event.velocityX, isRTL));
-        }),
-    [busy, isRTL, move],
-  );
-
-  async function finish(then?: "support") {
+  async function finish() {
     if (finishing.current) return;
     finishing.current = true;
     setBusy(true);
+    // The adhan is on from the start; it schedules as soon as notifications are allowed
+    // (useAdhanSchedule retries on every return to the app). One permission dialog covers the adhan and
+    // the morning/evening adhkar reminders.
+    writeAdhanSettings({ enabled: true });
     try {
-      if (wird) await khatma.create({ mode: "amount", unit: "pages", perSession: wird, targetDay: "", days: [...ALL_DAYS] });
-    } catch {
-      // The khatma can be started later from its own screen; never trap the user on the first run.
-    }
-    if (adhan) {
-      // The choice is saved whatever the system answers: the adhan schedules as soon as notifications
-      // are allowed (useAdhanSchedule retries on every return to the app). One permission dialog
-      // covers the adhan and the morning/evening adhkar reminders.
-      writeAdhanSettings({ enabled: true });
-      try {
-        if (await ensureAdhanPermission()) {
-          await setAdhkarReminder("morning", true);
-          await setAdhkarReminder("evening", true);
-        }
-      } catch {
-        // Shown on the settings screen (الإعدادات) instead.
+      if (await ensureAdhanPermission()) {
+        await setAdhkarReminder("morning", true);
+        await setAdhkarReminder("evening", true);
       }
+    } catch {
+      // Shown on the settings screen (الإعدادات) instead.
     }
     onboarding.finish();
-    // Onboarding just set the essentials: the "complete your settings" invitation waits a day.
+    // The essentials are set: the "complete your settings" invitation waits a day.
     snoozeSetupPrompt(24 * 60 * 60 * 1000);
-    track("onboarding_finished", { wird: wird ?? 0, adhan, support: then === "support" });
+    track("onboarding_finished", { adhan: true });
     setBusy(false);
     router.replace("/");
-    if (then === "support") router.push("/support");
   }
 
   function skipAll() {
-    track("onboarding_skipped", { step: id });
+    track("onboarding_skipped", { step });
     onboarding.finish();
     router.replace("/");
   }
 
-  const edges = slideEdges(direction, isRTL);
-  const entering = reduceMotion ? FadeIn.duration(150) : (edges.enterFrom === "left" ? SlideInLeft : SlideInRight).duration(SLIDE_MS);
-  const exiting = reduceMotion ? FadeOut.duration(120) : exitSlide;
+  if (step === "intro") {
+    return (
+      <Animated.View key="intro" exiting={reduceMotion ? undefined : FadeOut.duration(250)} style={{ flex: 1 }}>
+        <IntroCarousel reduceMotion={reduceMotion} onDone={() => setStep("location")} onSkip={skipAll} />
+      </Animated.View>
+    );
+  }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <GestureDetector gesture={swipe}>
-        <View className="flex-1 bg-bg">
-          {id === "welcome" ? (
-            <Animated.View key="welcome" exiting={reduceMotion ? undefined : FadeOut.duration(250)} style={StyleSheet.absoluteFill}>
-              <WelcomeStep reduceMotion={reduceMotion} onStart={() => move(1)} onSkip={skipAll} />
-            </Animated.View>
-          ) : (
-            <Animated.View
-              key="setup"
-              entering={reduceMotion ? undefined : FadeIn.duration(400)}
-              style={{ flex: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}
-            >
-              <StepTopBar
-                fraction={progressFraction(step, count)}
-                counter={stepCounter(step, count)}
-                reduceMotion={reduceMotion}
-                onBack={() => move(-1)}
-                onSkip={id === "support" || id === "account" ? undefined : skipAll}
-              />
-
-              {/* Steps are layered absolutely so the leaving one can slide out while the next slides in. */}
-              <View style={{ flex: 1, minHeight: 0 }} className="mt-4 overflow-hidden">
-                <Animated.View key={id} entering={entering} exiting={exiting} style={StyleSheet.absoluteFill} className="px-5">
-                  {id === "account" && <AccountStep onSignedIn={next} />}
-                  {id === "location" && <LocationStep />}
-                  {id === "reciter" && <ReciterStep />}
-                  {id === "wird" && <WirdStep wird={wird} onWird={setWird} adhan={adhan} onAdhan={setAdhan} />}
-                  {id === "support" && <DonationStep onDonate={() => finish("support")} />}
-                </Animated.View>
-              </View>
-
-              <View className="gap-2 px-5 pt-4">
-                {id === "support" ? (
-                  <>
-                    <Button variant="gold" size="lg" icon={HandHeart} disabled={busy} onPress={() => finish("support")}>
-                      {busy ? "لحظة…" : "ادعم الآن"}
-                    </Button>
-                    <Button variant="outline" size="lg" disabled={busy} onPress={() => finish()}>
-                      ربما لاحقًا
-                    </Button>
-                  </>
-                ) : id === "account" && !signedIn ? (
-                  // While a fresh sign-in loads the account, "continue as guest" would be the wrong button.
-                  <Button variant="outline" size="lg" disabled={accountState.status === "loading"} onPress={next}>
-                    {accountState.status === "loading" ? "لحظة…" : "متابعة كضيف"}
-                  </Button>
-                ) : (
-                  <Button size="lg" disabled={busy || !canGoNext(step, count)} onPress={next}>
-                    {id === "wird" ? "متابعة" : "التالي"}
-                  </Button>
-                )}
-              </View>
-            </Animated.View>
-          )}
-        </View>
-      </GestureDetector>
-    </GestureHandlerRootView>
+    <Animated.View
+      key="location"
+      entering={reduceMotion ? undefined : FadeIn.duration(400)}
+      className="bg-bg"
+      style={{ flex: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}
+    >
+      <View className="flex-row items-center justify-between px-4">
+        <IconButton icon={ChevronRight} label="رجوع" onPress={() => setStep("intro")} />
+        <Pressable accessibilityRole="button" accessibilityLabel="تخطَّ" onPress={skipAll} hitSlop={10} className="px-1 py-2">
+          <Text className="font-sans-bold text-sm text-fg-muted">تخطَّ</Text>
+        </Pressable>
+      </View>
+      <View style={{ flex: 1, minHeight: 0 }} className="mt-4 px-5">
+        <LocationStep />
+      </View>
+      <View className="px-5 pt-4">
+        <Button size="lg" disabled={busy} onPress={finish}>
+          {busy ? "لحظة…" : "ابدأ"}
+        </Button>
+      </View>
+    </Animated.View>
   );
 }

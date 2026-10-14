@@ -1,6 +1,7 @@
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ArrowLeft, ScrollText } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
@@ -9,12 +10,13 @@ import { getHadithOfTheDayOffline } from "@/features/hadith/offlineHadith";
 import { useAsync } from "@/features/hadith/useAsync";
 import { useThemeColor } from "@/theme/useThemeColor";
 
+import { SECTION_ART } from "./sectionArt";
+
 /**
  * A new hadith every day (the website's "حديث اليوم": the same hadith for everyone on a given day), as a
  * banner on Home. Nothing shows until it loads, or when it can't (offline before any pack is saved).
  */
 export function DailyHadithBanner() {
-  const gold = useThemeColor("gold-soft");
   // The brand's emerald in both themes, like the next-prayer card: a dark accent card in the page gutter.
   const deep = useThemeColor("emerald-deep");
   const night = useThemeColor("emerald-night");
@@ -43,7 +45,7 @@ export function DailyHadithBanner() {
           <View className="p-5">
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center gap-2 rounded-full border border-gold/40 bg-white/10 px-3 py-1">
-                <ScrollText size={14} color={gold} />
+                <Image source={SECTION_ART.hadith} style={{ width: 18, height: 18 }} contentFit="contain" accessible={false} />
                 <Text className="font-sans-bold text-xs text-gold-soft">حديث اليوم</Text>
               </View>
               <Text className="text-2xl text-gold-soft/70">۞</Text>

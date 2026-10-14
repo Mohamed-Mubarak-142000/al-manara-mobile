@@ -1,10 +1,11 @@
 import { FlashList } from "@shopify/flash-list";
 import { router, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, ScrollText } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import type { HadithCategory, HadithSummary } from "@/core/hadith/api";
 import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -94,7 +95,7 @@ export default function HadithCategoryScreen() {
           <View className="mb-4">
             <PageHeader
               back
-              icon={ScrollText}
+              art={SECTION_ART.hadith}
               kicker={parent?.title ?? "الأحاديث النبوية"}
               title={category?.title ?? title ?? "الأحاديث"}
               description={current && !current.failed ? `${toArabicDigits(current.total)} حديث مع الشرح والفوائد.` : undefined}

@@ -35,6 +35,7 @@ const ART = {
   downloads: "Inbox tray",
   kids: "Deciduous tree",
   qibla: "Kaaba",
+  home: "House",
 };
 
 const snake = (name) => name.toLowerCase().replace(/\s+/g, "_");

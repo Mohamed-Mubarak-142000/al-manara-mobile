@@ -1,10 +1,11 @@
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { BookOpen, Bookmark, NotebookPen, TextSearch, Trash2 } from "lucide-react-native";
+import { Bookmark, NotebookPen, TextSearch, Trash2 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { useTabBarInset } from "@/features/audio/MiniPlayer";
 import { toArabicDigits } from "@/core/text/arabic";
 import { normalizeArabic } from "@/core/text/normalizeArabic";
@@ -181,7 +182,7 @@ export default function QuranIndexScreen() {
           <View className="mb-4">
             <PageHeader
               kicker="القرآن الكريم"
-              icon={BookOpen}
+              art={SECTION_ART.quran}
               title="المصحف الشريف"
               description="بالرسم العثماني، برواية حفص عن عاصم. يعمل دون إنترنت."
             />

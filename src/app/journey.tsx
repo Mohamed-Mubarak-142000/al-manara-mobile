@@ -1,9 +1,10 @@
 import { router } from "expo-router";
-import { Award, BookOpenCheck, CalendarRange, Flame, GraduationCap, Lock, Medal, Mic, Repeat, Route } from "lucide-react-native";
+import { Award, BookOpenCheck, CalendarRange, Flame, GraduationCap, Lock, Medal, Mic, Repeat } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -64,7 +65,7 @@ export default function JourneyScreen() {
       <PageHeader
         back
         kicker="رحلتي"
-        icon={Route}
+        art={SECTION_ART.journey}
         title={name ? `رحلة ${name} مع القرآن` : "رحلتك مع القرآن"}
         description="ما حفظته في كل جزء، ومكان قراءتك، وتسميعك، واختباراتك وشهاداتك — محفوظة في حسابك."
       />
