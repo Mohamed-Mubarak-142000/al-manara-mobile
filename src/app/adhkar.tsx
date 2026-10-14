@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
-import { Bell, BellRing, Check, ChevronRight, ExternalLink, Pause, RotateCcw, Share2, Volume2 } from "lucide-react-native";
+import { Bell, Check, ChevronRight, ExternalLink, Pause, RotateCcw, Share2, Volume2 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
@@ -13,14 +13,11 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { AdhkarCelebration, claimCelebration } from "@/features/adhkar/AdhkarCelebration";
 import { countDhikr, getAdhkarCounts, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
 import { ChapterPicker } from "@/features/adhkar/ChapterPicker";
-import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { audio, currentTrack, usePlayerValue, type Track } from "@/features/audio/playerStore";
 import { useScaledText } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
-import { OutsideReminderCard } from "@/features/adhkar/OutsideReminderCard";
 import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
-import { reportReminderError } from "@/features/notifications/backgroundReminderStatus";
 
 /** The website's tab order (features/adhkar/AdhkarView.tsx). */
 const CATEGORIES: DuaCategory[] = ["morning", "evening", "after-prayer", "sleep", "waking", "general"];
@@ -153,30 +150,6 @@ function DhikrCard({ dua, count, onCounted }: { dua: Dua; count: number; onCount
   );
 }
 
-function ReminderChip({ kind, label }: { kind: ReminderKind; label: string }) {
-  const reminders = useAdhkarReminders();
-  const on = reminders[kind].enabled;
-  const gold = useThemeColor("gold-soft");
-  const [denied, setDenied] = useState(false);
-  return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityState={{ checked: on }}
-      onPress={async () => {
-        try {
-          setDenied(!(await setAdhkarReminder(kind, !on)));
-        } catch (error) {
-          reportReminderError(error);
-        }
-      }}
-      className={`flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 ${on ? "border-gold bg-gold/20" : "border-white/20 bg-white/5"}`}
-    >
-      {on ? <BellRing size={14} color={gold} /> : <Bell size={14} color="rgba(255,255,255,0.8)" />}
-      <Text className={`font-sans-bold text-xs ${on ? "text-gold-soft" : "text-white/80"}`}>{denied ? "الإشعارات مرفوضة" : label}</Text>
-    </Pressable>
-  );
-}
-
 export default function AdhkarScreen() {
   const params = useLocalSearchParams<{ toast?: string }>();
   const selectedToast = TOAST_ADHKAR.find((entry) => entry.id === params.toast);
@@ -216,15 +189,27 @@ export default function AdhkarScreen() {
                 <Pressable accessibilityRole="button" accessibilityLabel="رجوع" onPress={() => router.back()} hitSlop={12} className="p-1">
                   <ChevronRight size={26} color={heroFg} />
                 </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="إعادة العدّ"
-                  onPress={() => resetDhikr(list.map((dua) => dua.id))}
-                  hitSlop={12}
-                  className="p-1"
-                >
-                  <RotateCcw size={20} color={heroFg} />
-                </Pressable>
+                <View className="flex-row items-center gap-3">
+                  {/* Reminders live with every other setting; this only points there. */}
+                  <Pressable
+                    accessibilityRole="link"
+                    accessibilityLabel="تذكيرات الأذكار في الإعدادات"
+                    onPress={() => router.push("/settings")}
+                    hitSlop={12}
+                    className="p-1"
+                  >
+                    <Bell size={20} color={heroFg} />
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="إعادة العدّ"
+                    onPress={() => resetDhikr(list.map((dua) => dua.id))}
+                    hitSlop={12}
+                    className="p-1"
+                  >
+                    <RotateCcw size={20} color={heroFg} />
+                  </Pressable>
+                </View>
               </View>
               <Text className="mt-2 font-display-bold text-3xl text-hero-fg">{DUA_CATEGORY_LABELS[category]}</Text>
               <Text className="mt-1 font-sans text-xs text-gold-soft">من حصن المسلم</Text>
@@ -234,13 +219,7 @@ export default function AdhkarScreen() {
               <View className="mt-3">
                 <ProgressBar tone="light" value={list.length ? finished / list.length : 0} />
               </View>
-              <View className="mt-4 flex-row flex-wrap gap-2">
-                <ReminderChip kind="morning" label="تذكير الصباح ٧:٠٠" />
-                <ReminderChip kind="evening" label="تذكير المساء ٥:٠٠" />
-                <ReminderChip kind="friday" label="تذكير الجمعة والكهف" />
-              </View>
             </View>
-            <OutsideReminderCard />
             {selectedToast && (
               <View className="mx-4 mt-3 rounded-3xl border border-primary bg-surface p-4">
                 <Text className="font-quran-fallback text-xl leading-9 text-fg">{selectedToast.text}</Text>

@@ -93,7 +93,8 @@ export default function SettingsScreen() {
 
           <Group title="تذكير الأذكار">
             <AdhkarRemindersCard />
-            {Platform.OS === "android" ? <OutsideReminderCard embedded /> : null}
+            {/* On iPhone it is the hourly notification the adhkar screen used to offer; now only here. */}
+            {Platform.OS !== "web" ? <OutsideReminderCard embedded /> : null}
             <AdhkarToastCard />
           </Group>
 
