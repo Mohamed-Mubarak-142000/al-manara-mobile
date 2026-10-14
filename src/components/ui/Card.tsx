@@ -7,9 +7,9 @@ interface CardProps {
   onPress?: () => void;
 }
 
-/** The site's white rounded panel with the soft shadow. Pressable when given onPress. */
+/** A white rounded panel set apart by a hairline border and the faintest shadow. Pressable when given onPress. */
 export function Card({ children, className, onPress }: CardProps) {
-  const box = `rounded-3xl border border-border bg-surface p-4 shadow-soft ${className ?? ""}`;
+  const box = `rounded-3xl border border-border bg-surface p-4 shadow-card ${className ?? ""}`;
   if (!onPress) return <View className={box}>{children}</View>;
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}>

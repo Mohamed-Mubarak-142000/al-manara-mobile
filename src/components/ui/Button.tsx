@@ -7,11 +7,13 @@ import { useTextScale } from "@/theme/textScale";
 import { useThemeColor, type ThemeColor } from "@/theme/useThemeColor";
 
 /** The website's buttonClass() variants (src/components/ui/button.ts), as a native component. */
-export type ButtonVariant = "primary" | "gold" | "outline" | "ghost" | "light";
+export type ButtonVariant = "primary" | "secondary" | "gold" | "outline" | "ghost" | "light";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<ButtonVariant, { box: string; text: string; icon: ThemeColor | "white" }> = {
-  primary: { box: "bg-primary shadow-soft", text: "text-on-primary", icon: "on-primary" },
+  primary: { box: "bg-primary", text: "text-on-primary", icon: "on-primary" },
+  // The filled button's partner: same colour, outlined (إعادة تعيين beside تطبيق).
+  secondary: { box: "border-[1.5px] border-primary bg-surface", text: "text-primary", icon: "primary" },
   gold: { box: "bg-gold shadow-gold", text: "text-emerald-night", icon: "hero" },
   outline: { box: "border border-border bg-surface", text: "text-fg", icon: "fg" },
   ghost: { box: "bg-transparent", text: "text-fg", icon: "fg" },
@@ -53,10 +55,10 @@ export function Button({ children, variant = "primary", size = "md", icon: Icon,
           Haptics.selectionAsync().catch(() => {});
           onPress?.(event);
         }}
-        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }], opacity: disabled ? 0.5 : 1 })}
+        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }], opacity: disabled ? 0.5 : pressed ? 0.9 : 1 })}
         {...rest}
       >
-        <View className={`flex-row items-center justify-center rounded-full ${v.box} ${s.box}`}>
+        <View className={`flex-row items-center justify-center rounded-xl ${v.box} ${s.box}`}>
           {Icon && <Icon size={s.icon} color={iconColor} />}
           <Text className={`font-sans-bold ${v.text} ${s.text}`} style={s.px ? { fontSize: Math.round(s.px * textScale) } : undefined}>
             {children}

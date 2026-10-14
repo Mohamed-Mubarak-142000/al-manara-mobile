@@ -15,7 +15,7 @@ const C = {
   goldSoft: "#e8d7a6",
   faint: "#9db0a6",
 } as const;
-const FONT = "Cairo_700Bold";
+const FONT = "IBMPlexSansArabic_700Bold";
 const OBLIGATORY: PrayerKey[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
 export interface PrayerWidgetData {

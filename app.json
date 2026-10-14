@@ -253,7 +253,7 @@
         "react-native-android-widget",
         {
           "fonts": [
-            "./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf"
+            "./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/700Bold/IBMPlexSansArabic_700Bold.ttf"
           ],
           "widgets": [
             {
@@ -297,14 +297,10 @@
         {
           "android": {
             "fonts": [
-              "./node_modules/@expo-google-fonts/cairo/400Regular/Cairo_400Regular.ttf",
-              "./node_modules/@expo-google-fonts/cairo/500Medium/Cairo_500Medium.ttf",
-              "./node_modules/@expo-google-fonts/cairo/600SemiBold/Cairo_600SemiBold.ttf",
-              "./node_modules/@expo-google-fonts/cairo/700Bold/Cairo_700Bold.ttf",
-              "./node_modules/@expo-google-fonts/cairo/800ExtraBold/Cairo_800ExtraBold.ttf",
-              "./node_modules/@expo-google-fonts/alexandria/600SemiBold/Alexandria_600SemiBold.ttf",
-              "./node_modules/@expo-google-fonts/alexandria/700Bold/Alexandria_700Bold.ttf",
-              "./node_modules/@expo-google-fonts/alexandria/800ExtraBold/Alexandria_800ExtraBold.ttf",
+              "./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/400Regular/IBMPlexSansArabic_400Regular.ttf",
+              "./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/500Medium/IBMPlexSansArabic_500Medium.ttf",
+              "./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/600SemiBold/IBMPlexSansArabic_600SemiBold.ttf",
+              "./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/700Bold/IBMPlexSansArabic_700Bold.ttf",
               "./node_modules/@expo-google-fonts/amiri-quran/400Regular/AmiriQuran_400Regular.ttf",
               "./node_modules/@expo-google-fonts/baloo-bhaijaan-2/600SemiBold/BalooBhaijaan2_600SemiBold.ttf",
               "./node_modules/@expo-google-fonts/baloo-bhaijaan-2/800ExtraBold/BalooBhaijaan2_800ExtraBold.ttf",

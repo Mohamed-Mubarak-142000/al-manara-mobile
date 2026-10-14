@@ -32,15 +32,19 @@
   --shadow-gold: 0 10px 30px -12px rgb(205 162 62 / 55%);
   /* @sync:brand:end */
 
+  /* The app's card: barely lifted off the white ground (the border does most of the work). */
+  --shadow-card: 0 1px 2px rgb(24 61 52 / 4%), 0 6px 16px -10px rgb(24 61 52 / 14%);
+
   /* React Native has no font-weight synthesis: every weight is its own loaded family. */
-  --font-sans: "Cairo_400Regular";
-  --font-sans-medium: "Cairo_500Medium";
-  --font-sans-semibold: "Cairo_600SemiBold";
-  --font-sans-bold: "Cairo_700Bold";
-  --font-sans-black: "Cairo_800ExtraBold";
-  --font-display: "Alexandria_600SemiBold";
-  --font-display-bold: "Alexandria_700Bold";
-  --font-display-black: "Alexandria_800ExtraBold";
+  /* One calm sans for text and headings alike (IBM Plex Sans Arabic has no 800: black is its 700). */
+  --font-sans: "IBMPlexSansArabic_400Regular";
+  --font-sans-medium: "IBMPlexSansArabic_500Medium";
+  --font-sans-semibold: "IBMPlexSansArabic_600SemiBold";
+  --font-sans-bold: "IBMPlexSansArabic_700Bold";
+  --font-sans-black: "IBMPlexSansArabic_700Bold";
+  --font-display: "IBMPlexSansArabic_600SemiBold";
+  --font-display-bold: "IBMPlexSansArabic_700Bold";
+  --font-display-black: "IBMPlexSansArabic_700Bold";
   --font-quran: "UthmanicHafs";
   --font-quran-fallback: "AmiriQuran_400Regular";
   --font-kids: "BalooBhaijaan2_600SemiBold";
@@ -50,7 +54,8 @@
 @layer theme {
   :root {
     @variant light {
-      --color-bg: #fbf8f1;
+      /* A clean white ground: cards stand apart by a hairline border, not by tint. */
+      --color-bg: #ffffff;
       --color-bg-deep: #f3ecdc;
       --color-surface: #ffffff;
       --color-surface-alt: #f7f0df;

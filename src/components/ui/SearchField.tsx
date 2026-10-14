@@ -15,8 +15,8 @@ export function SearchField({
   const muted = useThemeColor("fg-muted");
   const fg = useThemeColor("fg");
   return (
-    <View className="h-12 flex-row items-center gap-2 rounded-full border border-border bg-surface px-4 shadow-soft">
-      <Search size={18} color={muted} />
+    <View className="h-14 flex-row items-center gap-3 rounded-2xl border border-border bg-surface px-4">
+      <Search size={20} color={fg} strokeWidth={1.8} />
       <TextInput
         value={value}
         onChangeText={onChangeText}

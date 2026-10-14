@@ -4,10 +4,9 @@
   "version": "1.0.0",
   "dependencies": {
     "@bacons/apple-targets": "^5.0.0",
-    "@expo-google-fonts/alexandria": "^0.4.2",
     "@expo-google-fonts/amiri-quran": "^0.4.1",
     "@expo-google-fonts/baloo-bhaijaan-2": "^0.4.2",
-    "@expo-google-fonts/cairo": "^0.4.2",
+    "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
     "@react-native-community/netinfo": "12.0.1",
     "@sentry/react-native": "~7.11.0",
     "@shopify/flash-list": "2.0.2",

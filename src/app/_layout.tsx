@@ -96,7 +96,8 @@ function RootLayout() {
       <StatusBar style="auto" />
       <BackgroundReminders />
       <ReadingSync />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
+      {/* A calm transition everywhere: the next screen fades in while rising a little (the same either way in RTL). */}
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg }, animation: "fade_from_bottom", animationDuration: 350 }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: "fade" }} />
         <Stack.Screen name="player" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
@@ -110,7 +111,6 @@ function RootLayout() {
         <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         <Stack.Screen name="share-card" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-        <Stack.Screen name="settings" options={{ animation: "slide_from_left" }} />
       </Stack>
       <ReadingStreakTracker />
       <GlobalMiniPlayer />
