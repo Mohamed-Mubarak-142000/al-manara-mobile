@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Palette,
+  Pencil,
   RotateCcw,
   Vibrate,
   VibrateOff,
@@ -67,18 +68,32 @@ function ToolButton({
   );
 }
 
-function TargetChip({ label, active, theme, onPress }: { label: string; active: boolean; theme: TasbihTheme; onPress: () => void }) {
+function TargetChip({
+  label,
+  active,
+  theme,
+  onPress,
+  icon: Icon,
+}: {
+  label: string;
+  active: boolean;
+  theme: TasbihTheme;
+  onPress: () => void;
+  /** A small glyph after the label (the custom count's pencil). */
+  icon?: LucideIcon;
+}) {
   return (
     <Pressable
       accessibilityRole="radio"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      className="rounded-full border px-3.5 py-1.5"
+      className="flex-row items-center gap-1.5 rounded-full border px-3.5 py-1.5"
       style={{ backgroundColor: active ? theme.accent : "transparent", borderColor: active ? theme.accent : theme.track }}
     >
       <Text className="font-sans-bold text-sm" style={{ color: active ? theme.face : theme.ink }}>
         {label}
       </Text>
+      {Icon ? <Icon size={14} color={active ? theme.face : theme.ink} strokeWidth={2} /> : null}
     </Pressable>
   );
 }
@@ -91,7 +106,8 @@ function CustomTarget({ current, theme }: { current: number; theme: TasbihTheme 
   if (draft === null) {
     return (
       <TargetChip
-        label={custom ? `${toArabicDigits(current)} ✎` : "عدد آخر"}
+        label={custom ? toArabicDigits(current) : "عدد آخر"}
+        icon={custom ? Pencil : undefined}
         active={custom}
         theme={theme}
         onPress={() => setDraft(custom ? String(current) : "")}

@@ -1,4 +1,4 @@
-import { Brain, RotateCcw } from "lucide-react-native";
+import { RotateCcw } from "lucide-react-native";
 import { useRef, useState } from "react";
 import { View } from "react-native";
 
@@ -90,13 +90,23 @@ export function LetterMemoryGame() {
   if (!tiles) {
     return (
       <KidsScroll>
-        <GameIntro icon={Brain} tone="violet" title="ذاكرة الحروف" description="اقلب بطاقتين: إذا كان الحرف واسمه متطابقين يبقيان مفتوحين. هل تجد كل الأزواج؟">
+        <GameIntro
+          art="🅰️"
+          tone="violet"
+          title="ذاكرة الحروف"
+          description="اقلب بطاقتين: إذا كان الحرف واسمه متطابقين يبقيان مفتوحين. هل تجد كل الأزواج؟"
+        >
           <KidsText size={16} bold center>
             اختر المستوى:
           </KidsText>
           <View className="flex-row flex-wrap justify-center gap-3">
             {LEVELS.map((level) => (
-              <KidsButton key={level.pairs} tone={level.tone} caption={`(${toArabicDigits(level.pairs)} أزواج)`} onPress={() => start(level.pairs)}>
+              <KidsButton
+                key={level.pairs}
+                tone={level.tone}
+                caption={`(${toArabicDigits(level.pairs)} أزواج)`}
+                onPress={() => start(level.pairs)}
+              >
                 {level.label}
               </KidsButton>
             ))}
@@ -146,12 +156,19 @@ export function LetterMemoryGame() {
                 </FlipCard>
               );
             })}
-            {row.length < columns && Array.from({ length: columns - row.length }, (_, pad) => <View key={`pad-${pad}`} style={{ flex: 1 }} />)}
+            {row.length < columns &&
+              Array.from({ length: columns - row.length }, (_, pad) => <View key={`pad-${pad}`} style={{ flex: 1 }} />)}
           </View>
         ))}
       </View>
 
-      <Celebration open={won} title="أحسنت! وجدت كل الأزواج" message={`في ${toArabicDigits(moves)} محاولة`} stars={starsFor(moves, pairs)} onClose={() => setWon(false)}>
+      <Celebration
+        open={won}
+        title="أحسنت! وجدت كل الأزواج"
+        message={`في ${toArabicDigits(moves)} محاولة`}
+        stars={starsFor(moves, pairs)}
+        onClose={() => setWon(false)}
+      >
         <KidsButton tone="emerald" onPress={() => start(pairs)}>
           العب مرة أخرى
         </KidsButton>

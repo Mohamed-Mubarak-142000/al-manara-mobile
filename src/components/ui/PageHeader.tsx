@@ -51,11 +51,14 @@ export function IconButton({
 export function ScreenHeader({
   title,
   subtitle,
+  art,
   actions,
   onBack,
   back = true,
 }: {
   title?: string;
+  /** The section's full-colour 3D art beside the title. */
+  art?: ImageSourcePropType;
   subtitle?: string;
   actions?: ReactNode;
   onBack?: () => void;
@@ -71,6 +74,7 @@ export function ScreenHeader({
           onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace("/")))}
         />
       )}
+      {art ? <Image source={art} style={{ width: 34, height: 34 }} contentFit="contain" accessible={false} /> : null}
       <View className="flex-1">
         {title ? (
           <Text className="font-sans-bold text-lg text-fg" numberOfLines={1}>

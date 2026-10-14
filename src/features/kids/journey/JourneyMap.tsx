@@ -4,7 +4,6 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
-  FadeInDown,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -34,7 +33,9 @@ import { companion as companionStore } from "../companion/companionStore";
 import { getKidsSurahs } from "../kidsData";
 import { useKidsProgress } from "../progress/progressStore";
 import { sfx } from "../sfx";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
+import { KidsEnter } from "../ui/KidsMotion";
 import { KidsPanel, KidsText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
 import { KIDS, PANEL_SHADOW } from "../ui/kidsStyles";
@@ -47,7 +48,10 @@ const ROAD_X = [0.5, 0.74, 0.5, 0.26];
 const STATION_WIDTH = 130;
 
 function Road({ count, width }: { count: number; width: number }) {
-  const points = Array.from({ length: count }, (_, index) => [ROAD_X[index % ROAD_X.length]! * width, index * ROW_HEIGHT + ROW_HEIGHT / 2] as const);
+  const points = Array.from(
+    { length: count },
+    (_, index) => [ROAD_X[index % ROAD_X.length]! * width, index * ROW_HEIGHT + ROW_HEIGHT / 2] as const,
+  );
   const d = points.reduce((path, [x, y], index) => {
     if (index === 0) return `M${x} ${y}`;
     const [px, py] = points[index - 1]!;
@@ -67,7 +71,10 @@ function Pulse({ active, children }: { active: boolean; children: React.ReactNod
   const scale = useSharedValue(1);
   useEffect(() => {
     if (!active || reduceMotion) return;
-    scale.value = withRepeat(withSequence(withTiming(1.07, { duration: 800, easing: Easing.inOut(Easing.ease) }), withTiming(1, { duration: 800 })), -1);
+    scale.value = withRepeat(
+      withSequence(withTiming(1.07, { duration: 800, easing: Easing.inOut(Easing.ease) }), withTiming(1, { duration: 800 })),
+      -1,
+    );
   }, [active, reduceMotion, scale]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return <Animated.View style={style}>{children}</Animated.View>;
@@ -128,7 +135,7 @@ const StationButton = memo(function StationButton({
               borderColor: KIDS.white,
             }}
           >
-            <Text className="font-kids-bold" style={{ color: KIDS.white, fontSize: 12, lineHeight: 20 }}>
+            <Text className="font-kids-bold" style={{ color: KIDS.white, fontSize: 14, lineHeight: 22 }}>
               راجعها
             </Text>
           </View>
@@ -161,7 +168,9 @@ const StationButton = memo(function StationButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={locked ? `سورة ${name}: مغلقة. اجتز اختبار السورة التي قبلها لتفتحها` : `سورة ${name}${current ? " (محطتك الآن)" : ""}`}
+      accessibilityLabel={
+        locked ? `سورة ${name}: مغلقة. اجتز اختبار السورة التي قبلها لتفتحها` : `سورة ${name}${current ? " (محطتك الآن)" : ""}`
+      }
       onPress={() => {
         sfx.tap();
         if (locked) companionStore.react("locked", "thinking");
@@ -200,7 +209,10 @@ export function JourneyMap() {
 
   const progress = useSharedValue(0);
   useEffect(() => {
-    progress.value = withDelay(300, withTiming(Math.max(percent, 3), { duration: reduceMotion ? 0 : 1200, easing: Easing.out(Easing.ease) }));
+    progress.value = withDelay(
+      300,
+      withTiming(Math.max(percent, 3), { duration: reduceMotion ? 0 : 1200, easing: Easing.out(Easing.ease) }),
+    );
   }, [percent, progress, reduceMotion]);
   const bar = useAnimatedStyle(() => ({ width: `${progress.value}%` }));
 
@@ -213,7 +225,8 @@ export function JourneyMap() {
       if (!station) return;
       const regionStations = stations.filter((entry) => entry.region.id === station.region.id);
       const index = regionStations.indexOf(station);
-      const y = (sectionY.current.get(station.region.id) ?? 0) + (roadY.current.get(station.region.id) ?? 0) + index * ROW_HEIGHT + ROW_HEIGHT / 2;
+      const y =
+        (sectionY.current.get(station.region.id) ?? 0) + (roadY.current.get(station.region.id) ?? 0) + index * ROW_HEIGHT + ROW_HEIGHT / 2;
       scrollRef.current?.scrollTo({ y: Math.max(0, y - screenHeight / 2), animated: !reduceMotion });
     }, 700);
     return () => clearTimeout(timer);
@@ -223,14 +236,20 @@ export function JourneyMap() {
 
   return (
     <KidsScroll ref={scrollRef} gap={20}>
-      <Animated.View entering={FadeInDown.springify().stiffness(220).damping(18)}>
+      <KidsEnter index={0}>
         <KidsPanel>
-          <KidsText size={28} bold center>
-            أهلًا يا {learner?.display_name ?? "بطل"}! 👋
-          </KidsText>
-          <KidsText size={19} tone="muted" center className="mt-1">
-            جاهز نكمل رحلتنا مع القرآن؟ 🌟
-          </KidsText>
+          <View className="flex-row items-center justify-center gap-2">
+            <KidsText size={28} bold center style={{ flexShrink: 1 }}>
+              أهلًا يا {learner?.display_name ?? "بطل"}!
+            </KidsText>
+            <KidsArt emoji="👋" size={38} />
+          </View>
+          <View className="mt-1 flex-row items-center justify-center gap-1.5">
+            <KidsText size={19} tone="muted" center style={{ flexShrink: 1 }}>
+              جاهز نكمل رحلتنا مع القرآن؟
+            </KidsText>
+            <KidsArt emoji="🌟" size={26} />
+          </View>
           <View className="mt-5">
             <View className="flex-row items-center justify-between">
               <KidsText size={16} bold>
@@ -244,105 +263,163 @@ export function JourneyMap() {
               accessibilityRole="progressbar"
               accessibilityLabel="نسبة التقدم في الرحلة"
               accessibilityValue={{ min: 0, max: 100, now: percent }}
-              style={{ marginTop: 8, height: 24, borderRadius: 12, overflow: "hidden", backgroundColor: KIDS.track, borderWidth: 2, borderColor: KIDS.white }}
+              style={{
+                marginTop: 8,
+                height: 24,
+                borderRadius: 12,
+                overflow: "hidden",
+                backgroundColor: KIDS.track,
+                borderWidth: 2,
+                borderColor: KIDS.white,
+              }}
             >
               <Animated.View style={[{ height: "100%", borderRadius: 12, overflow: "hidden" }, bar]}>
-                <LinearGradient colors={[KIDS.emerald, KIDS.emeraldLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+                <LinearGradient
+                  colors={[KIDS.emerald, KIDS.emeraldLight]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
               </Animated.View>
             </View>
           </View>
           {current ? (
-            <KidsButton tone="emerald" size="lg" icon={Play} iconFilled className="mt-6" onPress={() => go(`/kids/journey/${current.surahId}`)}>
+            <KidsButton
+              tone="emerald"
+              size="lg"
+              icon={Play}
+              iconFilled
+              className="mt-6"
+              onPress={() => go(`/kids/journey/${current.surahId}`)}
+            >
               كمّل الرحلة: سورة {names.get(current.surahId)}
             </KidsButton>
           ) : (
             done === JOURNEY_LENGTH && (
-              <View style={{ marginTop: 24, borderRadius: 24, backgroundColor: KIDS.cream, padding: 16 }}>
-                <KidsText size={20} bold center style={{ color: KIDS.honey }}>
-                  🏆 ما شاء الله! أنت حافظ صغير
+              <View
+                style={{
+                  marginTop: 24,
+                  borderRadius: 24,
+                  backgroundColor: KIDS.cream,
+                  padding: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <KidsArt emoji="🏆" size={34} />
+                <KidsText size={20} bold center style={{ color: KIDS.honey, flexShrink: 1 }}>
+                  ما شاء الله! أنت حافظ صغير
                 </KidsText>
               </View>
             )
           )}
         </KidsPanel>
-      </Animated.View>
+      </KidsEnter>
 
-      <DailyChallengeCard surahId={current?.surahId ?? null} />
+      <KidsEnter index={1}>
+        <DailyChallengeCard surahId={current?.surahId ?? null} />
+      </KidsEnter>
 
-      {JOURNEY_REGIONS.map((region) => {
+      {JOURNEY_REGIONS.map((region, regionIndex) => {
         const regionStations = stations.filter((station) => station.region.id === region.id);
         const regionDone = regionStations.filter((station) => station.status === "done" || station.status === "review").length;
         return (
-          <View
+          <KidsEnter
             key={region.id}
-            accessibilityLabel={region.name}
+            index={regionIndex + 2}
             onLayout={(event) => sectionY.current.set(region.id, event.nativeEvent.layout.y)}
-            style={[{ borderRadius: 36, padding: 16, borderWidth: 4, borderColor: "rgba(255,255,255,0.7)", backgroundColor: `${region.tint}f2`, overflow: "hidden" }, PANEL_SHADOW]}
           >
-            <View className="flex-row items-center gap-3">
-              <View
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 16,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: region.color,
-                  borderBottomWidth: 5,
-                  borderBottomColor: region.shadow,
-                }}
-              >
-                <Text style={{ fontSize: 28 }}>{region.emoji}</Text>
-              </View>
-              <View>
-                <KidsText size={22} bold>
-                  {region.name}
-                </KidsText>
-                <KidsText size={15} bold tone="muted">
-                  {toArabicDigits(regionDone)} من {toArabicDigits(regionStations.length)} محطات
-                </KidsText>
-              </View>
-            </View>
-            {/* Left-to-right inside, so the stations sit on the road the same way as on the website. */}
             <View
-              onLayout={(event) => {
-                roadY.current.set(region.id, event.nativeEvent.layout.y);
-                setRoadWidth(event.nativeEvent.layout.width);
-              }}
-              style={{ marginTop: 8, height: regionStations.length * ROW_HEIGHT, direction: "ltr" }}
+              accessibilityLabel={region.name}
+              style={[
+                {
+                  borderRadius: 36,
+                  padding: 16,
+                  borderWidth: 4,
+                  borderColor: "rgba(255,255,255,0.7)",
+                  backgroundColor: `${region.tint}f2`,
+                  overflow: "hidden",
+                },
+                PANEL_SHADOW,
+              ]}
             >
-              {roadWidth > 0 && <Road count={regionStations.length} width={roadWidth} />}
-              {roadWidth > 0 &&
-                regionStations.map((station, index) => {
-                  const x = ROAD_X[index % ROAD_X.length]!;
-                  return (
-                    <View key={station.surahId} style={{ position: "absolute", width: STATION_WIDTH, left: x * roadWidth - STATION_WIDTH / 2, top: index * ROW_HEIGHT + 8 }}>
-                      <StationButton
-                        station={station}
-                        name={names.get(station.surahId) ?? toArabicDigits(station.surahId)}
-                        stars={stationStars(state, station.surahId)}
-                        color={region.color}
-                        shadow={region.shadow}
-                        side={x >= 0.5 ? "left" : "right"}
-                        companion={state.companion}
-                      />
-                    </View>
-                  );
-                })}
+              <View className="flex-row items-center gap-3">
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: region.color,
+                    borderBottomWidth: 5,
+                    borderBottomColor: region.shadow,
+                  }}
+                >
+                  <KidsArt emoji={region.emoji} size={36} />
+                </View>
+                <View>
+                  <KidsText size={22} bold>
+                    {region.name}
+                  </KidsText>
+                  <KidsText size={15} bold tone="muted">
+                    {toArabicDigits(regionDone)} من {toArabicDigits(regionStations.length)} محطات
+                  </KidsText>
+                </View>
+              </View>
+              {/* Left-to-right inside, so the stations sit on the road the same way as on the website. */}
+              <View
+                onLayout={(event) => {
+                  roadY.current.set(region.id, event.nativeEvent.layout.y);
+                  setRoadWidth(event.nativeEvent.layout.width);
+                }}
+                style={{ marginTop: 8, height: regionStations.length * ROW_HEIGHT, direction: "ltr" }}
+              >
+                {roadWidth > 0 && <Road count={regionStations.length} width={roadWidth} />}
+                {roadWidth > 0 &&
+                  regionStations.map((station, index) => {
+                    const x = ROAD_X[index % ROAD_X.length]!;
+                    return (
+                      <View
+                        key={station.surahId}
+                        style={{
+                          position: "absolute",
+                          width: STATION_WIDTH,
+                          left: x * roadWidth - STATION_WIDTH / 2,
+                          top: index * ROW_HEIGHT + 8,
+                        }}
+                      >
+                        <StationButton
+                          station={station}
+                          name={names.get(station.surahId) ?? toArabicDigits(station.surahId)}
+                          stars={stationStars(state, station.surahId)}
+                          color={region.color}
+                          shadow={region.shadow}
+                          side={x >= 0.5 ? "left" : "right"}
+                          companion={state.companion}
+                        />
+                      </View>
+                    );
+                  })}
+              </View>
             </View>
-          </View>
+          </KidsEnter>
         );
       })}
 
-      <KidsPanel className="items-center">
-        <Text style={{ fontSize: 56 }}>🏆</Text>
-        <KidsText size={22} bold center className="mt-2">
-          نهاية الرحلة: الحافظ الصغير
-        </KidsText>
-        <KidsText size={17} tone="muted" center className="mt-1">
-          أكمل كل المحطات لتصل إلى هنا!
-        </KidsText>
-      </KidsPanel>
+      <KidsEnter index={JOURNEY_REGIONS.length + 2}>
+        <KidsPanel className="items-center">
+          <KidsArt emoji="🏆" size={68} />
+          <KidsText size={22} bold center className="mt-2">
+            نهاية الرحلة: الحافظ الصغير
+          </KidsText>
+          <KidsText size={17} tone="muted" center className="mt-1">
+            أكمل كل المحطات لتصل إلى هنا!
+          </KidsText>
+        </KidsPanel>
+      </KidsEnter>
     </KidsScroll>
   );
 }

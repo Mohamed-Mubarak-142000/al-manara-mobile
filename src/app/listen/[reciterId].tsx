@@ -15,6 +15,7 @@ import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { audio, currentTrack, usePlayer, type Track } from "@/features/audio/playerStore";
 import { DownloadButton } from "@/features/downloads/DownloadButton";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { filterSurahs } from "@/features/listen/surahFilter";
 import { useReciters } from "@/features/listen/useReciters";
 import { getSurah } from "@/features/mushaf/mushaf";
@@ -75,7 +76,7 @@ export default function ReciterScreen() {
   if (!reciter) {
     return (
       <View className="flex-1 bg-bg">
-        <ScreenHeader title="القارئ" />
+        <ScreenHeader title="القارئ" art={SECTION_ART.listen} />
         {failed ? <StateMessage message="تعذّر تحميل بيانات القارئ." onRetry={reload} /> : <StateMessage loading />}
       </View>
     );
@@ -92,7 +93,9 @@ export default function ReciterScreen() {
         ListHeaderComponent={
           <View className="mb-4">
             <ScreenHeader
-              title="القارئ"
+              title={reciter.name}
+              subtitle="القارئ"
+              art={SECTION_ART.listen}
               actions={
                 <Pressable
                   accessibilityRole="switch"

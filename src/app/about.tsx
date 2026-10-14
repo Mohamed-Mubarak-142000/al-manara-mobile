@@ -1,14 +1,15 @@
 import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { ChevronLeft, FileText, Globe, Info, Mail, Share2, ShieldCheck, type LucideIcon } from "lucide-react-native";
-import { Linking, Pressable, Text, View } from "react-native";
+import { ChevronLeft } from "lucide-react-native";
+import { Linking, Pressable, Text, View, type ImageSourcePropType } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { CONTACT_EMAIL, missionText } from "@/core/legal/legalContent";
 import { toArabicDigits } from "@/core/text/arabic";
 import { enterSoft } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { BackHeader } from "@/features/legal/BackHeader";
 import { CrashReport } from "@/features/legal/CrashReport";
 import { SITE_URL, openSitePage, shareApp } from "@/features/legal/site";
@@ -17,26 +18,26 @@ import { useThemeColor } from "@/theme/useThemeColor";
 
 const PROMISES = ["مجاني بالكامل", "بلا إعلانات", "القرآن دون إنترنت"];
 
+/** One row of the links card: its 3D art, title, optional hint, and a chevron. */
 function Row({
-  icon: Icon,
+  art,
   title,
   hint,
   onPress,
   last,
 }: {
-  icon: LucideIcon;
+  art: ImageSourcePropType;
   title: string;
   hint?: string;
   onPress: () => void;
   last?: boolean;
 }) {
-  const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   return (
     <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
       <View className={`flex-row items-center gap-3 px-4 py-4 ${last ? "" : "border-b border-border"}`}>
-        <View className="size-10 items-center justify-center rounded-2xl bg-primary-soft">
-          <Icon size={18} color={primary} />
+        <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
+          <Image source={art} style={{ width: 30, height: 30 }} contentFit="contain" accessible={false} />
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-[15px] text-fg">{title}</Text>
@@ -55,7 +56,7 @@ export default function AboutScreen() {
 
   return (
     <Screen bleed>
-      <BackHeader kicker="عن المنارة" icon={Info} title="المنارة" description="علمٌ ينير قلبك، ومعرفةٌ ترافق يومك.">
+      <BackHeader kicker="عن المنارة" art={SECTION_ART.about} title="المنارة" description="علمٌ ينير قلبك، ومعرفةٌ ترافق يومك.">
         <Animated.View entering={FadeIn.duration(400)} className="mb-5 self-center">
           <View className="size-28 items-center justify-center rounded-4xl border border-border bg-primary-soft">
             <Image
@@ -84,12 +85,14 @@ export default function AboutScreen() {
         </Animated.View>
 
         <View className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card">
-          <Row icon={ShieldCheck} title="سياسة الخصوصية" onPress={() => router.push("/privacy")} />
-          <Row icon={FileText} title="شروط الاستخدام" onPress={() => router.push("/terms")} />
-          {SITE_URL ? <Row icon={Globe} title="موقع المنارة" hint="كل الأقسام على الويب" onPress={() => openSitePage("/")} /> : null}
-          <Row icon={Share2} title="شارك التطبيق" hint="الدال على الخير كفاعله" onPress={shareApp} />
+          <Row art={SECTION_ART.privacy} title="سياسة الخصوصية" onPress={() => router.push("/privacy")} />
+          <Row art={SECTION_ART.terms} title="شروط الاستخدام" onPress={() => router.push("/terms")} />
+          {SITE_URL ? (
+            <Row art={SECTION_ART.website} title="موقع المنارة" hint="كل الأقسام على الويب" onPress={() => openSitePage("/")} />
+          ) : null}
+          <Row art={SECTION_ART.share} title="شارك التطبيق" hint="الدال على الخير كفاعله" onPress={shareApp} />
           <Row
-            icon={Mail}
+            art={SECTION_ART.email}
             title="تواصل معنا"
             hint={CONTACT_EMAIL}
             onPress={() => void Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("تطبيق المنارة")}`)}

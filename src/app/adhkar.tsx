@@ -15,6 +15,7 @@ import { AdhkarCelebration, claimCelebration } from "@/features/adhkar/AdhkarCel
 import { countDhikr, getAdhkarCounts, resetDhikr, useAdhkarCounts } from "@/features/adhkar/adhkarProgress";
 import { ChapterPicker } from "@/features/adhkar/ChapterPicker";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { audio, currentTrack, usePlayerValue, type Track } from "@/features/audio/playerStore";
 import { useScaledText } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -187,6 +188,7 @@ export default function AdhkarScreen() {
             <ScreenHeader
               title={DUA_CATEGORY_LABELS[category]}
               subtitle="من حصن المسلم"
+              art={SECTION_ART.adhkar}
               actions={
                 <>
                   {/* Reminders live with every other setting; this only points there. */}
@@ -227,7 +229,7 @@ export default function AdhkarScreen() {
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                     onPress={() => setCategory(key)}
-                    className={`rounded-full border px-4 py-1.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+                    className={`h-11 justify-center rounded-full border px-4 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
                   >
                     <Text className={`font-sans-bold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{DUA_CATEGORY_LABELS[key]}</Text>
                   </Pressable>

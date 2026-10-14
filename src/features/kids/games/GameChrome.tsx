@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
 
+import { KidsArt } from "../ui/KidsArt";
 import { KidsPanel, KidsText } from "../ui/KidsPanel";
 import { KIDS, PANEL_SHADOW, TONES, type KidsTone } from "../ui/kidsStyles";
 
@@ -29,30 +30,99 @@ export function GameBar({ title, children }: { title: string; children?: ReactNo
       <KidsText size={18} bold style={{ flexShrink: 1 }}>
         {title}
       </KidsText>
-      {children ? <View className="flex-row items-center gap-3">{children}</View> : null}
+      {children ? <View className="flex-row items-center gap-2">{children}</View> : null}
     </View>
   );
 }
 
-/** A small text action in the bar ("من جديد", "مساعدة"). */
-export function BarAction({ icon: Icon, label, onPress, color = KIDS.muted }: { icon: LucideIcon; label: string; onPress: () => void; color?: string }) {
+/** A small action in the bar ("من جديد", "مساعدة"): a soft pill at least 44dp tall so small fingers can hit it. */
+export function BarAction({
+  icon: Icon,
+  label,
+  onPress,
+  color = KIDS.muted,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onPress: () => void;
+  color?: string;
+}) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} hitSlop={8} className="flex-row items-center gap-1">
-      <Icon size={16} color={color} />
-      <KidsText size={14} bold style={{ color }}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: 44,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingHorizontal: 14,
+        borderRadius: 999,
+        backgroundColor: pressed ? KIDS.soft : KIDS.softer,
+      })}
+    >
+      <Icon size={18} color={color} />
+      <KidsText size={15} bold style={{ color }}>
         {label}
       </KidsText>
     </Pressable>
   );
 }
 
-/** A game's start card: the big icon tile, the name, how to play, and what to press. */
-export function GameIntro({ icon: Icon, tone, title, description, children }: { icon: LucideIcon; tone: KidsTone; title: string; description: string; children: ReactNode }) {
+/** A secondary choice under a game's start button ("اختر سورة أخرى"): a full 44dp pill, not a thin underlined link. */
+export function GameLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="link"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: 44,
+        justifyContent: "center",
+        paddingHorizontal: 20,
+        borderRadius: 999,
+        backgroundColor: pressed ? KIDS.soft : KIDS.softer,
+      })}
+    >
+      <KidsText size={16} bold tone="muted">
+        {label}
+      </KidsText>
+    </Pressable>
+  );
+}
+
+/**
+ * A game's start card: the big picture tile, the name, how to play, and what to press. `art` is the same emoji
+ * the games menu tile uses, so a game looks the same from the menu to its first screen.
+ */
+export function GameIntro({
+  art,
+  tone,
+  title,
+  description,
+  children,
+}: {
+  art: string;
+  tone: KidsTone;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
   const t = TONES[tone];
   return (
     <KidsPanel className="items-center">
-      <View style={{ width: 80, height: 80, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: t.bg, borderBottomWidth: 7, borderBottomColor: t.shadow }}>
-        <Icon size={40} color={KIDS.white} />
+      <View
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: 24,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: t.bg,
+          borderBottomWidth: 7,
+          borderBottomColor: t.shadow,
+        }}
+      >
+        <KidsArt emoji={art} size={50} />
       </View>
       <KidsText size={26} bold center className="mt-5">
         {title}

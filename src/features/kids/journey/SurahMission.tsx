@@ -1,7 +1,7 @@
 import { ArrowRight, Check, Lock, Pause, Play, Star } from "lucide-react-native";
 import { useEffect, useMemo, type ReactNode } from "react";
-import { Text, View } from "react-native";
-import Animated, { FadeInDown, FadeInLeft, ZoomIn } from "react-native-reanimated";
+import { View } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 
 import { missionProgress, regionOf, stationStars } from "@/core/kids/journey";
 import { KIDS_SURAH_IDS } from "@/core/kids/kidsSurahs";
@@ -15,7 +15,9 @@ import { getTeachingTrack, kidsSurah } from "../kidsData";
 import { useKidsProgress } from "../progress/progressStore";
 import { sfx } from "../sfx";
 import { useLoad } from "../useLoad";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
+import { KidsEnter } from "../ui/KidsMotion";
 import { KidsPanel, KidsText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
 import { KIDS, PANEL_SHADOW } from "../ui/kidsStyles";
@@ -26,16 +28,18 @@ interface StepCardProps {
   emoji: string;
   title: string;
   hint: string;
+  /** A small picture after the hint (the lock that the quiz opens). */
+  hintArt?: string;
   color: string;
   shadow: string;
   index: number;
   children: ReactNode;
 }
 
-function StepCard({ done, emoji, title, hint, color, shadow, index, children }: StepCardProps) {
+function StepCard({ done, emoji, title, hint, hintArt, color, shadow, index, children }: StepCardProps) {
   return (
-    <Animated.View
-      entering={FadeInLeft.delay(150 + index * 80).springify().stiffness(240).damping(20)}
+    <KidsEnter
+      index={index + 1}
       style={[
         {
           gap: 14,
@@ -50,9 +54,18 @@ function StepCard({ done, emoji, title, hint, color, shadow, index, children }: 
       ]}
     >
       <View
-        style={{ width: 72, height: 72, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: color, borderBottomWidth: 6, borderBottomColor: shadow }}
+        style={{
+          width: 72,
+          height: 72,
+          borderRadius: 24,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: color,
+          borderBottomWidth: 6,
+          borderBottomColor: shadow,
+        }}
       >
-        <Text style={{ fontSize: 34 }}>{emoji}</Text>
+        <KidsArt emoji={emoji} size={42} />
         {done && (
           <View
             style={{
@@ -78,12 +91,15 @@ function StepCard({ done, emoji, title, hint, color, shadow, index, children }: 
           {title}
           {done ? " ✓" : ""}
         </KidsText>
-        <KidsText size={16} tone="muted" center>
-          {hint}
-        </KidsText>
+        <View className="flex-row items-center justify-center gap-1.5">
+          <KidsText size={16} tone="muted" center style={{ flexShrink: 1 }}>
+            {hint}
+          </KidsText>
+          {hintArt ? <KidsArt emoji={hintArt} size={22} /> : null}
+        </View>
       </View>
       <View className="flex-row flex-wrap justify-center gap-2">{children}</View>
-    </Animated.View>
+    </KidsEnter>
   );
 }
 
@@ -135,34 +151,58 @@ export function SurahMission({ surahId }: { surahId: number }) {
   if (status === "ready" && !unlocked) {
     return (
       <KidsScroll>
-        <KidsPanel className="items-center">
-          <Lock size={56} color={KIDS.lockedShadow} />
-          <KidsText size={28} bold center className="mt-3">
-            سورة {surah.name} مغلقة الآن
-          </KidsText>
-          <KidsText size={17} tone="muted" center className="mt-2">
-            اجتز اختبار المحطة التي قبلها، وستُفتح لك هذه السورة 🔓
-          </KidsText>
-          <KidsButton tone="emerald" icon={ArrowRight} className="mt-6" onPress={() => go("/kids")}>
-            العودة للخريطة
-          </KidsButton>
-        </KidsPanel>
+        <KidsEnter>
+          <KidsPanel className="items-center">
+            <Lock size={56} color={KIDS.lockedShadow} />
+            <KidsText size={28} bold center className="mt-3">
+              سورة {surah.name} مغلقة الآن
+            </KidsText>
+            <View className="mt-2 flex-row items-center justify-center gap-2">
+              <KidsText size={17} tone="muted" center style={{ flexShrink: 1 }}>
+                اجتز اختبار المحطة التي قبلها، وستُفتح لك هذه السورة
+              </KidsText>
+              <KidsArt emoji="🔓" size={28} />
+            </View>
+            <KidsButton tone="emerald" icon={ArrowRight} className="mt-6" onPress={() => go("/kids")}>
+              العودة للخريطة
+            </KidsButton>
+          </KidsPanel>
+        </KidsEnter>
       </KidsScroll>
     );
   }
 
   return (
     <KidsScroll gap={16}>
-      <Animated.View
-        entering={FadeInDown}
+      <KidsEnter
         style={[
-          { borderRadius: 36, padding: 22, paddingBottom: 28, borderWidth: 4, borderColor: "rgba(255,255,255,0.7)", backgroundColor: `${region.tint}f5`, overflow: "hidden", alignItems: "center" },
+          {
+            borderRadius: 36,
+            padding: 22,
+            paddingBottom: 28,
+            borderWidth: 4,
+            borderColor: "rgba(255,255,255,0.7)",
+            backgroundColor: `${region.tint}f5`,
+            overflow: "hidden",
+            alignItems: "center",
+          },
           PANEL_SHADOW,
         ]}
       >
-        <View style={{ borderRadius: 999, backgroundColor: "rgba(255,255,255,0.8)", paddingHorizontal: 14, paddingVertical: 2 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.8)",
+            paddingHorizontal: 14,
+            paddingVertical: 2,
+          }}
+        >
+          <KidsArt emoji={region.emoji} size={22} />
           <KidsText size={15} bold style={{ color: region.shadow }}>
-            {region.emoji} {region.name} · المحطة {toArabicDigits(station)}
+            {region.name} · المحطة {toArabicDigits(station)}
           </KidsText>
         </View>
         <KidsText size={36} bold center className="mt-3">
@@ -174,11 +214,15 @@ export function SurahMission({ surahId }: { surahId: number }) {
         <View accessibilityLabel={`${stars} من ٥ نجوم`} className="mt-4 flex-row gap-1.5">
           {starRow.map((index) => (
             <Animated.View key={index} entering={ZoomIn.delay(300 + index * 80).springify()}>
-              <Star size={38} color={index < stars ? KIDS.starStroke : KIDS.whiteShadow} fill={index < stars ? KIDS.starFill : KIDS.white} />
+              <Star
+                size={38}
+                color={index < stars ? KIDS.starStroke : KIDS.whiteShadow}
+                fill={index < stars ? KIDS.starFill : KIDS.white}
+              />
             </Animated.View>
           ))}
         </View>
-      </Animated.View>
+      </KidsEnter>
 
       <StepCard
         index={0}
@@ -212,7 +256,15 @@ export function SurahMission({ surahId }: { surahId: number }) {
         </KidsButton>
       </StepCard>
 
-      <StepCard index={2} done={progress.play} emoji="🎮" title="العب بالسورة" hint="أي لعبة على هذه السورة تكمل المهمة" color={KIDS.gold} shadow={KIDS.goldShadow}>
+      <StepCard
+        index={2}
+        done={progress.play}
+        emoji="🎮"
+        title="العب بالسورة"
+        hint="أي لعبة على هذه السورة تكمل المهمة"
+        color={KIDS.gold}
+        shadow={KIDS.goldShadow}
+      >
         {shortSurah && (
           <KidsButton tone="gold" onPress={() => go(`/kids/games/ayah-order/${surah.id}`)}>
             رتّب الآيات
@@ -226,7 +278,15 @@ export function SurahMission({ surahId }: { surahId: number }) {
         </KidsButton>
       </StepCard>
 
-      <StepCard index={3} done={progress.recite} emoji="🎤" title="سمّعني" hint="اقرأ بصوتك ورفيقك يسمعك" color={KIDS.rose} shadow={KIDS.roseShadow}>
+      <StepCard
+        index={3}
+        done={progress.recite}
+        emoji="🎤"
+        title="سمّعني"
+        hint="اقرأ بصوتك ورفيقك يسمعك"
+        color={KIDS.rose}
+        shadow={KIDS.roseShadow}
+      >
         <KidsButton tone="rose" onPress={() => go(`/kids/recite/${surah.id}`)}>
           سمّع الآن
         </KidsButton>
@@ -237,7 +297,8 @@ export function SurahMission({ surahId }: { surahId: number }) {
         done={progress.quiz}
         emoji="🧠"
         title="اختبار المحطة"
-        hint={progress.quiz ? "اجتزت الاختبار وفتحت المحطة التالية!" : "اجتز الاختبار لتفتح المحطة التالية 🔓"}
+        hint={progress.quiz ? "اجتزت الاختبار وفتحت المحطة التالية!" : "اجتز الاختبار لتفتح المحطة التالية"}
+        hintArt={progress.quiz ? undefined : "🔓"}
         color={KIDS.violet}
         shadow={KIDS.violetShadow}
       >
@@ -257,8 +318,8 @@ export function SurahMission({ surahId }: { surahId: number }) {
           الخريطة
         </KidsButton>
         {progress.quiz && next !== null && (
-          <KidsButton tone="emerald" onPress={() => go(`/kids/journey/${next}`)}>
-            المحطة التالية 🚀
+          <KidsButton tone="emerald" art="🚀" onPress={() => go(`/kids/journey/${next}`)}>
+            المحطة التالية
           </KidsButton>
         )}
       </View>

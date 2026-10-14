@@ -1,9 +1,9 @@
-import { LayoutGrid } from "lucide-react-native";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { SectionGrid } from "@/features/home/SectionGrid";
 
 /** Every built section of the app in the same tiles as Home, grouped. Opened from Home's "كل الأقسام". */
@@ -16,7 +16,7 @@ export default function SectionsScreen() {
       <PageHeader
         back
         kicker="أقسام المنارة"
-        icon={LayoutGrid}
+        art={SECTION_ART.sections}
         title="كل الأقسام"
         description="القرآن، ويومك، ورحلتك في الحفظ، والأدعية — كل قسم في مكانه."
       />

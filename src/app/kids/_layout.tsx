@@ -1,13 +1,12 @@
 import { Stack } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 
 import { useAccount } from "@/features/account/accountStore";
 import { ChooseChild, KidsSignIn } from "@/features/kids/ChooseChild";
 import { useKidsProgress } from "@/features/kids/progress/progressStore";
-import { KidsButton } from "@/features/kids/ui/KidsButton";
-import { KidsPanel, KidsText } from "@/features/kids/ui/KidsPanel";
 import { KidsShell } from "@/features/kids/ui/KidsShell";
+import { KidsError, KidsLoading } from "@/features/kids/ui/KidsStatus";
 import { KIDS } from "@/features/kids/ui/kidsStyles";
 
 /**
@@ -27,33 +26,27 @@ export default function KidsLayout() {
   let content;
   if (account.status === "loading")
     content = (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator color={KIDS.white} size="large" />
+      <View className="flex-1 justify-center px-3 pb-20">
+        <KidsLoading />
       </View>
     );
   else if (account.status !== "signed-in") content = <KidsSignIn />;
   else if (!childId)
-    content = <ChooseChild childLearners={account.learners.filter((entry) => entry.kind === "child").map(({ id, display_name }) => ({ id, display_name }))} />;
+    content = (
+      <ChooseChild
+        childLearners={account.learners.filter((entry) => entry.kind === "child").map(({ id, display_name }) => ({ id, display_name }))}
+      />
+    );
   else if (status === "loading")
     content = (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator color={KIDS.white} size="large" />
+      <View className="flex-1 justify-center px-3 pb-20">
+        <KidsLoading label="لحظة… نجهّز رحلتك" />
       </View>
     );
   else if (status === "error")
     content = (
       <View className="px-3 pt-4">
-        <KidsPanel className="items-center">
-          <KidsText size={22} bold center>
-            تعذّر تحميل رحلتك الآن
-          </KidsText>
-          <KidsText size={16} tone="muted" center className="mt-2">
-            تأكد من الاتصال بالإنترنت، ثم حاول مرة أخرى.
-          </KidsText>
-          <KidsButton tone="emerald" className="mt-5" onPress={retry}>
-            حاول مرة أخرى
-          </KidsButton>
-        </KidsPanel>
+        <KidsError title="تعذّر تحميل رحلتك الآن" message="تأكد من الاتصال بالإنترنت، ثم حاول مرة أخرى." onRetry={retry} />
       </View>
     );
   else

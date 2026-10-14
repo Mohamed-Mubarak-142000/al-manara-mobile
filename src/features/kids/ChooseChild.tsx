@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { ArrowRight, Baby, LogIn, UserPlus } from "lucide-react-native";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
 import { account, type Learner } from "@/features/account/accountStore";
 
@@ -52,12 +52,9 @@ export function ChooseChild({ childLearners }: { childLearners: Pick<Learner, "i
 
 function BackToJourney() {
   return (
-    <Pressable accessibilityRole="link" onPress={() => router.dismissTo("/journey")} className="mt-6 flex-row items-center gap-1">
-      <ArrowRight size={16} color={KIDS.brand} />
-      <KidsText size={14} bold style={{ color: KIDS.brand }}>
-        العودة إلى رحلتي
-      </KidsText>
-    </Pressable>
+    <KidsButton tone="white" size="sm" icon={ArrowRight} className="mt-5" onPress={() => router.dismissTo("/journey")}>
+      العودة إلى رحلتي
+    </KidsButton>
   );
 }
 

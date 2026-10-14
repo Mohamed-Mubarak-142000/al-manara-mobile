@@ -8,6 +8,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount } from "@/features/account/accountStore";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { certificateSubject } from "@/features/exams/CertificateCard";
 import { getMyCertificates } from "@/features/exams/examData";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
@@ -58,7 +59,13 @@ export default function CertificatesScreen() {
       }
       contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + 32 }}
       ListHeaderComponent={
-        <PageHeader back kicker="الشهادات" icon={Award} title="شهاداتي" description="شهادات الأجزاء والأربعين النووية، موثّقة برمز تحقق." />
+        <PageHeader
+          back
+          kicker="الشهادات"
+          art={SECTION_ART.certificates}
+          title="شهاداتي"
+          description="شهادات الأجزاء والأربعين النووية، موثّقة برمز تحقق."
+        />
       }
       ListEmptyComponent={
         account.status === "loading" ? (

@@ -1,16 +1,8 @@
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 import { Mic, MicOff, SkipForward, ThumbsUp, Volume2 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import Animated, {
-  FadeIn,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-  ZoomIn,
-} from "react-native-reanimated";
+import { Pressable, View } from "react-native";
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, ZoomIn } from "react-native-reanimated";
 
 import { splitAyahWords } from "@/core/kids/games/arrangeGameLogic";
 import { buildExpected, matchChunk, matchPreview } from "@/core/tasmee/recitation";
@@ -26,6 +18,7 @@ import { useKidsProgress } from "../progress/progressStore";
 import { ReciteRecorder } from "../ReciteRecorder";
 import { sfx } from "../sfx";
 import { Celebration } from "../ui/Celebration";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { KidsPanel, KidsText, QuranText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
@@ -75,7 +68,9 @@ function Word({ word, heard }: { word: string; heard: boolean }) {
 function MicButton({ listening, onPress }: { listening: boolean; onPress: () => void }) {
   const scale = useSharedValue(1);
   useEffect(() => {
-    scale.value = listening ? withRepeat(withSequence(withTiming(1.1, { duration: 600 }), withTiming(1, { duration: 600 })), -1) : withTiming(1);
+    scale.value = listening
+      ? withRepeat(withSequence(withTiming(1.1, { duration: 600 }), withTiming(1, { duration: 600 })), -1)
+      : withTiming(1);
   }, [listening, scale]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
@@ -265,8 +260,9 @@ export function KidsRecite({ surahId }: { surahId: number }) {
     return (
       <KidsScroll>
         <KidsPanel className="items-center">
-          <KidsText size={26} bold center>
-            🎤 سمّعني: سورة {surah.name}
+          <KidsArt emoji="🎤" size={60} />
+          <KidsText size={26} bold center className="mt-2">
+            سمّعني: سورة {surah.name}
           </KidsText>
           <KidsText size={17} tone="muted" center className="mt-2">
             سجّل صوتك وأنت تقرأ، ثم استمع لنفسك. هل قرأتها جيدًا؟
@@ -291,7 +287,7 @@ export function KidsRecite({ surahId }: { surahId: number }) {
             قرأتها جيدًا!
           </KidsButton>
         </KidsPanel>
-        <Celebration open={finished} title="أحسنت يا بطل!" message="صوتك جميل بالقرآن 🌟" stars={3} onClose={() => setFinished(false)}>
+        <Celebration open={finished} title="أحسنت يا بطل!" message="صوتك جميل بالقرآن" stars={3} onClose={() => setFinished(false)}>
           <KidsButton
             tone="emerald"
             onPress={() => {
@@ -314,13 +310,25 @@ export function KidsRecite({ surahId }: { surahId: number }) {
     <KidsScroll gap={16}>
       <View
         style={[
-          { borderRadius: 999, backgroundColor: "rgba(255,255,255,0.95)", paddingHorizontal: 20, paddingVertical: 10, borderWidth: 4, borderColor: "rgba(255,255,255,0.6)", gap: 2, alignItems: "center" },
+          {
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderWidth: 4,
+            borderColor: "rgba(255,255,255,0.6)",
+            gap: 2,
+            alignItems: "center",
+          },
           PANEL_SHADOW,
         ]}
       >
-        <KidsText size={19} bold center>
-          🎤 سمّعني: سورة {surah.name}
-        </KidsText>
+        <View className="flex-row items-center justify-center gap-2">
+          <KidsArt emoji="🎤" size={26} />
+          <KidsText size={19} bold center style={{ flexShrink: 1 }}>
+            سمّعني: سورة {surah.name}
+          </KidsText>
+        </View>
         <KidsText size={14} bold tone="muted">
           الآية {toArabicDigits(ayah.numberInSurah)} من {toArabicDigits(ayahs.length)}
         </KidsText>
@@ -335,7 +343,7 @@ export function KidsRecite({ surahId }: { surahId: number }) {
 
         {verdict ? (
           <Animated.View key="verdict" entering={ZoomIn} className="mt-6 items-center">
-            <Text style={{ fontSize: 48 }}>{VERDICTS[verdict].emoji}</Text>
+            <KidsArt emoji={VERDICTS[verdict].emoji} size={58} />
             <KidsText size={28} bold center className="mt-2">
               {VERDICTS[verdict].title}
             </KidsText>

@@ -1,8 +1,10 @@
 import { memo, type ReactNode } from "react";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 
 import { getRewardItem } from "@/core/kids/catalog";
 import { GARDEN_DECOR_SLOTS, GARDEN_STAGES } from "@/core/kids/garden";
+
+import { kidsArtFor } from "../ui/KidsArt";
 
 /**
  * The website's GardenScene: the same 400 × 262 SVG garden, each finished stage drawn in and the ones still to
@@ -74,7 +76,11 @@ const ARTWORK: Record<string, ReactNode> = {
     <G>
       <Path d="M0 252 Q100 240 200 252 T400 250 L400 262 L0 262 Z" fill="#6cc3f5" opacity={0.8} />
       <Path d="M170 252 Q200 228 230 252" stroke="#9a6a3f" strokeWidth="6" fill="none" strokeLinecap="round" />
-      <Path d="M176 244 L176 252 M188 236 L188 252 M200 233 L200 252 M212 236 L212 252 M224 244 L224 252" stroke="#9a6a3f" strokeWidth="3" />
+      <Path
+        d="M176 244 L176 252 M188 236 L188 252 M200 233 L200 252 M212 236 L212 252 M224 244 L224 252"
+        stroke="#9a6a3f"
+        strokeWidth="3"
+      />
     </G>
   ),
   house: (
@@ -98,7 +104,15 @@ const ARTWORK: Record<string, ReactNode> = {
   ),
 };
 
-export const GardenScene = memo(function GardenScene({ doneStations, ownedItems, width }: { doneStations: number; ownedItems: string[]; width: number }) {
+export const GardenScene = memo(function GardenScene({
+  doneStations,
+  ownedItems,
+  width,
+}: {
+  doneStations: number;
+  ownedItems: string[];
+  width: number;
+}) {
   const decor = ownedItems.filter((id) => getRewardItem(id)?.kind === "garden");
   return (
     <Svg width={width} height={(width * 262) / 400} viewBox="0 0 400 262" accessibilityLabel="حديقتك">
@@ -138,6 +152,22 @@ export const GardenScene = memo(function GardenScene({ doneStations, ownedItems,
           const slot = GARDEN_DECOR_SLOTS[id];
           const item = getRewardItem(id);
           if (!slot || !item) return null;
+          const art = kidsArtFor(item.emoji);
+          if (art) {
+            // The slot is an emoji baseline (centered x, text y), so the picture is sized like the glyph and sits on that line.
+            const size = slot.size * 1.15;
+            return (
+              <SvgImage
+                key={id}
+                href={art}
+                x={slot.x - size / 2}
+                y={slot.y - slot.size * 0.95}
+                width={size}
+                height={size}
+                preserveAspectRatio="xMidYMid meet"
+              />
+            );
+          }
           return (
             <SvgText key={id} x={slot.x} y={slot.y} fontSize={slot.size} textAnchor="middle">
               {item.emoji}

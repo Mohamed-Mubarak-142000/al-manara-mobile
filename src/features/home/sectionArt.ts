@@ -30,6 +30,19 @@ export const SECTION_ART = {
   kids: require("@/assets/images/sections/kids.png"),
   qibla: require("@/assets/images/sections/qibla.png"),
   home: require("@/assets/images/sections/home.png"),
+  // The app's own pages: More, settings, search, the legal pages…
+  sections: require("@/assets/images/sections/sections.png"),
+  settings: require("@/assets/images/sections/settings.png"),
+  account: require("@/assets/images/sections/account.png"),
+  about: require("@/assets/images/sections/about.png"),
+  share: require("@/assets/images/sections/share.png"),
+  support: require("@/assets/images/sections/support.png"),
+  search: require("@/assets/images/sections/search.png"),
+  privacy: require("@/assets/images/sections/privacy.png"),
+  terms: require("@/assets/images/sections/terms.png"),
+  email: require("@/assets/images/sections/email.png"),
+  website: require("@/assets/images/sections/website.png"),
+  certificates: require("@/assets/images/sections/certificates.png"),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type SectionArt = keyof typeof SECTION_ART;

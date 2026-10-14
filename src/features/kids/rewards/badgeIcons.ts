@@ -1,17 +1,26 @@
-import { Award, BookOpenCheck, Flame, Headphones, Map as MapIcon, Mic, Palette, Sparkles, Star, Trophy, type LucideIcon } from "lucide-react-native";
+import type { BadgeDefinition, BadgeIcon } from "@/core/kids/badges";
+import { JOURNEY_REGIONS } from "@/core/kids/journey";
 
-import type { BadgeIcon } from "@/core/kids/badges";
-
-/** The website's badge icons (core/kids/badges.ts names them; the app draws them). */
-export const BADGE_ICONS: Record<BadgeIcon, LucideIcon> = {
-  award: Award,
-  "book-open-check": BookOpenCheck,
-  flame: Flame,
-  headphones: Headphones,
-  map: MapIcon,
-  mic: Mic,
-  palette: Palette,
-  sparkles: Sparkles,
-  star: Star,
-  trophy: Trophy,
+/** The badges (core/kids/badges.ts names their icons) as 3D pictures (KidsArt), matching the chests and shop. */
+const BADGE_ART: Record<BadgeIcon, string> = {
+  award: "🏅",
+  "book-open-check": "📖",
+  flame: "☀️",
+  headphones: "🎧",
+  map: "🗺️",
+  mic: "🎤",
+  palette: "🎨",
+  sparkles: "✨",
+  star: "⭐",
+  trophy: "🏆",
 };
+
+/**
+ * A badge's picture and its label without the emoji. Region badges carry the region's emoji in their label
+ * ("🌱 …"); that emoji becomes the picture instead of a generic map, and the label keeps just the name.
+ */
+export function badgeArt(badge: BadgeDefinition): { emoji: string; label: string } {
+  const region = badge.id.startsWith("region-") ? JOURNEY_REGIONS.find((entry) => `region-${entry.id}` === badge.id) : undefined;
+  if (region) return { emoji: region.emoji, label: region.name };
+  return { emoji: BADGE_ART[badge.icon], label: badge.label };
+}

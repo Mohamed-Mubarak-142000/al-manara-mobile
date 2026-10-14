@@ -36,6 +36,18 @@ const ART = {
   kids: "Deciduous tree",
   qibla: "Kaaba",
   home: "House",
+  sections: "Card index dividers",
+  settings: "Gear",
+  account: "Bust in silhouette",
+  about: "Information",
+  share: "Megaphone",
+  support: "Red heart",
+  search: "Magnifying glass tilted left",
+  privacy: "Locked",
+  terms: "Page facing up",
+  email: "E-mail",
+  website: "Globe with meridians",
+  certificates: "Sports medal",
 };
 
 const snake = (name) => name.toLowerCase().replace(/\s+/g, "_");

@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Moon } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { FlatList, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getHijriDate } from "@/core/calendar/hijriDate";
@@ -8,8 +9,9 @@ import { IMSAK_MINUTES, calcSettingsKey, shiftClock } from "@/core/prayer/calcul
 import { locationKey } from "@/core/prayer/location";
 import { PRAYER_LABELS, PRAYER_ORDER, formatPrayerClock, getPrayerMonth, type PrayerMonthDay } from "@/core/prayer/prayerTimesApi";
 import { toArabicDigits } from "@/core/text/arabic";
-import { IconButton, ScreenHeader } from "@/components/ui/PageHeader";
+import { IconButton, ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { useUserLocation } from "@/features/prayer/locationStore";
 import { usePrayerCalcSettings } from "@/features/prayer/prayerCalcSettings";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -78,26 +80,34 @@ export default function PrayerMonthScreen() {
           <ScreenHeader
             title={imsakiya ? `إمساكية رمضان ${toArabicDigits(ramadan.year ?? "")}` : "مواقيت الشهر"}
             subtitle={`${location.label}${imsakiya ? ` · الإمساك قبل الفجر بـ${toArabicDigits(IMSAK_MINUTES)} دقائق` : ""}`}
+            art={SECTION_ART.calendar}
           />
-          <View className="mx-4 mt-1 flex-row items-center justify-between gap-3">
+          <Animated.View entering={enterSoft(0)} className="mx-4 mt-1 flex-row items-center justify-between gap-3">
             <IconButton icon={ChevronRight} label="الشهر السابق" onPress={() => shift(-1)} />
             <Text className="flex-1 text-center font-sans-bold text-base text-fg">
               {MONTHS.format(new Date(month.year, month.month - 1, 1))}
             </Text>
             <IconButton icon={ChevronLeft} label="الشهر التالي" onPress={() => shift(1)} />
-          </View>
-          <View className="mx-3 mt-3 flex-row rounded-xl bg-surface-alt py-2">
-            <Text className="w-14 text-center font-sans-bold text-[11px] text-fg-muted">اليوم</Text>
-            {imsakiya && <Text className="flex-1 text-center font-sans-bold text-[11px] text-accent-strong">الإمساك</Text>}
+          </Animated.View>
+          {/* Seven columns must fit 360dp: tight side margins, and labels shrink a touch rather than wrap. */}
+          <Animated.View entering={enterSoft(1)} className="mx-2 mt-3 flex-row rounded-2xl bg-surface-alt py-2.5">
+            <Text className="w-14 text-center font-sans-bold text-xs text-fg-muted">اليوم</Text>
+            {imsakiya && (
+              <Text numberOfLines={1} adjustsFontSizeToFit className="flex-1 text-center font-sans-bold text-xs text-accent-strong">
+                الإمساك
+              </Text>
+            )}
             {PRAYER_ORDER.map((prayer) => (
               <Text
                 key={prayer}
-                className={`flex-1 text-center font-sans-bold text-[11px] ${imsakiya && prayer === "maghrib" ? "text-accent-strong" : "text-fg-muted"}`}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                className={`flex-1 text-center font-sans-bold text-xs ${imsakiya && prayer === "maghrib" ? "text-accent-strong" : "text-fg-muted"}`}
               >
                 {imsakiya && prayer === "maghrib" ? "الإفطار" : PRAYER_LABELS[prayer]}
               </Text>
             ))}
-          </View>
+          </Animated.View>
         </View>
       }
       ListEmptyComponent={
@@ -107,26 +117,29 @@ export default function PrayerMonthScreen() {
           <StateMessage loading />
         )
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const current = isToday(item.day);
         const date = new Date(month.year, month.month - 1, item.day);
         const ramadanDay = ramadan.byDay.get(item.day);
         return (
-          <View
-            className={`mx-3 flex-row items-center border-b border-border py-2.5 ${current ? "rounded-xl border-transparent bg-primary-soft" : ""}`}
+          <Animated.View
+            entering={enterSoft(Math.min(index, 8))}
+            className={`mx-2 flex-row items-center border-b border-border py-2.5 ${current ? "rounded-2xl border-transparent bg-primary-soft" : ""}`}
           >
             <View className="w-14 items-center">
               <Text className={`font-sans-bold text-sm ${current ? "text-primary" : "text-fg"}`}>{toArabicDigits(item.day)}</Text>
-              <Text className="font-sans text-[10px] text-fg-muted">{WEEKDAY.format(date)}</Text>
+              <Text numberOfLines={1} adjustsFontSizeToFit className="font-sans text-xs text-fg-muted">
+                {WEEKDAY.format(date)}
+              </Text>
               {ramadanDay !== undefined && (
                 <View className="mt-0.5 flex-row items-center gap-0.5">
-                  <Moon size={9} color={gold} />
-                  <Text className="font-sans-bold text-[9px] text-accent-strong">{toArabicDigits(ramadanDay)}</Text>
+                  <Moon size={12} color={gold} />
+                  <Text className="font-sans-bold text-xs text-accent-strong">{toArabicDigits(ramadanDay)}</Text>
                 </View>
               )}
             </View>
             {imsakiya && (
-              <Text className="flex-1 text-center font-sans-bold text-xs text-accent-strong">
+              <Text className="flex-1 text-center font-sans-bold text-[13px] text-accent-strong">
                 {ramadanDay !== undefined ? clock(shiftClock(item.times.fajr, -IMSAK_MINUTES)) : "–"}
               </Text>
             )}
@@ -135,7 +148,9 @@ export default function PrayerMonthScreen() {
               return (
                 <View key={prayer} className="flex-1 items-center">
                   <Text
-                    className={`text-center text-xs ${
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    className={`text-center text-[13px] ${
                       iftar
                         ? "rounded-md bg-accent-soft px-1 font-sans-bold text-accent-strong"
                         : current
@@ -148,7 +163,7 @@ export default function PrayerMonthScreen() {
                 </View>
               );
             })}
-          </View>
+          </Animated.View>
         );
       }}
     />

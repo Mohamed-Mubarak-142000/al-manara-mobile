@@ -1,7 +1,8 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { Text, View, type ImageSourcePropType } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,6 +15,8 @@ interface BackHeaderProps {
   title: string;
   description?: string;
   icon?: LucideIcon;
+  /** The page's full-colour 3D art beside the kicker, in place of `icon`. */
+  art?: ImageSourcePropType;
   /** Shown above the kicker (the about screen's logo). */
   children?: ReactNode;
 }
@@ -22,7 +25,7 @@ interface BackHeaderProps {
  * The opening of a pushed page on the white ground: the outlined back button, then (optionally) the
  * children, the kicker in primary, a large title and a quiet description.
  */
-export function BackHeader({ kicker, title, description, icon: Icon, children }: BackHeaderProps) {
+export function BackHeader({ kicker, title, description, icon: Icon, art, children }: BackHeaderProps) {
   const insets = useSafeAreaInsets();
   const primary = useThemeColor("primary");
   const textScale = useTextScale();
@@ -34,7 +37,11 @@ export function BackHeader({ kicker, title, description, icon: Icon, children }:
       </View>
       {children}
       <Animated.View entering={enterSoft(0)} className="flex-row items-center gap-2">
-        {Icon && <Icon size={16} color={primary} />}
+        {art ? (
+          <Image source={art} style={{ width: 26, height: 26 }} contentFit="contain" accessible={false} />
+        ) : (
+          Icon && <Icon size={16} color={primary} />
+        )}
         <Text className="font-sans-bold text-sm text-primary">{kicker}</Text>
       </Animated.View>
       <Animated.Text

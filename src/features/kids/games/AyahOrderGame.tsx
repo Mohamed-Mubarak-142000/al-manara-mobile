@@ -1,4 +1,4 @@
-import { ListOrdered, RotateCcw } from "lucide-react-native";
+import { RotateCcw } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeOut, LinearTransition, ZoomIn } from "react-native-reanimated";
@@ -88,7 +88,13 @@ export function AyahOrderGame({ surahId }: { surahId: number }) {
     const next = [...placed, ayah];
     setPlaced(next);
     if (next.length === round.ordered.length) {
-      recordGame({ game: "ayah_order", surah: surah.id, score: next.length, total: next.length + slips, stars: starsForSlips(slips, next.length) });
+      recordGame({
+        game: "ayah_order",
+        surah: surah.id,
+        score: next.length,
+        total: next.length + slips,
+        stars: starsForSlips(slips, next.length),
+      });
       sfx.win();
       setTimeout(() => setWon(true), 400);
     } else react("correct");
@@ -97,7 +103,12 @@ export function AyahOrderGame({ surahId }: { surahId: number }) {
   if (!round) {
     return (
       <KidsScroll>
-        <GameIntro icon={ListOrdered} tone="gold" title={`رتّب الآيات: سورة ${surah.name}`} description="الآيات اختلط ترتيبها! اضغط على الآيات واحدة واحدة بترتيبها في المصحف.">
+        <GameIntro
+          art="🧩"
+          tone="gold"
+          title={`رتّب الآيات: سورة ${surah.name}`}
+          description="الآيات اختلط ترتيبها! اضغط على الآيات واحدة واحدة بترتيبها في المصحف."
+        >
           {ayahs.length >= 2 ? (
             <KidsButton tone="gold" onPress={start}>
               ابدأ اللعب
@@ -128,7 +139,19 @@ export function AyahOrderGame({ surahId }: { surahId: number }) {
         <KidsText size={14} bold tone="muted" center>
           بالترتيب:
         </KidsText>
-        <View style={{ marginTop: 10, minHeight: 80, gap: 8, borderRadius: 30, borderWidth: 4, borderStyle: "dashed", borderColor: KIDS.dashed, backgroundColor: KIDS.ivory, padding: 10 }}>
+        <View
+          style={{
+            marginTop: 10,
+            minHeight: 80,
+            gap: 8,
+            borderRadius: 30,
+            borderWidth: 4,
+            borderStyle: "dashed",
+            borderColor: KIDS.dashed,
+            backgroundColor: KIDS.ivory,
+            padding: 10,
+          }}
+        >
           {placed.length === 0 && (
             <KidsText tone="muted" center className="p-3">
               أيّ آية تأتي أولًا؟
@@ -138,9 +161,29 @@ export function AyahOrderGame({ surahId }: { surahId: number }) {
             <Animated.View
               key={ayah.number}
               entering={ZoomIn}
-              style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 18, backgroundColor: KIDS.rightBg, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 2, borderColor: KIDS.emerald }}
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 10,
+                borderRadius: 18,
+                backgroundColor: KIDS.rightBg,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderWidth: 2,
+                borderColor: KIDS.emerald,
+              }}
             >
-              <View style={{ marginTop: 6, width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: KIDS.emerald }}>
+              <View
+                style={{
+                  marginTop: 6,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: KIDS.emerald,
+                }}
+              >
                 <Text className="font-kids-bold" style={{ color: KIDS.white, fontSize: 15 }}>
                   {toArabicDigits(ayah.numberInSurah)}
                 </Text>
@@ -162,7 +205,13 @@ export function AyahOrderGame({ surahId }: { surahId: number }) {
         </View>
       </KidsPanel>
 
-      <Celebration open={won} title="ممتاز! رتّبت الآيات" message={`سورة ${surah.name} بترتيبها الصحيح`} stars={starsForSlips(slips, round.ordered.length)} onClose={() => setWon(false)}>
+      <Celebration
+        open={won}
+        title="ممتاز! رتّبت الآيات"
+        message={`سورة ${surah.name} بترتيبها الصحيح`}
+        stars={starsForSlips(slips, round.ordered.length)}
+        onClose={() => setWon(false)}
+      >
         <KidsButton tone="gold" onPress={start}>
           العب مرة أخرى
         </KidsButton>

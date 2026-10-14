@@ -7,6 +7,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 
 import { useKidsState } from "../progress/progressStore";
 import { sfx } from "../sfx";
+import { KidsArt } from "./KidsArt";
 import { KIDS, PANEL_SHADOW } from "./kidsStyles";
 import { goTab } from "./nav";
 
@@ -43,7 +44,15 @@ export function KidsTabBar() {
     >
       <View
         style={[
-          { flexDirection: "row", gap: 4, borderRadius: 32, backgroundColor: "rgba(255,255,255,0.96)", padding: 6, borderWidth: 4, borderColor: "rgba(255,255,255,0.7)" },
+          {
+            flexDirection: "row",
+            gap: 4,
+            borderRadius: 32,
+            backgroundColor: "rgba(255,255,255,0.96)",
+            padding: 6,
+            borderWidth: 4,
+            borderColor: "rgba(255,255,255,0.7)",
+          },
           PANEL_SHADOW,
         ]}
       >
@@ -59,9 +68,18 @@ export function KidsTabBar() {
                 sfx.tap();
                 goTab(tab.href, pathname);
               }}
-              style={{ flex: 1, alignItems: "center", paddingVertical: 6, borderRadius: 26, backgroundColor: active ? KIDS.tabActive : "transparent" }}
+              style={{
+                flex: 1,
+                alignItems: "center",
+                paddingVertical: 6,
+                borderRadius: 26,
+                backgroundColor: active ? KIDS.tabActive : "transparent",
+              }}
             >
-              <Text style={{ fontSize: active ? 30 : 27, lineHeight: 38 }}>{tab.emoji}</Text>
+              {/* The active tab's picture grows and the others dim a little, so "where am I" reads without the label. */}
+              <View style={{ height: 38, justifyContent: "center", opacity: active ? 1 : 0.75 }}>
+                <KidsArt emoji={tab.emoji} size={active ? 35 : 31} />
+              </View>
               <Text className="font-kids-bold" style={{ color: KIDS.deep, fontSize: 13, lineHeight: 20 }} numberOfLines={1}>
                 {tab.label}
               </Text>

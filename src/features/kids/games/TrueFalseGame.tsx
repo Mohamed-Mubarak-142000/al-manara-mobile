@@ -1,4 +1,4 @@
-import { Check, CircleHelp, X } from "lucide-react-native";
+import { Check, X } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeInLeft } from "react-native-reanimated";
@@ -11,6 +11,7 @@ import { getKidsFirstAyahs, getKidsSurahs } from "../kidsData";
 import { useKidsProgress } from "../progress/progressStore";
 import { sfx } from "../sfx";
 import { Celebration } from "../ui/Celebration";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { KidsPanel, KidsText, QuranText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
@@ -68,7 +69,12 @@ export function TrueFalseGame() {
   if (!question) {
     return (
       <KidsScroll>
-        <GameIntro icon={CircleHelp} tone="rose" title="صح أم خطأ؟" description="جمل عن سور القرآن: هل هي صحيحة أم خطأ؟ وبعد كل جملة تتعلّم معلومة جديدة!">
+        <GameIntro
+          art="✅"
+          tone="rose"
+          title="صح أم خطأ؟"
+          description="جمل عن سور القرآن: هل هي صحيحة أم خطأ؟ وبعد كل جملة تتعلّم معلومة جديدة!"
+        >
           <KidsButton tone="rose" onPress={start}>
             ابدأ اللعب
           </KidsButton>
@@ -132,9 +138,12 @@ export function TrueFalseGame() {
 
           {answer !== null && (
             <Animated.View entering={FadeInDown} className="mt-6 items-center">
-              <KidsText size={20} bold center style={{ color: right ? KIDS.emeraldShadow : KIDS.honey }}>
-                {right ? "أحسنت! 🌟" : "قريب! ❤️ تعلّمنا معلومة جديدة:"}
-              </KidsText>
+              <View className="flex-row items-center justify-center gap-2">
+                <KidsArt emoji={right ? "🌟" : "❤️"} size={28} />
+                <KidsText size={20} bold center style={{ flexShrink: 1, color: right ? KIDS.emeraldShadow : KIDS.honey }}>
+                  {right ? "أحسنت!" : "قريب! تعلّمنا معلومة جديدة:"}
+                </KidsText>
+              </View>
               <KidsText size={17} tone="muted" center className="mt-1">
                 {question.explanation}
               </KidsText>
@@ -146,7 +155,13 @@ export function TrueFalseGame() {
         </KidsPanel>
       </Animated.View>
 
-      <Celebration open={won} title="أحسنت يا بطل!" message={`عرفت ${toArabicDigits(correct)} من ${toArabicDigits(questions.length)}`} stars={stars} onClose={() => setWon(false)}>
+      <Celebration
+        open={won}
+        title="أحسنت يا بطل!"
+        message={`عرفت ${toArabicDigits(correct)} من ${toArabicDigits(questions.length)}`}
+        stars={stars}
+        onClose={() => setWon(false)}
+      >
         <KidsButton tone="rose" onPress={start}>
           العب مرة أخرى
         </KidsButton>

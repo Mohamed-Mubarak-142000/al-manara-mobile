@@ -41,7 +41,7 @@ import { sfx } from "../sfx";
 import { useLoad } from "../useLoad";
 import { Celebration } from "../ui/Celebration";
 import { KidsButton } from "../ui/KidsButton";
-import { KidsPanel, KidsText, QuranText } from "../ui/KidsPanel";
+import { KidsPanel, KidsSheetCard, KidsText, QuranText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
 import { KIDS, PANEL_SHADOW } from "../ui/kidsStyles";
 import { go, kidsHref } from "../ui/nav";
@@ -184,7 +184,7 @@ function PlayButton({
               {label}
             </KidsText>
           </View>
-          <KidsText size={11} bold tone="white" style={{ opacity: 0.85 }}>
+          <KidsText size={14} bold tone="white" style={{ opacity: 0.9 }}>
             {caption}
           </KidsText>
         </View>
@@ -339,7 +339,7 @@ export function KidsLearn({ surahId }: { surahId: number }) {
               paddingHorizontal: 10,
             }}
           >
-            <Text className="font-kids-bold" style={{ fontSize: 11, color: KIDS.goldText }}>
+            <Text className="font-kids-bold" style={{ fontSize: 14, color: KIDS.goldText }}>
               {surah.meccan ? "سورة مكية" : "سورة مدنية"}
             </Text>
           </View>
@@ -352,7 +352,9 @@ export function KidsLearn({ surahId }: { surahId: number }) {
         icon={BookOpen}
         maxHeight={0.75}
       >
-        <KidsSurahGrid current={surah.id} onPick={() => setSwitcherOpen(false)} />
+        <KidsSheetCard>
+          <KidsSurahGrid current={surah.id} onPick={() => setSwitcherOpen(false)} />
+        </KidsSheetCard>
       </BottomSheet>
 
       {/* Ayah steps */}
@@ -364,9 +366,9 @@ export function KidsLearn({ surahId }: { surahId: number }) {
             disabled={group === 0}
             onPress={() => goTo(Math.max(0, (group - 1) * STEP_GROUP))}
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               backgroundColor: "rgba(255,255,255,0.9)",
               alignItems: "center",
               justifyContent: "center",
@@ -389,9 +391,9 @@ export function KidsLearn({ surahId }: { surahId: number }) {
                   accessibilityState={{ selected: active }}
                   onPress={() => goTo(entryIndex)}
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
@@ -420,9 +422,9 @@ export function KidsLearn({ surahId }: { surahId: number }) {
             disabled={group === groups - 1}
             onPress={() => goTo(Math.min(ayahs.length - 1, (group + 1) * STEP_GROUP))}
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               backgroundColor: "rgba(255,255,255,0.9)",
               alignItems: "center",
               justifyContent: "center",
@@ -460,7 +462,7 @@ export function KidsLearn({ surahId }: { surahId: number }) {
             style={{ alignItems: "center" }}
           >
             <View style={{ borderRadius: 999, backgroundColor: KIDS.soft, paddingHorizontal: 16, paddingVertical: 2 }}>
-              <KidsText size={13} bold tone="muted">
+              <KidsText size={15} bold tone="muted">
                 الآية {toArabicDigits(ayah.numberInSurah)}
               </KidsText>
             </View>
@@ -505,12 +507,12 @@ export function KidsLearn({ surahId }: { surahId: number }) {
               exiting={FadeOut}
               style={{ marginTop: 16, borderRadius: 24, backgroundColor: KIDS.ivory, padding: 16 }}
             >
-              <Text className="font-sans-bold" style={{ fontSize: 12, color: KIDS.goldDeep }}>
+              <KidsText size={14} bold style={{ color: KIDS.goldDeep }}>
                 التفسير الميسّر
-              </Text>
-              <Text className="font-sans" style={{ fontSize: 16, lineHeight: 32, color: "rgba(24,61,52,0.85)" }}>
+              </KidsText>
+              <KidsText size={17} style={{ lineHeight: 32, color: KIDS.siteInk }}>
                 {tafsirText ?? "التفسير غير متاح الآن."}
-              </Text>
+              </KidsText>
             </Animated.View>
           )}
           {panel === "settings" && (

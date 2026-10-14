@@ -1,4 +1,4 @@
-import { Lightbulb, RotateCcw, Shuffle } from "lucide-react-native";
+import { Lightbulb, RotateCcw } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition, ZoomIn } from "react-native-reanimated";
@@ -17,7 +17,7 @@ import { KidsScroll } from "../ui/KidsScroll";
 import { KIDS } from "../ui/kidsStyles";
 import { useShake } from "../ui/motion";
 import { go } from "../ui/nav";
-import { BarAction, GameBar, GameIntro } from "./GameChrome";
+import { BarAction, GameBar, GameIntro, GameLink } from "./GameChrome";
 
 function PlacedTile({ tile, wrong, checked, onPress }: { tile: WordTile; wrong: boolean; checked: boolean; onPress: () => void }) {
   const motion = useShake(checked, wrong ? "shake" : null);
@@ -103,7 +103,12 @@ export function ArrangeAyahGame({ surahId }: { surahId: number }) {
   if (!ayah) {
     return (
       <KidsScroll>
-        <GameIntro icon={Shuffle} tone="emerald" title={`رتّب الآية — سورة ${surah.name}`} description="الكلمات مبعثرة! اضغط عليها بالترتيب الصحيح لتكوّن الآية كما في المصحف.">
+        <GameIntro
+          art="🔤"
+          tone="emerald"
+          title={`رتّب الآية — سورة ${surah.name}`}
+          description="الكلمات مبعثرة! اضغط عليها بالترتيب الصحيح لتكوّن الآية كما في المصحف."
+        >
           {playable.length > 0 ? (
             <KidsButton tone="emerald" onPress={randomAyah}>
               ابدأ اللعب
@@ -113,11 +118,7 @@ export function ArrangeAyahGame({ surahId }: { surahId: number }) {
               آيات هذه السورة غير مناسبة لهذه اللعبة، جرّب سورة أخرى.
             </KidsText>
           )}
-          <Pressable accessibilityRole="link" onPress={() => go("/kids/games/arrange")}>
-            <KidsText size={14} bold tone="muted" style={{ textDecorationLine: "underline" }}>
-              اختر سورة أخرى
-            </KidsText>
-          </Pressable>
+          <GameLink label="اختر سورة أخرى" onPress={() => go("/kids/games/arrange")} />
         </GameIntro>
       </KidsScroll>
     );
@@ -129,7 +130,12 @@ export function ArrangeAyahGame({ surahId }: { surahId: number }) {
   return (
     <KidsScroll gap={16}>
       <GameBar title={`سورة ${surah.name} — الآية ${toArabicDigits(ayah.numberInSurah)}`}>
-        <BarAction icon={Lightbulb} label={hint ? "إخفاء المساعدة" : "مساعدة"} color={KIDS.honey} onPress={() => setHint((value) => !value)} />
+        <BarAction
+          icon={Lightbulb}
+          label={hint ? "إخفاء المساعدة" : "مساعدة"}
+          color={KIDS.honey}
+          onPress={() => setHint((value) => !value)}
+        />
         <BarAction icon={RotateCcw} label="من جديد" onPress={() => startAyah(ayah)} />
       </GameBar>
 
@@ -170,7 +176,17 @@ export function ArrangeAyahGame({ surahId }: { surahId: number }) {
         <KidsText size={14} bold tone="muted" center className="mt-7">
           الكلمات:
         </KidsText>
-        <View style={{ marginTop: 10, minHeight: 80, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 10 }}>
+        <View
+          style={{
+            marginTop: 10,
+            minHeight: 80,
+            flexDirection: "row",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+          }}
+        >
           {bank.map((tile) => (
             <Animated.View key={tile.id} entering={ZoomIn.duration(180)} layout={LinearTransition}>
               <Pressable

@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
 
+import { KidsArt } from "./KidsArt";
 import { KIDS, TONES, type KidsTone } from "./kidsStyles";
 
 type Size = "sm" | "md" | "lg";
@@ -20,6 +21,8 @@ interface KidsButtonProps {
   icon?: LucideIcon;
   /** Fills the icon too (the website's `fill-current` on play icons). */
   iconFilled?: boolean;
+  /** A 3D picture beside the label (an emoji with a KidsArt picture), instead of a line icon. */
+  art?: string;
   onPress?: () => void;
   disabled?: boolean;
   /** Placement in the parent (mt-4, self-stretch…), on an outer wrapper. */
@@ -37,6 +40,7 @@ export function KidsButton({
   size = "md",
   icon: Icon,
   iconFilled,
+  art,
   onPress,
   disabled,
   className,
@@ -77,6 +81,7 @@ export function KidsButton({
           >
             <View className="flex-row items-center justify-center gap-2">
               {Icon && <Icon size={s.icon} color={t.fg} fill={iconFilled ? t.fg : "none"} />}
+              {art ? <KidsArt emoji={art} size={Math.round(s.icon * 1.3)} /> : null}
               {children !== undefined && (
                 <Text className="font-kids-bold text-center" style={{ color: t.fg, fontSize: s.font, lineHeight: s.font * 1.45 }}>
                   {children}
@@ -84,7 +89,7 @@ export function KidsButton({
               )}
             </View>
             {caption ? (
-              <Text className="font-kids text-center" style={{ color: t.fg, fontSize: 12, opacity: 0.85 }}>
+              <Text className="font-kids text-center" style={{ color: t.fg, fontSize: 14, opacity: 0.9 }}>
                 {caption}
               </Text>
             ) : null}

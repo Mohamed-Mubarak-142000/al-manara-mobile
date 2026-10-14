@@ -1,10 +1,12 @@
 import { Gift } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 
 import { unopenedChests } from "@/core/kids/rewards";
 
 import { useKidsProgress } from "../progress/progressStore";
 import { Celebration } from "../ui/Celebration";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { go } from "../ui/nav";
 
@@ -41,10 +43,14 @@ export function ChestWatcher() {
   return (
     <Celebration
       open={fresh !== null}
-      title={daily ? "أكملت تحدي اليوم! 🎉" : "أكملت المحطة! 🎉"}
+      title={daily ? "أكملت تحدي اليوم!" : "أكملت المحطة!"}
       message="حصلت على صندوق مفاجآت، ماذا بداخله يا ترى؟"
       onClose={() => setFresh(null)}
     >
+      <View style={{ width: "100%", flexDirection: "row", justifyContent: "center", alignItems: "flex-end", gap: 8 }}>
+        <KidsArt emoji="🎉" size={44} />
+        <KidsArt emoji="🎁" size={72} />
+      </View>
       <KidsButton
         tone="rose"
         icon={Gift}

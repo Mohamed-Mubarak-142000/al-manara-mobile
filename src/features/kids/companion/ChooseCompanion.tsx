@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { Rocket } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { COMPANIONS, companionInfo } from "@/core/kids/companionLines";
@@ -10,6 +10,7 @@ import { useAccount } from "@/features/account/accountStore";
 
 import { useKidsProgress } from "../progress/progressStore";
 import { sfx } from "../sfx";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { KidsPanel, KidsText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
@@ -36,7 +37,9 @@ export function ChooseCompanion() {
   return (
     <KidsScroll>
       <KidsPanel>
-        <Text style={{ fontSize: 44, textAlign: "center" }}>👋</Text>
+        <View className="items-center">
+          <KidsArt emoji="👋" size={52} />
+        </View>
         <KidsText size={28} bold center className="mt-2">
           {learner ? `أهلًا يا ${learner.display_name}!` : "أهلًا يا بطل!"}
         </KidsText>
@@ -49,7 +52,14 @@ export function ChooseCompanion() {
         {COMPANIONS.map((companion, index) => {
           const selected = picked === companion.animal;
           return (
-            <Animated.View key={companion.animal} entering={FadeInDown.delay(index * 100).springify().stiffness(240).damping(16)} style={{ width: "48%" }}>
+            <Animated.View
+              key={companion.animal}
+              entering={FadeInDown.delay(index * 100)
+                .springify()
+                .stiffness(240)
+                .damping(16)}
+              style={{ width: "48%" }}
+            >
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ selected }}

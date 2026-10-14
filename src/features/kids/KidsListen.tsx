@@ -1,7 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import { Pause, Play } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { buildSurahAudioUrl, type Reciter } from "@/core/quran/api";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -10,8 +10,11 @@ import { audio, currentTrack, usePlayerValue, type Track } from "@/features/audi
 import { kidsAudio } from "./kidsAudio";
 import { getKidsSurahs, getTeachingReciters } from "./kidsData";
 import { useLoad } from "./useLoad";
-import { KidsPanel, KidsText, KidsTitlePanel } from "./ui/KidsPanel";
+import { KidsArt } from "./ui/KidsArt";
+import { KidsBeat } from "./ui/KidsMotion";
+import { KidsText, KidsTitlePanel } from "./ui/KidsPanel";
 import { useKidsBottomPad } from "./ui/KidsShell";
+import { KidsError, KidsLoading } from "./ui/KidsStatus";
 import { KIDS, PANEL_SHADOW } from "./ui/kidsStyles";
 
 /**
@@ -42,7 +45,7 @@ export function KidsListen() {
 
   const header = (
     <View style={{ marginHorizontal: 6, marginBottom: 16 }}>
-      <KidsTitlePanel title="استمع مع الأطفال" subtitle="المصحف المعلّم: يقرأ الشيخ الآية، ثم يردّدها الأطفال معه — ردّد معهم!" />
+      <KidsTitlePanel title="استمع مع الأطفال" icon={<KidsArt emoji="🎶" size={60} />} subtitle="اسمع الشيخ وردّد مع الأطفال!" />
       {reciters.length > 1 && (
         <View className="mt-3 flex-row flex-wrap justify-center gap-2" accessibilityLabel="اختر الشيخ">
           {reciters.map((entry) => {
@@ -73,13 +76,9 @@ export function KidsListen() {
         </View>
       )}
       {loaded.status === "loading" ? (
-        <ActivityIndicator color={KIDS.white} size="large" style={{ marginTop: 24 }} />
+        <KidsLoading label="لحظة… نجهّز التسجيلات" className="mt-4" />
       ) : queue.length === 0 ? (
-        <KidsPanel className="mt-4">
-          <KidsText tone="muted" center>
-            لا تتوفر تسجيلات المصحف المعلّم الآن.
-          </KidsText>
-        </KidsPanel>
+        <KidsError emoji="🎧" title="لا تتوفر التسجيلات الآن" message="جرّب مرة أخرى بعد قليل." className="mt-4" />
       ) : null}
     </View>
   );
@@ -136,9 +135,15 @@ export function KidsListen() {
             <KidsText size={19} bold center style={{ color: on ? KIDS.white : KIDS.deep }}>
               {item.title}
             </KidsText>
-            <KidsText size={12} bold style={{ color: on ? KIDS.white : KIDS.deep, opacity: 0.6 }}>
-              {on ? "♪ ♪ ♪" : toArabicDigits(index + 1)}
-            </KidsText>
+            {on ? (
+              <KidsBeat>
+                <KidsArt emoji="🎶" size={26} />
+              </KidsBeat>
+            ) : (
+              <KidsText size={15} bold style={{ color: KIDS.deep, opacity: 0.6, lineHeight: 26 }}>
+                {toArabicDigits(index + 1)}
+              </KidsText>
+            )}
           </Pressable>
         );
       }}

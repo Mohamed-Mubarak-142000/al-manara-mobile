@@ -1,4 +1,4 @@
-import { Ear, Volume2 } from "lucide-react-native";
+import { Volume2 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
@@ -14,6 +14,7 @@ import { husaryAyah, kidsAyahs, kidsSurah } from "../kidsData";
 import { useKidsProgress } from "../progress/progressStore";
 import { sfx } from "../sfx";
 import { Celebration } from "../ui/Celebration";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { KidsPanel, KidsText, QuranText } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
@@ -22,7 +23,19 @@ import { useShake } from "../ui/motion";
 import { go } from "../ui/nav";
 import { GameBar, GameIntro } from "./GameChrome";
 
-function ChoiceCard({ text, wrong, right, disabled, onPress }: { text: string; wrong: boolean; right: boolean; disabled: boolean; onPress: () => void }) {
+function ChoiceCard({
+  text,
+  wrong,
+  right,
+  disabled,
+  onPress,
+}: {
+  text: string;
+  wrong: boolean;
+  right: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}) {
   const motion = useShake(wrong || right, wrong ? "shake" : right ? "pop" : null);
   return (
     <Animated.View style={motion}>
@@ -51,7 +64,9 @@ function ChoiceCard({ text, wrong, right, disabled, onPress }: { text: string; w
 function SpeakerButton({ playing, onPress }: { playing: boolean; onPress: () => void }) {
   const scale = useSharedValue(1);
   useEffect(() => {
-    scale.value = playing ? withRepeat(withSequence(withTiming(1.08, { duration: 500 }), withTiming(1, { duration: 500 })), -1) : withTiming(1);
+    scale.value = playing
+      ? withRepeat(withSequence(withTiming(1.08, { duration: 500 }), withTiming(1, { duration: 500 })), -1)
+      : withTiming(1);
   }, [playing, scale]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
@@ -60,7 +75,16 @@ function SpeakerButton({ playing, onPress }: { playing: boolean; onPress: () => 
         accessibilityRole="button"
         accessibilityLabel="اسمع الآية"
         onPress={onPress}
-        style={{ width: 112, height: 112, borderRadius: 56, alignItems: "center", justifyContent: "center", backgroundColor: KIDS.sky, borderBottomWidth: 8, borderBottomColor: KIDS.skyShadow }}
+        style={{
+          width: 112,
+          height: 112,
+          borderRadius: 56,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: KIDS.sky,
+          borderBottomWidth: 8,
+          borderBottomColor: KIDS.skyShadow,
+        }}
       >
         <Volume2 size={56} color={KIDS.white} />
       </Pressable>
@@ -116,7 +140,13 @@ export function ListenPickGame({ surahId }: { surahId: number }) {
       setTimeout(() => {
         const nextIndex = index + 1;
         if (nextIndex >= rounds.length) {
-          recordGame({ game: "listen_pick", surah: surah.id, score: rounds.length, total: rounds.length, stars: starsForSlips(slips, rounds.length) });
+          recordGame({
+            game: "listen_pick",
+            surah: surah.id,
+            score: rounds.length,
+            total: rounds.length,
+            stars: starsForSlips(slips, rounds.length),
+          });
           sfx.win();
           setWon(true);
           return;
@@ -137,7 +167,12 @@ export function ListenPickGame({ surahId }: { surahId: number }) {
   if (!round) {
     return (
       <KidsScroll>
-        <GameIntro icon={Ear} tone="sky" title={`اسمع واختر: سورة ${surah.name}`} description="اسمع الآية جيدًا، ثم اضغط على الآية التي سمعتها.">
+        <GameIntro
+          art="🎧"
+          tone="sky"
+          title={`اسمع واختر: سورة ${surah.name}`}
+          description="اسمع الآية جيدًا، ثم اضغط على الآية التي سمعتها."
+        >
           {ayahs.length >= 3 ? (
             <KidsButton tone="sky" onPress={start}>
               ابدأ اللعب
@@ -161,7 +196,15 @@ export function ListenPickGame({ surahId }: { surahId: number }) {
       <GameBar title={`اسمع واختر: ${surah.name}`}>
         <View className="flex-row gap-1.5" accessibilityLabel={`السؤال ${index + 1} من ${rounds.length}`}>
           {rounds.map((_, dot) => (
-            <View key={dot} style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: dot < index ? KIDS.emerald : dot === index ? KIDS.gold : KIDS.dashed }} />
+            <View
+              key={dot}
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 7,
+                backgroundColor: dot < index ? KIDS.emerald : dot === index ? KIDS.gold : KIDS.dashed,
+              }}
+            />
           ))}
         </View>
       </GameBar>
@@ -175,12 +218,30 @@ export function ListenPickGame({ surahId }: { surahId: number }) {
           {round.choices.map((choice) => {
             const wrong = wrongPicks.includes(choice.number);
             const right = solved && choice.number === round.target.number;
-            return <ChoiceCard key={choice.number} text={ayahPreview(choice.text, 10)} wrong={wrong} right={right} disabled={wrong || solved} onPress={() => pick(choice)} />;
+            return (
+              <ChoiceCard
+                key={choice.number}
+                text={ayahPreview(choice.text, 10)}
+                wrong={wrong}
+                right={right}
+                disabled={wrong || solved}
+                onPress={() => pick(choice)}
+              />
+            );
           })}
         </View>
       </KidsPanel>
 
-      <Celebration open={won} title="ما شاء الله! أذنك ذهبية 🎧" message={`عرفت ${toArabicDigits(rounds.length)} آيات من سورة ${surah.name}`} stars={stars} onClose={() => setWon(false)}>
+      <Celebration
+        open={won}
+        title="ما شاء الله! أذنك ذهبية"
+        message={`عرفت ${toArabicDigits(rounds.length)} آيات من سورة ${surah.name}`}
+        stars={stars}
+        onClose={() => setWon(false)}
+      >
+        <View style={{ width: "100%", alignItems: "center" }}>
+          <KidsArt emoji="🎧" size={64} />
+        </View>
         <KidsButton tone="sky" onPress={start}>
           العب مرة أخرى
         </KidsButton>

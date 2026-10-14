@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import type { LucideIcon } from "lucide-react-native";
-import { Linking, Text, View } from "react-native";
+import { Linking, Text, View, type ImageSourcePropType } from "react-native";
 
 import { splitEmails, type LegalDocumentData, type LegalRun } from "@/core/legal/legalContent";
 import { toArabicDigits } from "@/core/text/arabic";
@@ -37,13 +37,13 @@ function Runs({ runs }: { runs: LegalRun[] }) {
 }
 
 /** The website's LegalDocument: "آخر تحديث", then numbered sections of a paragraph or bullets. */
-export function LegalDocument({ document, icon }: { document: LegalDocumentData; icon: LucideIcon }) {
+export function LegalDocument({ document, icon, art }: { document: LegalDocumentData; icon?: LucideIcon; art?: ImageSourcePropType }) {
   const body = useScaledText(16, 30);
   const heading = useScaledText(20, 34);
 
   return (
     <Screen bleed>
-      <BackHeader kicker={document.kicker} icon={icon} title={document.title} description={document.description} />
+      <BackHeader kicker={document.kicker} icon={icon} art={art} title={document.title} description={document.description} />
       <Section className="mt-2 gap-4">
         <Text className="font-sans text-sm text-fg-muted">آخر تحديث: {toArabicDigits(document.updated)}</Text>
         {document.sections.map((section, index) => (

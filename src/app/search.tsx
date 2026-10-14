@@ -1,13 +1,16 @@
 import { FlashList } from "@shopify/flash-list";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
-import { ScreenHeader } from "@/components/ui/PageHeader";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { SearchField } from "@/components/ui/SearchField";
 import { StateMessage } from "@/components/ui/StateMessage";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { MAX_RESULTS, isSearchIndexReady, prepareSearchIndex, searchQuran } from "@/features/mushaf/search";
 
@@ -15,20 +18,40 @@ const NO_RESULTS = { results: [] as MushafAyah[], total: 0 };
 
 function ResultRow({ item }: { item: MushafAyah }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => router.push({ pathname: "/mushaf", params: { page: String(item.page) } })}
-      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
-    >
-      <View className="mx-4 mb-3 gap-1 rounded-3xl border border-border bg-surface p-4">
-        <Text className="font-sans-bold text-xs text-accent-strong">
-          سورة {getSurah(item.surah)?.name} · الآية {toArabicDigits(item.ayah)} · ص {toArabicDigits(item.page)}
-        </Text>
-        <Text className="font-quran text-lg leading-10 text-fg" numberOfLines={3}>
-          {item.text}
-        </Text>
-      </View>
-    </Pressable>
+    // A light fade only: results change with every keystroke.
+    <Animated.View entering={FadeIn.duration(240)}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push({ pathname: "/mushaf", params: { page: String(item.page) } })}
+        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
+      >
+        <View className="mx-4 mb-3 gap-1 rounded-3xl border border-border bg-surface p-4 shadow-card">
+          <Text className="font-sans-bold text-xs text-accent-strong">
+            سورة {getSurah(item.surah)?.name} · الآية {toArabicDigits(item.ayah)} · ص {toArabicDigits(item.page)}
+          </Text>
+          <Text className="font-quran text-lg leading-10 text-fg" numberOfLines={3}>
+            {item.text}
+          </Text>
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/** Before typing: the picture, a title and one hint. */
+function SearchIntro() {
+  return (
+    <View className="items-center gap-3 px-8 pt-10">
+      <Animated.View entering={enterSoft(0)}>
+        <Image source={SECTION_ART.search} style={{ width: 96, height: 96 }} contentFit="contain" accessible={false} />
+      </Animated.View>
+      <Animated.Text entering={enterSoft(1)} className="mt-1 text-center font-sans-bold text-lg text-fg">
+        ابحث في آيات القرآن
+      </Animated.Text>
+      <Animated.Text entering={enterSoft(2)} className="text-center font-sans text-sm leading-6 text-fg-muted">
+        اكتب كما تكتب عادةً، بالتشكيل أو بدونه، ويعمل البحث دون إنترنت.
+      </Animated.Text>
+    </View>
   );
 }
 
@@ -58,7 +81,7 @@ export default function SearchScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader title="البحث في القرآن" />
+      <ScreenHeader title="البحث في القرآن" art={SECTION_ART.search} />
       <View className="gap-3 px-4 pb-3">
         <SearchField value={query} onChangeText={setQuery} placeholder="اكتب كلمة أو جزءًا من آية" />
         {searching && ready && total > 0 && (
@@ -74,15 +97,7 @@ export default function SearchScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         ListEmptyComponent={
-          !searching ? (
-            <Text className="mx-6 mt-6 text-center font-sans text-sm leading-7 text-fg-muted">
-              ابحث بالكلمات كما تكتبها عادةً، بالتشكيل أو بدونه. البحث يعمل دون إنترنت.
-            </Text>
-          ) : ready ? (
-            <StateMessage message="لا توجد آية بهذه الكلمات." />
-          ) : (
-            <StateMessage loading />
-          )
+          !searching ? <SearchIntro /> : ready ? <StateMessage message="لا توجد آية بهذه الكلمات." /> : <StateMessage loading />
         }
         renderItem={({ item }) => <ResultRow item={item} />}
       />

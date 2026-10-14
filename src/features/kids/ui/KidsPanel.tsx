@@ -25,6 +25,19 @@ export function KidsPanel({ children, className, style }: { children: ReactNode;
   );
 }
 
+/**
+ * The kids' content inside the app's shared BottomSheet. The sheet follows the app theme (dark at night),
+ * while the kids palette is always daytime; a white card of its own keeps the garden-coloured rows readable
+ * in both themes.
+ */
+export function KidsSheetCard({ children }: { children: ReactNode }) {
+  return (
+    <View style={{ borderRadius: 24, backgroundColor: KIDS.white, padding: 8, borderWidth: 2, borderColor: KIDS.whiteRing }}>
+      {children}
+    </View>
+  );
+}
+
 type Tone = "deep" | "muted" | "white";
 const COLOR: Record<Tone, string> = { deep: KIDS.deep, muted: KIDS.muted, white: KIDS.white };
 
@@ -60,7 +73,17 @@ export function KidsText({
 }
 
 /** The page title panel most kids pages open with (a centered heading and a line under it). */
-export function KidsTitlePanel({ title, subtitle, icon, className }: { title: string; subtitle?: string; icon?: ReactNode; className?: string }) {
+export function KidsTitlePanel({
+  title,
+  subtitle,
+  icon,
+  className,
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  className?: string;
+}) {
   return (
     <KidsPanel className={className}>
       {icon ? <View className="items-center">{icon}</View> : null}
@@ -77,9 +100,27 @@ export function KidsTitlePanel({ title, subtitle, icon, className }: { title: st
 }
 
 /** Quran text inside the kids pages (the website's quran-text class). */
-export function QuranText({ children, size = 30, color = KIDS.ink, center = true, style }: { children: ReactNode; size?: number; color?: string; center?: boolean; style?: StyleProp<TextStyle> }) {
+export function QuranText({
+  children,
+  size = 30,
+  color = KIDS.ink,
+  center = true,
+  style,
+}: {
+  children: ReactNode;
+  size?: number;
+  color?: string;
+  center?: boolean;
+  style?: StyleProp<TextStyle>;
+}) {
   return (
-    <Text className="font-quran" style={[{ fontSize: size, lineHeight: Math.round(size * 1.9), color, textAlign: center ? "center" : "right", writingDirection: "rtl" }, style]}>
+    <Text
+      className="font-quran"
+      style={[
+        { fontSize: size, lineHeight: Math.round(size * 1.9), color, textAlign: center ? "center" : "right", writingDirection: "rtl" },
+        style,
+      ]}
+    >
       {children}
     </Text>
   );

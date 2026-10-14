@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { Compass, MapPin, Settings } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { AppState, Linking, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Linking, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
@@ -10,7 +10,8 @@ import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
 import { distanceToKaaba, qiblaBearing } from "@/core/prayer/qibla";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
-import { ScreenHeader } from "@/components/ui/PageHeader";
+import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { requestPreciseLocation } from "@/features/prayer/locationStore";
 import { usePrayerDay } from "@/features/prayer/usePrayerDay";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -28,6 +29,7 @@ export default function QiblaScreen() {
   const insets = useSafeAreaInsets();
   const fg = useThemeColor("fg");
   const gold = useThemeColor("gold");
+  const accent = useThemeColor("accent");
   const primary = useThemeColor("primary");
   const border = useThemeColor("border");
   const muted = useThemeColor("fg-muted");
@@ -112,15 +114,18 @@ export default function QiblaScreen() {
 
   return (
     <View className="flex-1 bg-bg" style={{ paddingBottom: insets.bottom + 16 }}>
-      <ScreenHeader title="اتجاه القبلة" />
+      <ScreenHeader title="اتجاه القبلة" art={SECTION_ART.qibla} />
 
       <View className="flex-1 items-center justify-center gap-6 px-6">
-        <View className="flex-row items-center gap-1.5 rounded-full border border-border px-3 py-1.5">
+        <Animated.View
+          entering={enterSoft(0)}
+          className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5"
+        >
           <MapPin size={14} color={primary} />
           <Text className="font-sans text-sm text-fg-muted">{location.label}</Text>
-        </View>
+        </Animated.View>
 
-        <View style={{ width: SIZE, height: SIZE }}>
+        <Animated.View entering={enterSoft(1)} style={{ width: SIZE, height: SIZE }}>
           <Animated.View style={[{ width: SIZE, height: SIZE }, dial]}>
             <Svg width={SIZE} height={SIZE}>
               <Circle cx={center} cy={center} r={center - 4} fill="none" stroke={border} strokeWidth={2} />
@@ -183,10 +188,10 @@ export default function QiblaScreen() {
               style={{ borderBottomColor: aligned ? primary : fg }}
             />
           </View>
-        </View>
+        </Animated.View>
 
         {denied ? (
-          <View className="items-center gap-3">
+          <Animated.View entering={enterSoft(2)} className="items-center gap-3">
             <Text className="text-center font-sans text-sm text-fg-muted">
               {permission === "blocked"
                 ? "إذن الموقع مرفوض من إعدادات الجهاز. افتح الإعدادات واسمح بالموقع لتشغيل البوصلة."
@@ -195,11 +200,14 @@ export default function QiblaScreen() {
             <Button icon={permission === "blocked" ? Settings : Compass} onPress={allowLocation} disabled={asking}>
               {permission === "blocked" ? "فتح الإعدادات" : "السماح بالموقع"}
             </Button>
-          </View>
+          </Animated.View>
         ) : bearing === null ? (
-          <Text className="font-sans text-sm text-fg-muted">جارٍ تحديد موقعك…</Text>
+          <Animated.View entering={enterSoft(2)} className="min-h-16 flex-row items-center gap-3" accessibilityLiveRegion="polite">
+            <ActivityIndicator color={accent} />
+            <Text className="font-sans-bold text-base text-fg-muted">جارٍ تحديد موقعك…</Text>
+          </Animated.View>
         ) : (
-          <View className="items-center gap-1">
+          <Animated.View entering={enterSoft(2)} className="items-center gap-1">
             <Text className={`font-sans-bold text-2xl ${aligned ? "text-primary" : "text-fg"}`}>
               {aligned
                 ? "أنت تتجه إلى القبلة"
@@ -213,11 +221,11 @@ export default function QiblaScreen() {
                 ? ` · ${toArabicDigits(Math.round(distanceToKaaba(coords.latitude, coords.longitude)).toLocaleString("en"))} كم إلى مكة`
                 : ""}
             </Text>
-          </View>
+          </Animated.View>
         )}
-        <Text className="text-center font-sans text-xs leading-5 text-fg-muted">
+        <Animated.Text entering={enterSoft(3)} className="text-center font-sans text-sm leading-6 text-fg-muted">
           أمسك الهاتف مستويًا وبعيدًا عن المعادن والمغناطيس. لدقة أكبر حرّك الهاتف على شكل رقم ٨ لمعايرة البوصلة.
-        </Text>
+        </Animated.Text>
       </View>
     </View>
   );

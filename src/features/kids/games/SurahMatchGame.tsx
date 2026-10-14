@@ -1,4 +1,4 @@
-import { BookHeart, RotateCcw } from "lucide-react-native";
+import { RotateCcw } from "lucide-react-native";
 import { useMemo, useRef, useState } from "react";
 import { View } from "react-native";
 
@@ -67,7 +67,14 @@ export function SurahMatchGame({ focusSurahId }: { focusSurahId: number | null }
         setTimeout(() => {
           sfx.win();
           setWon(true);
-          recordGame({ game: "surah_match", surah: focusSurahId, score: pairs, total: pairs, moves: moves + 1, stars: starsFor(moves + 1, pairs) });
+          recordGame({
+            game: "surah_match",
+            surah: focusSurahId,
+            score: pairs,
+            total: pairs,
+            moves: moves + 1,
+            stars: starsFor(moves + 1, pairs),
+          });
         }, 450);
       }
       return;
@@ -82,7 +89,7 @@ export function SurahMatchGame({ focusSurahId }: { focusSurahId: number | null }
   if (!cards) {
     return (
       <KidsScroll>
-        <GameIntro icon={BookHeart} tone="emerald" title="ذاكرة السور" description="اقلب بطاقتين: طابق اسم كل سورة مع أول آية فيها!">
+        <GameIntro art="🃏" tone="violet" title="ذاكرة السور" description="اقلب بطاقتين: طابق اسم كل سورة مع أول آية فيها!">
           <KidsButton tone="emerald" onPress={start}>
             ابدأ اللعب
           </KidsButton>
@@ -135,7 +142,13 @@ export function SurahMatchGame({ focusSurahId }: { focusSurahId: number | null }
         ))}
       </View>
 
-      <Celebration open={won} title="أحسنت! وجدت كل الأزواج" message={`في ${toArabicDigits(moves)} محاولة`} stars={starsFor(moves, pairs)} onClose={() => setWon(false)}>
+      <Celebration
+        open={won}
+        title="أحسنت! وجدت كل الأزواج"
+        message={`في ${toArabicDigits(moves)} محاولة`}
+        stars={starsFor(moves, pairs)}
+        onClose={() => setWon(false)}
+      >
         <KidsButton tone="emerald" onPress={start}>
           العب مرة أخرى
         </KidsButton>

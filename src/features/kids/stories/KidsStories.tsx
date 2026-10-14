@@ -2,7 +2,7 @@ import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import { ArrowLeft, ArrowRight, CheckCircle2, Clapperboard, Lightbulb } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 import { toArabicDigits } from "@/core/text/arabic";
@@ -12,9 +12,11 @@ import { loadStories, markWatched, playerHtml, thumbnail, type Story } from "@/f
 import { sfx } from "../sfx";
 import { useLoad } from "../useLoad";
 import { KidsButton } from "../ui/KidsButton";
+import { KidsEnter } from "../ui/KidsMotion";
 import { KidsPanel, KidsText, KidsTitlePanel } from "../ui/KidsPanel";
 import { KidsScroll } from "../ui/KidsScroll";
 import { useKidsBottomPad } from "../ui/KidsShell";
+import { KidsLoading } from "../ui/KidsStatus";
 import { KIDS, PANEL_SHADOW } from "../ui/kidsStyles";
 import { go } from "../ui/nav";
 
@@ -47,67 +49,78 @@ export function KidsStories() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: bottom }}
       ListHeaderComponent={
-        <View style={{ marginBottom: 20 }}>
+        <KidsEnter style={{ marginBottom: 20 }}>
           <KidsTitlePanel
             icon={<Clapperboard size={48} color={KIDS.violet} />}
             title="قصص الأنبياء"
             subtitle={data ? progressLine(data.stories, data.watched) : state.status === "loading" ? undefined : "تعذّر تحميل القصص الآن."}
           />
-          {state.status === "loading" && <ActivityIndicator color={KIDS.white} size="large" style={{ marginTop: 24 }} />}
+          {state.status === "loading" && <KidsLoading label="لحظة… نجهّز القصص" className="mt-4" />}
           {state.status === "ready" && !data && (
             <KidsButton tone="emerald" className="mt-4 self-center" onPress={reload}>
               حاول مرة أخرى
             </KidsButton>
           )}
-        </View>
+        </KidsEnter>
       }
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const watched = data?.watched.has(item.id) ?? false;
         return (
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={item.title}
-            onPress={() => go(`/kids/stories/${item.id}`)}
-            style={({ pressed }) => [
-              { marginBottom: 20, borderRadius: 32, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 4, borderColor: "rgba(255,255,255,0.6)", transform: [{ translateY: pressed ? -3 : 0 }] },
-              PANEL_SHADOW,
-            ]}
-          >
-            <View style={{ aspectRatio: 16 / 9, backgroundColor: KIDS.mist }}>
-              <Image source={{ uri: thumbnail(item.youtube_id) }} contentFit="cover" style={{ width: "100%", height: "100%" }} />
-              {watched && (
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    end: 12,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    borderRadius: 999,
-                    backgroundColor: KIDS.emerald,
-                    paddingHorizontal: 12,
-                    paddingVertical: 2,
-                  }}
-                >
-                  <CheckCircle2 size={16} color={KIDS.white} />
-                  <KidsText size={14} bold tone="white">
-                    شاهدتها
+          // Only the first screenful is staggered; cards mounted later while scrolling rise in without waiting.
+          <KidsEnter index={index < 6 ? index + 1 : 0}>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={item.title}
+              onPress={() => go(`/kids/stories/${item.id}`)}
+              style={({ pressed }) => [
+                {
+                  marginBottom: 20,
+                  borderRadius: 32,
+                  overflow: "hidden",
+                  backgroundColor: "rgba(255,255,255,0.95)",
+                  borderWidth: 4,
+                  borderColor: "rgba(255,255,255,0.6)",
+                  transform: [{ translateY: pressed ? -3 : 0 }],
+                },
+                PANEL_SHADOW,
+              ]}
+            >
+              <View style={{ aspectRatio: 16 / 9, backgroundColor: KIDS.mist }}>
+                <Image source={{ uri: thumbnail(item.youtube_id) }} contentFit="cover" style={{ width: "100%", height: "100%" }} />
+                {watched && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      end: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      borderRadius: 999,
+                      backgroundColor: KIDS.emerald,
+                      paddingHorizontal: 12,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <CheckCircle2 size={16} color={KIDS.white} />
+                    <KidsText size={14} bold tone="white">
+                      شاهدتها
+                    </KidsText>
+                  </View>
+                )}
+              </View>
+              <View style={{ padding: 14, alignItems: "center" }}>
+                {item.prophet ? (
+                  <KidsText size={14} bold style={{ color: KIDS.violet }}>
+                    {item.prophet}
                   </KidsText>
-                </View>
-              )}
-            </View>
-            <View style={{ padding: 14, alignItems: "center" }}>
-              {item.prophet ? (
-                <KidsText size={14} bold style={{ color: KIDS.violet }}>
-                  {item.prophet}
+                ) : null}
+                <KidsText size={20} bold center>
+                  {item.title}
                 </KidsText>
-              ) : null}
-              <KidsText size={20} bold center>
-                {item.title}
-              </KidsText>
-            </View>
-          </Pressable>
+              </View>
+            </Pressable>
+          </KidsEnter>
         );
       }}
     />
@@ -140,7 +153,12 @@ export function KidsStory({ id }: { id: string }) {
     if (event.nativeEvent.data === "ended") void finish();
   }
 
-  if (state.status === "loading") return <ActivityIndicator color={KIDS.white} size="large" style={{ marginTop: 40 }} />;
+  if (state.status === "loading")
+    return (
+      <KidsScroll>
+        <KidsLoading label="لحظة… نجهّز القصة" />
+      </KidsScroll>
+    );
   if (!story)
     return (
       <KidsScroll>
@@ -168,7 +186,12 @@ export function KidsStory({ id }: { id: string }) {
           {story.title}
         </KidsText>
       </View>
-      <View style={[{ borderRadius: 32, overflow: "hidden", backgroundColor: KIDS.black, borderWidth: 4, borderColor: "rgba(255,255,255,0.7)" }, PANEL_SHADOW]}>
+      <View
+        style={[
+          { borderRadius: 32, overflow: "hidden", backgroundColor: KIDS.black, borderWidth: 4, borderColor: "rgba(255,255,255,0.7)" },
+          PANEL_SHADOW,
+        ]}
+      >
         <View style={{ width: playerWidth - 8, height: ((playerWidth - 8) * 9) / 16 }}>
           <WebView
             source={{ html: playerHtml(story.youtube_id), baseUrl: "https://www.youtube-nocookie.com" }}
@@ -182,7 +205,17 @@ export function KidsStory({ id }: { id: string }) {
       </View>
       <View className="items-center">
         {watched ? (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 999, backgroundColor: KIDS.watched, paddingHorizontal: 20, paddingVertical: 8 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 999,
+              backgroundColor: KIDS.watched,
+              paddingHorizontal: 20,
+              paddingVertical: 8,
+            }}
+          >
             <CheckCircle2 size={24} color={KIDS.emeraldShadow} />
             <KidsText size={18} bold style={{ color: KIDS.emeraldShadow }}>
               أحسنت! شاهدت هذه القصة
@@ -202,7 +235,16 @@ export function KidsStory({ id }: { id: string }) {
             </KidsText>
           ) : null}
           {story.lesson ? (
-            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, borderRadius: 24, backgroundColor: KIDS.cream, padding: 14 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 12,
+                borderRadius: 24,
+                backgroundColor: KIDS.cream,
+                padding: 14,
+              }}
+            >
               <Lightbulb size={24} color={KIDS.starStroke} />
               <KidsText size={17} bold style={{ flex: 1, color: KIDS.lessonInk }}>
                 ماذا تعلّمنا؟ {story.lesson}

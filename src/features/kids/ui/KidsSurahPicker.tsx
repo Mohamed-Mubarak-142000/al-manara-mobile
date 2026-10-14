@@ -11,6 +11,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 
 import { getKidsSurahs } from "../kidsData";
 import { useKidsProgress } from "../progress/progressStore";
+import { KidsArt } from "./KidsArt";
 import { KidsTitlePanel, KidsText } from "./KidsPanel";
 import { useKidsBottomPad } from "./KidsShell";
 import { KIDS, PANEL_SHADOW } from "./kidsStyles";
@@ -23,6 +24,8 @@ interface KidsSurahPickerProps {
   showProgress?: boolean;
   /** Surahs are levels: a surah stays locked until the quiz of the one before it is passed. */
   levels?: boolean;
+  /** The 3D picture over the title (an emoji with a KidsArt picture). */
+  art?: string;
 }
 
 const RING = 97.4;
@@ -68,7 +71,14 @@ const SurahCard = memo(function SurahCard({
     >
       <View style={{ width: 64, height: 64, alignItems: "center", justifyContent: "center" }}>
         <Svg width={64} height={64} viewBox="0 0 36 36" style={{ position: "absolute", transform: [{ rotate: "-90deg" }] }}>
-          <Circle cx="18" cy="18" r="15.5" fill={locked ? KIDS.soft : done ? KIDS.emerald : KIDS.ringFill} stroke={KIDS.ringTrack} strokeWidth="3" />
+          <Circle
+            cx="18"
+            cy="18"
+            r="15.5"
+            fill={locked ? KIDS.soft : done ? KIDS.emerald : KIDS.ringFill}
+            stroke={KIDS.ringTrack}
+            strokeWidth="3"
+          />
           {showProgress && !locked && (
             <Circle
               cx="18"
@@ -101,7 +111,7 @@ const SurahCard = memo(function SurahCard({
       <KidsText size={20} bold center className="mt-2">
         {surah.name}
       </KidsText>
-      <KidsText size={12} bold tone="muted" center>
+      <KidsText size={14} bold tone="muted" center>
         {locked
           ? "انجح في اختبار السورة السابقة لتفتحها"
           : `${toArabicDigits(total)} آيات${showProgress && memorized > 0 ? ` · حفظت ${toArabicDigits(memorized)}` : ""}`}
@@ -111,7 +121,7 @@ const SurahCard = memo(function SurahCard({
 });
 
 /** The website's KidsSurahPicker: the kids surahs as big cards, with progress rings and level locks. */
-export function KidsSurahPicker({ hrefBase, title, subtitle, showProgress = true, levels = false }: KidsSurahPickerProps) {
+export function KidsSurahPicker({ hrefBase, title, subtitle, showProgress = true, levels = false, art }: KidsSurahPickerProps) {
   const { state, status } = useKidsProgress();
   const bottom = useKidsBottomPad();
   const surahs = getKidsSurahs();
@@ -123,7 +133,14 @@ export function KidsSurahPicker({ hrefBase, title, subtitle, showProgress = true
       extraData={state}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 6, paddingTop: 10, paddingBottom: bottom }}
-      ListHeaderComponent={<KidsTitlePanel title={title} subtitle={subtitle} className="mx-1.5 mb-4" />}
+      ListHeaderComponent={
+        <KidsTitlePanel
+          title={title}
+          subtitle={subtitle}
+          icon={art ? <KidsArt emoji={art} size={64} /> : undefined}
+          className="mx-1.5 mb-4"
+        />
+      }
       renderItem={({ item }) => {
         const level = levels ? levelStatus(state, item.id) : null;
         return (

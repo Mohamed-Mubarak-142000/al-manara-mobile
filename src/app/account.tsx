@@ -11,6 +11,7 @@ import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount, type Learner } from "@/features/account/accountStore";
 import { AuthField } from "@/features/account/AuthLayout";
 import { MAX_CHILDREN, settings, type SettingsResult } from "@/features/account/settings";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -175,7 +176,7 @@ export default function AccountScreen() {
         <PageHeader
           back
           kicker="حسابي"
-          icon={UserRound}
+          art={SECTION_ART.account}
           title={`أهلًا ${profile?.full_name || "بك"}`}
           description="بياناتك، وملفات أطفالك، وكلمة المرور."
         />

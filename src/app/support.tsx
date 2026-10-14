@@ -5,14 +5,16 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { Check, Clock, Copy, HandHeart, ImagePlus, LogIn, MessageCircleHeart, Sparkles, UserRound, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StateMessage } from "@/components/ui/StateMessage";
 import { useAccount } from "@/features/account/accountStore";
 import { AuthField, FormError } from "@/features/account/AuthLayout";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { donationProblem, submitDonation, useMyDonation, type NewDonation } from "@/features/support/donationApi";
 import { INSTAPAY_NUMBER, QUICK_AMOUNTS, SUPPORTER_PERKS, useSupporter } from "@/features/support/supportStore";
 import { useThemeColor } from "@/theme/useThemeColor";
@@ -207,7 +209,6 @@ function DonationForm({ defaultName, onSent }: { defaultName: string; onSent: ()
       <Button variant="gold" size="lg" icon={HandHeart} disabled={sending} onPress={send}>
         {sending ? "جارٍ الإرسال…" : "إرسال"}
       </Button>
-      {sending && <ActivityIndicator color={primary} />}
     </View>
   );
 }
@@ -240,14 +241,14 @@ export default function SupportScreen() {
       <PageHeader
         back
         kicker="صدقة جارية"
-        icon={HandHeart}
+        art={SECTION_ART.support}
         title="ادعم المنارة"
         description="المنارة مجانية بالكامل، بلا إعلانات وبلا اشتراكات. دعمك يغطي الخوادم ويضيف قرّاءً وروايات ومحتوى للأطفال، ويبقيها مجانية لكل مسلم."
       />
 
       <View className="gap-4 px-4">
         {supporter && (
-          <StatusCard icon={Sparkles} tone="done" title="أنت من داعمي المنارة ✓" body="جزاك الله خيرًا. يمكنك الدعم مرة أخرى متى شئت." />
+          <StatusCard icon={Sparkles} tone="done" title="أنت من داعمي المنارة" body="جزاك الله خيرًا. يمكنك الدعم مرة أخرى متى شئت." />
         )}
 
         <InstaPayCard />
@@ -263,7 +264,7 @@ export default function SupportScreen() {
             </Button>
           </View>
         ) : loading ? (
-          <ActivityIndicator color={primary} className="py-6" />
+          <StateMessage loading />
         ) : pending ? (
           <StatusCard
             icon={Clock}

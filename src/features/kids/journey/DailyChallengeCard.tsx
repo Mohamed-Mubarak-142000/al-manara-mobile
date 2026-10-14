@@ -1,12 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Check, Gift } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 
 import { buildDailyChallenge, DAILY_TASK_COUNT, todayKey, type DailyTaskId } from "@/core/kids/dailyChallenge";
 import { toArabicDigits } from "@/core/text/arabic";
 
 import { useKidsState } from "../progress/progressStore";
+import { KidsArt } from "../ui/KidsArt";
 import { KidsButton } from "../ui/KidsButton";
 import { KidsText } from "../ui/KidsPanel";
 import { KIDS, PANEL_SHADOW } from "../ui/kidsStyles";
@@ -39,9 +40,12 @@ export function DailyChallengeCard({ surahId }: { surahId: number | null }) {
     <View style={[{ borderRadius: 36, overflow: "hidden", borderWidth: 4, borderColor: "rgba(255,255,255,0.7)" }, PANEL_SHADOW]}>
       <LinearGradient colors={[KIDS.cream, KIDS.creamDeep]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ padding: 20 }}>
         <View className="flex-row items-center justify-between gap-3">
-          <KidsText size={22} bold style={{ color: KIDS.honeyDeep }}>
-            🌟 تحدي اليوم
-          </KidsText>
+          <View className="flex-row items-center gap-2" style={{ flexShrink: 1 }}>
+            <KidsArt emoji="🌟" size={30} />
+            <KidsText size={22} bold style={{ color: KIDS.honeyDeep }}>
+              تحدي اليوم
+            </KidsText>
+          </View>
           <View style={{ backgroundColor: "rgba(255,255,255,0.8)", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 2 }}>
             <KidsText size={16} bold style={{ color: KIDS.honey }}>
               {toArabicDigits(Math.min(done.length, DAILY_TASK_COUNT))} / {toArabicDigits(DAILY_TASK_COUNT)}
@@ -68,7 +72,7 @@ export function DailyChallengeCard({ surahId }: { surahId: number | null }) {
                   transform: [{ translateY: pressed ? 1 : 0 }],
                 })}
               >
-                <Text style={{ fontSize: 24 }}>{task.emoji}</Text>
+                <KidsArt emoji={task.emoji} size={30} />
                 <KidsText
                   size={17}
                   bold

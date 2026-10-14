@@ -1,11 +1,13 @@
 import Constants from "expo-constants";
+import { Image } from "expo-image";
 import { router } from "expo-router";
-import { ChevronLeft, HandHeart, Info, Settings2, Share2, type LucideIcon } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { ChevronLeft } from "lucide-react-native";
+import { Pressable, Text, View, type ImageSourcePropType } from "react-native";
 
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { AccountCard } from "@/features/account/AccountCard";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { shareApp } from "@/features/legal/site";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -13,27 +15,26 @@ function GroupTitle({ children }: { children: string }) {
   return <Text className="mb-1 mt-4 px-1 font-sans-bold text-base text-fg">{children}</Text>;
 }
 
-/** One row of a grouped list: icon, title, optional hint, and a chevron. */
+/** One row of a grouped list: its 3D art, title, optional hint, and a chevron. */
 function LinkRow({
-  icon: Icon,
+  art,
   title,
   hint,
   onPress,
   last,
 }: {
-  icon: LucideIcon;
+  art: ImageSourcePropType;
   title: string;
   hint?: string;
   onPress: () => void;
   last?: boolean;
 }) {
-  const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   return (
     <Pressable accessibilityRole="link" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
       <View className={`flex-row items-center gap-3 px-4 py-4 ${last ? "" : "border-b border-border"}`}>
-        <View className="size-10 items-center justify-center rounded-2xl bg-primary-soft">
-          <Icon size={18} color={primary} />
+        <View className="size-11 items-center justify-center rounded-2xl bg-primary-soft">
+          <Image source={art} style={{ width: 30, height: 30 }} contentFit="contain" accessible={false} />
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-[15px] text-fg">{title}</Text>
@@ -59,7 +60,7 @@ function SupportLink() {
     >
       <View className="flex-row items-center gap-3 rounded-3xl border border-gold/40 bg-accent-soft p-4">
         <View className="size-11 items-center justify-center rounded-2xl bg-surface">
-          <HandHeart size={22} color={accent} />
+          <Image source={SECTION_ART.support} style={{ width: 30, height: 30 }} contentFit="contain" accessible={false} />
         </View>
         <View className="flex-1">
           <Text className="font-sans-bold text-base text-fg">ادعم المنارة</Text>
@@ -76,7 +77,7 @@ export default function MoreScreen() {
   const version = Constants.expoConfig?.version;
   return (
     <Screen bleed>
-      <PageHeader kicker="المزيد" icon={Settings2} title="حسابك والإعدادات" description="حسابك، وتفضيلات التطبيق، وعن المنارة." />
+      <PageHeader kicker="المزيد" art={SECTION_ART.sections} title="حسابك والإعدادات" description="حسابك، وتفضيلات التطبيق، وعن المنارة." />
       <Section className="mt-5 gap-3">
         <AccountCard />
         <SupportLink />
@@ -84,7 +85,7 @@ export default function MoreScreen() {
         <GroupTitle>الإعدادات</GroupTitle>
         <Group>
           <LinkRow
-            icon={Settings2}
+            art={SECTION_ART.settings}
             title="الإعدادات والإشعارات"
             hint="الأذان وصوته، والتذكيرات، والمواقيت، والخط في مكان واحد"
             onPress={() => router.push("/settings")}
@@ -95,8 +96,13 @@ export default function MoreScreen() {
         {/* Privacy, terms and the website are on the About screen, not repeated here. */}
         <GroupTitle>عن المنارة</GroupTitle>
         <Group>
-          <LinkRow icon={Info} title="عن المنارة" hint="رسالتنا، والخصوصية، والشروط، والتواصل" onPress={() => router.push("/about")} />
-          <LinkRow icon={Share2} title="شارك التطبيق" hint="الدال على الخير كفاعله" onPress={shareApp} last />
+          <LinkRow
+            art={SECTION_ART.about}
+            title="عن المنارة"
+            hint="رسالتنا، والخصوصية، والشروط، والتواصل"
+            onPress={() => router.push("/about")}
+          />
+          <LinkRow art={SECTION_ART.share} title="شارك التطبيق" hint="الدال على الخير كفاعله" onPress={shareApp} last />
         </Group>
         {version && <Text className="mt-2 text-center font-sans text-xs text-fg-muted">المنارة · الإصدار {version}</Text>}
       </Section>

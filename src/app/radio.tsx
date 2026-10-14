@@ -1,5 +1,6 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
-import { ListMusic, Pause, Play, Radio } from "lucide-react-native";
+import { ListMusic, Pause, Play } from "lucide-react-native";
 import { useEffect } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, {
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Ornament";
 import { ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { audio, currentTrack, usePlayer } from "@/features/audio/playerStore";
+import { SECTION_ART } from "@/features/home/sectionArt";
 import { RADIO_STATION, RADIO_TRACK } from "@/features/radio/station";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -46,7 +48,6 @@ function Bar({ index, active }: { index: number; active: boolean }) {
 /** Live Cairo Quran Radio, with the website's automatic switch to a backup stream. */
 export default function RadioScreen() {
   const insets = useSafeAreaInsets();
-  const accent = useThemeColor("accent-strong");
   const onPrimary = useThemeColor("on-primary");
   const state = usePlayer();
   const onRadio = currentTrack(state)?.id === RADIO_TRACK.id;
@@ -60,19 +61,22 @@ export default function RadioScreen() {
 
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader title="الإذاعة" subtitle="بث مباشر" />
+      <ScreenHeader title="الإذاعة" subtitle="بث مباشر" art={SECTION_ART.radio} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}>
         <Animated.View
           entering={enterSoft(0)}
           className="mt-2 items-center gap-7 rounded-3xl border border-border bg-surface px-5 py-8 shadow-card"
         >
-          <View
-            className={`flex-row items-center gap-2 rounded-full border px-4 py-1.5 ${playing ? "border-rose/40 bg-rose/10" : "border-border bg-accent-soft"}`}
-          >
-            {playing ? <View className="size-2 rounded-full bg-rose" /> : <Radio size={14} color={accent} />}
-            <Text className={`font-sans-bold text-sm ${playing ? "text-rose" : "text-accent-strong"}`}>
-              {playing ? "على الهواء الآن" : "بث مباشر على مدار الساعة"}
-            </Text>
+          <View className="items-center gap-4">
+            <Image source={SECTION_ART.radio} style={{ width: 112, height: 112 }} contentFit="contain" accessible={false} />
+            <View
+              className={`flex-row items-center gap-2 rounded-full border px-4 py-1.5 ${playing ? "border-rose/40 bg-rose/10" : "border-border bg-accent-soft"}`}
+            >
+              {playing ? <View className="size-2 rounded-full bg-rose" /> : null}
+              <Text className={`font-sans-bold text-sm ${playing ? "text-rose" : "text-accent-strong"}`}>
+                {playing ? "على الهواء الآن" : "بث مباشر على مدار الساعة"}
+              </Text>
+            </View>
           </View>
 
           <View className="items-center gap-1.5">

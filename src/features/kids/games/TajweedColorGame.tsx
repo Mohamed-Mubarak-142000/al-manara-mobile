@@ -1,9 +1,13 @@
-import { Palette } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
-import { buildTajweedMatchRound, checkTajweedMatch, type TajweedMatchRound, type TajweedMatchTarget } from "@/core/kids/games/matchGameLogic";
+import {
+  buildTajweedMatchRound,
+  checkTajweedMatch,
+  type TajweedMatchRound,
+  type TajweedMatchTarget,
+} from "@/core/kids/games/matchGameLogic";
 import { TAJWEED_RULES, type TajweedAyah } from "@/core/quran/tajweedApi";
 import { toArabicDigits } from "@/core/text/arabic";
 
@@ -18,7 +22,7 @@ import { KidsScroll } from "../ui/KidsScroll";
 import { KIDS } from "../ui/kidsStyles";
 import { useShake } from "../ui/motion";
 import { go } from "../ui/nav";
-import { GameBar, GameIntro } from "./GameChrome";
+import { GameBar, GameIntro, GameLink } from "./GameChrome";
 
 // Beginner-friendly rules only; silent letters and advanced idgham types are left out.
 const KIDS_RULES = [
@@ -54,7 +58,9 @@ function kidsRound(ayah: TajweedAyah): TajweedMatchRound | null {
   return {
     ...round,
     targets,
-    displaySegments: round.displaySegments.map((segment) => (segment.targetId && !allowed.has(segment.targetId) ? { ...segment, targetId: null } : segment)),
+    displaySegments: round.displaySegments.map((segment) =>
+      segment.targetId && !allowed.has(segment.targetId) ? { ...segment, targetId: null } : segment,
+    ),
   };
 }
 
@@ -119,7 +125,10 @@ export function TajweedColorGame({ surahId }: { surahId: number }) {
     sfx.tap();
     setSelected(target);
     setWrong(null);
-    const distractors = shuffle(KIDS_RULES.filter((rule) => TAJWEED_RULES[rule]?.label !== TAJWEED_RULES[target.ruleClass]?.label)).slice(0, 3);
+    const distractors = shuffle(KIDS_RULES.filter((rule) => TAJWEED_RULES[rule]?.label !== TAJWEED_RULES[target.ruleClass]?.label)).slice(
+      0,
+      3,
+    );
     setChoices(shuffle([target.ruleClass, ...distractors]));
   }
 
@@ -154,7 +163,7 @@ export function TajweedColorGame({ surahId }: { surahId: number }) {
     return (
       <KidsScroll>
         <GameIntro
-          icon={Palette}
+          art="🎨"
           tone="rose"
           title={`لوّن التجويد — سورة ${surah.name}`}
           description="في الآية كلمات مميّزة بخط منقّط. اضغط على كل واحدة، ثم اختر حكم التجويد الصحيح لتتلوّن!"
@@ -170,11 +179,7 @@ export function TajweedColorGame({ surahId }: { surahId: number }) {
               لا تتوفر أحكام كافية في هذه السورة، جرّب سورة أخرى.
             </KidsText>
           )}
-          <Pressable accessibilityRole="link" onPress={() => go("/kids/games/tajweed")}>
-            <KidsText size={14} bold tone="muted" style={{ textDecorationLine: "underline" }}>
-              اختر سورة أخرى
-            </KidsText>
-          </Pressable>
+          <GameLink label="اختر سورة أخرى" onPress={() => go("/kids/games/tajweed")} />
         </GameIntro>
       </KidsScroll>
     );
@@ -189,7 +194,10 @@ export function TajweedColorGame({ surahId }: { surahId: number }) {
       </GameBar>
 
       <KidsPanel className="items-center">
-        <Text className="font-quran" style={{ fontSize: 34, lineHeight: 76, color: KIDS.ink, textAlign: "center", writingDirection: "rtl" }}>
+        <Text
+          className="font-quran"
+          style={{ fontSize: 34, lineHeight: 76, color: KIDS.ink, textAlign: "center", writingDirection: "rtl" }}
+        >
           {round.displaySegments.map((segment, index) => {
             if (!segment.targetId) return <Text key={index}>{segment.text}</Text>;
             const target = round.targets.find((entry) => entry.id === segment.targetId)!;
