@@ -29,7 +29,8 @@ internal object VoiceCache {
     val mime = if (url.substringBefore('?').endsWith(".m3u8", true)) MimeTypes.APPLICATION_M3U8 else null
     val request = DownloadRequest.Builder(digest, Uri.parse(url)).setMimeType(mime).build()
     val factory = CacheDataSource.Factory().setCache(cache(context))
-      .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory().setConnectTimeoutMs(20_000).setReadTimeoutMs(30_000))
+      // The radio's source can take most of a minute to start answering.
+      .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory().setConnectTimeoutMs(30_000).setReadTimeoutMs(60_000))
     val downloader = DefaultDownloaderFactory(factory, executor).createDownloader(request)
     try {
       downloader.download(null)

@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { Check, ChevronDown, Pause, Play } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { FlatList, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getSoundLibrary } from "@/core/sounds/soundsApi";
@@ -24,18 +24,21 @@ export default function AdhanVoiceScreen() {
   const player = usePlayer();
   const playing = currentTrack(player);
   const [query, setQuery] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  // The voice being downloaded right now ("default" for the built-in one), shown with a spinner on its row.
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const saving = savingId !== null;
+  const [saveError, setSaveError] = useState<{ id: string; message: string } | null>(null);
   async function choose(track: Track | null) {
-    setSaving(true);
-    setSaveError("");
+    const id = track?.id ?? "default";
+    setSavingId(id);
+    setSaveError(null);
     try {
       await setAdhanVoice(track);
     } catch (error) {
-      setSaveError("تعذّر حفظ الصوت. الاختيار السابق لم يتغير. جرّب مرة أخرى.");
+      setSaveError({ id, message: "تعذّر تنزيل هذا الأذان الآن (المصدر بطيء أو الاتصال ضعيف). الاختيار السابق لم يتغير، جرّب مرة أخرى." });
       reportReminderError(error);
     } finally {
-      setSaving(false);
+      setSavingId(null);
     }
   }
   const { state, reload } = useAsync("adhan-library", async () => {
@@ -79,8 +82,6 @@ export default function AdhanVoiceScreen() {
                 ? "اختر المؤذن لتنزيل الأذان كاملًا وتشغيله عند دخول الوقت حتى والتطبيق مغلق، دون إنترنت."
                 : "آيفون يستخدم مقطع أذان قصيرًا موحدًا في الإشعار. يمكنك الاستماع إلى تسجيل المؤذن كاملًا هنا."}
             </Text>
-            {saving && <Text className="font-sans text-sm text-primary">جارٍ تنزيل تسجيل الأذان وحفظه…</Text>}
-            {!!saveError && <Text className="font-sans text-sm text-accent-strong">{saveError}</Text>}
             <Pressable
               accessibilityRole="radio"
               accessibilityState={{ selected: chosen === null }}
@@ -94,7 +95,7 @@ export default function AdhanVoiceScreen() {
                 <Text className="font-sans-bold text-base text-fg">الأذان الافتراضي</Text>
                 <Text className="font-sans text-xs text-fg-muted">مدمج في التطبيق، يعمل دون تنزيل أو إنترنت</Text>
               </View>
-              {chosen === null && <Check size={18} color={primary} />}
+              {savingId === "default" ? <ActivityIndicator color={primary} /> : chosen === null && <Check size={18} color={primary} />}
             </Pressable>
             <SearchField value={query} onChangeText={setQuery} placeholder="ابحث باسم المؤذن" />
           </View>
@@ -112,10 +113,14 @@ export default function AdhanVoiceScreen() {
       renderItem={({ item }) => {
         const selected = chosen?.id === item.id;
         const previewing = playing?.id === item.id && player.playing;
+        const downloading = savingId === item.id;
+        const failed = saveError?.id === item.id ? saveError.message : null;
         return (
           <View
-            className={`mx-4 mb-2.5 flex-row items-center gap-3 rounded-3xl border px-4 py-3 ${selected ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+            className={`mx-4 mb-2.5 rounded-3xl border px-4 py-3 ${selected || downloading ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
+            style={{ opacity: saving && !downloading ? 0.55 : 1 }}
           >
+          <View className="flex-row items-center gap-3">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={previewing ? "إيقاف" : "استمع"}
@@ -140,16 +145,29 @@ export default function AdhanVoiceScreen() {
                 <Text numberOfLines={1} className="font-sans text-xs text-fg-muted">
                   {item.title}
                 </Text>
-                {selected && chosen?.offlineKey && (
+                {downloading ? (
                   <Text numberOfLines={1} className="font-sans-bold text-xs text-primary">
-                    محفوظ على الجهاز للأذان دون إنترنت
+                    جارٍ تنزيل الأذان وحفظه… قد يستغرق دقيقة
                   </Text>
+                ) : (
+                  selected &&
+                  chosen?.offlineKey && (
+                    <Text numberOfLines={1} className="font-sans-bold text-xs text-primary">
+                      محفوظ على الجهاز للأذان دون إنترنت
+                    </Text>
+                  )
                 )}
               </View>
-              {selected && <Check size={18} color={primary} />}
+              {downloading ? <ActivityIndicator color={primary} /> : selected && <Check size={18} color={primary} />}
             </Pressable>
             {/* The preview: save it for listening offline (the alarm keeps its own copy). */}
             <TrackDownloadButton track={item} />
+          </View>
+          {failed && (
+            <Text accessibilityRole="alert" className="mt-2 font-sans text-xs leading-5 text-danger">
+              {failed}
+            </Text>
+          )}
           </View>
         );
       }}

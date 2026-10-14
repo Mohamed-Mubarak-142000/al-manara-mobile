@@ -352,10 +352,13 @@ export async function getSoundLibrary(category: SoundCategoryKey): Promise<Sound
   return { artists: [...artists.values()].sort((a, b) => b.count - a.count), tracks };
 }
 
-/** The HLS playlist of one radio recording, or null when the radio doesn't know it. */
-export async function getRadioMediaUrl(ref: string): Promise<string | null> {
+/**
+ * The HLS playlist of one radio recording, or null when the radio doesn't know it. `fresh` asks the radio
+ * again instead of using the week-old answer: for downloads, whose link must still be live when fetched.
+ */
+export async function getRadioMediaUrl(ref: string, { fresh = false }: { fresh?: boolean } = {}): Promise<string | null> {
   try {
-    const response = await cachedFetch(`${RADIO_API}/MediaService/GetVideoHlsUrl?videoRefno=${encodeURIComponent(ref)}`, 60 * 60 * 24 * 7);
+    const response = await cachedFetch(`${RADIO_API}/MediaService/GetVideoHlsUrl?videoRefno=${encodeURIComponent(ref)}`, fresh ? 0 : 60 * 60 * 24 * 7);
     if (!response.ok) return null;
     const data = (await response.json()) as { response?: { result?: string; video_url?: string } };
     const url = data.response?.video_url;

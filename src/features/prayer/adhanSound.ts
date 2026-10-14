@@ -9,6 +9,7 @@ import type { Track } from "@/features/audio/playerStore";
 
 export type AdhanVoice = Track & { offlineKey?: string };
 const KEY = "al-manara:adhan-voice:v1";
+const DOWNLOAD_ATTEMPTS = 2;
 let cached: AdhanVoice | null | undefined;
 let selection = 0;
 const listeners = new Set<() => void>();
@@ -29,10 +30,20 @@ export async function setAdhanVoice(track: Track | null) {
   if (track && Platform.OS === "android") {
     if (!background) throw new Error("اختيار الأذان الكامل يحتاج نسخة أندرويد الجديدة.");
     const ref = track.url.startsWith("radio-ref:") ? track.url.slice("radio-ref:".length) : null;
-    const url = ref ? await getRadioMediaUrl(ref) : track.url;
-    if (!url) throw new Error("تعذّر تحميل تسجيل المؤذن. الصوت السابق لم يتغير.");
-    const offlineKey = await background.downloadVoice(track.id, url);
-    next = { ...track, offlineKey };
+    // The radio's source is slow and its links don't last: each attempt asks for a fresh link, and a
+    // failed attempt (a timeout, an expired link) is tried once more before giving up.
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < DOWNLOAD_ATTEMPTS && !next?.offlineKey; attempt += 1) {
+      try {
+        const url = ref ? await getRadioMediaUrl(ref, { fresh: true }) : track.url;
+        if (!url) throw new Error("تعذّر الوصول إلى تسجيل المؤذن.");
+        next = { ...track, offlineKey: await background.downloadVoice(track.id, url) };
+      } catch (error) {
+        lastError = error;
+        if (version !== selection) return;
+      }
+    }
+    if (!next || !("offlineKey" in next) || !next.offlineKey) throw lastError ?? new Error("تعذّر تنزيل تسجيل المؤذن.");
   }
   if (version !== selection) return;
   Storage.setItemSync(KEY, JSON.stringify(next));
