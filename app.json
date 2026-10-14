@@ -30,7 +30,7 @@
       }
     },
     "android": {
-      "package": "com.almanara.app",
+      "package": "com.mmubarak.almanara",
       "adaptiveIcon": {
         "backgroundColor": "#003e32",
         "foregroundImage": "./assets/images/brand/icon-maskable.png"
