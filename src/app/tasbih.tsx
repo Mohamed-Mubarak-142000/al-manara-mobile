@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Check, ChevronDown, ChevronRight, Palette, RotateCcw, Vibrate, VibrateOff, type LucideIcon } from "lucide-react-native";
+import { Check, ChevronDown, ChevronRight, Palette, RotateCcw, Vibrate, VibrateOff, Volume2, VolumeX, type LucideIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
@@ -14,6 +14,7 @@ import { TARGET_CHOICES, TASBIH_THEMES, type TasbihTheme } from "@/core/tasbih/t
 import { toArabicDigits } from "@/core/text/arabic";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { AdhkarSheet, ThemeSheet } from "@/features/tasbih/TasbihSheets";
+import { playTasbihClick } from "@/features/tasbih/tasbihClick";
 import { countTap, updateTasbih, useTasbih } from "@/features/tasbih/tasbihStore";
 
 /*
@@ -177,6 +178,7 @@ export default function TasbihScreen() {
     // .set() rather than assigning .value, which the React Compiler treats as mutating a hook value.
     press.set(withSequence(withTiming(0.94, { duration: 60 }), withTiming(1, { duration: 140 })));
     if (completed) burst.set(withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 900 })));
+    if (state.sound) playTasbihClick();
     if (!state.vibrate) return;
     // A firmer buzz at the end of a round, so the thumb knows without looking.
     if (completed) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -249,6 +251,13 @@ export default function TasbihScreen() {
         <View className="mt-5 w-full flex-row items-center justify-around">
           <ToolButton icon={Palette} label="شكل السبحة" theme={theme} onPress={() => setSheet("themes")} />
           <ToolButton icon={RotateCcw} label="تصفير العدّاد" theme={theme} onPress={() => updateTasbih({ type: "reset" })} />
+          <ToolButton
+            icon={state.sound ? Volume2 : VolumeX}
+            label="صوت التكة"
+            pressed={state.sound}
+            theme={theme}
+            onPress={() => updateTasbih({ type: "sound" })}
+          />
           <ToolButton
             icon={state.vibrate ? Vibrate : VibrateOff}
             label="الاهتزاز"

@@ -16,6 +16,8 @@ export interface TasbihState {
   custom: Dhikr[];
   theme: TasbihThemeId;
   vibrate: boolean;
+  /** A bead's click on every tap. */
+  sound: boolean;
   /** Every tap ever, and today's taps (reset when the local date changes). */
   total: number;
   today: { date: string; count: number };
@@ -31,6 +33,7 @@ export const DEFAULT_TASBIH: TasbihState = {
   custom: [],
   theme: "emerald",
   vibrate: true,
+  sound: true,
   total: 0,
   today: { date: "", count: 0 },
 };
@@ -43,7 +46,8 @@ export type TasbihAction =
   | { type: "add"; id: string; text: string; target: number }
   | { type: "remove"; id: string }
   | { type: "theme"; theme: TasbihThemeId }
-  | { type: "vibrate" };
+  | { type: "vibrate" }
+  | { type: "sound" };
 
 export function localDate(date = new Date()): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
@@ -135,6 +139,8 @@ export function applyTasbih(state: TasbihState, action: TasbihAction, now = new 
       return { ...state, theme: action.theme };
     case "vibrate":
       return { ...state, vibrate: !state.vibrate };
+    case "sound":
+      return { ...state, sound: !state.sound };
   }
 }
 
@@ -165,6 +171,7 @@ export function normalizeTasbih(saved: unknown): TasbihState {
     custom,
     theme: TASBIH_THEMES.some((theme) => theme.id === raw.theme) ? (raw.theme as TasbihThemeId) : DEFAULT_TASBIH.theme,
     vibrate: typeof raw.vibrate === "boolean" ? raw.vibrate : true,
+    sound: typeof raw.sound === "boolean" ? raw.sound : true,
     total: count(raw.total),
     today: { date: typeof today?.date === "string" ? today.date : "", count: count(today?.count) },
   };

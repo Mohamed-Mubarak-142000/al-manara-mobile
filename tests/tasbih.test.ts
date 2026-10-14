@@ -88,6 +88,13 @@ describe("electronic tasbih", () => {
     expect(parseTarget("abc")).toBeNull();
   });
 
+  it("turns the click sound off and on, and keeps a saved choice", () => {
+    const off = applyTasbih(DEFAULT_TASBIH, { type: "sound" });
+    expect(off.sound).toBe(false);
+    expect(applyTasbih(off, { type: "sound" }).sound).toBe(true);
+    expect(normalizeTasbih({ ...DEFAULT_TASBIH, sound: false }).sound).toBe(false);
+  });
+
   it("repairs a damaged save instead of crashing", () => {
     expect(normalizeTasbih(null)).toEqual(DEFAULT_TASBIH);
     const repaired = normalizeTasbih({
@@ -108,6 +115,8 @@ describe("electronic tasbih", () => {
       custom: [{ id: "y", text: "ذكر", target: 10 }],
       theme: "emerald",
       vibrate: true,
+      // Saves from before the click sound start with it on.
+      sound: true,
       total: 12,
       today: { date: "2026-10-13", count: 4 },
     });
