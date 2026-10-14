@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/Button";
 import { SearchField } from "@/components/ui/SearchField";
 import { useAccount } from "@/features/account/accountStore";
 import { GoogleButton } from "@/features/account/AuthLayout";
-import { SECTION_ART } from "@/features/home/sectionArt";
 import { useReciters } from "@/features/listen/useReciters";
 import { StepLayout } from "@/features/onboarding/OnboardingStep";
 import { onboarding, useOnboarding } from "@/features/onboarding/onboardingStore";
@@ -51,7 +50,7 @@ export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
     const name = state.profile?.full_name?.trim() || state.email;
     return (
       <StepLayout
-        art={SECTION_ART.account}
+        art={require("@/assets/images/onboarding/stepper/login.jpg")}
         eyebrow="حسابك"
         title={`أهلًا بك، ${name.split(" ")[0]}`}
         subtitle={restored ? "استرجعنا إعداداتك من حسابك، وكل ما تغيّره يُحفظ عليه." : "كل ما تضبطه في الخطوات التالية يُحفظ على حسابك."}
@@ -68,7 +67,12 @@ export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
   }
 
   return (
-    <StepLayout art={SECTION_ART.account} eyebrow="حسابك" title="احفظ تقدّمك في حسابك" subtitle="حساب مجاني يحفظ كل شيء لك.">
+    <StepLayout
+      art={require("@/assets/images/onboarding/stepper/register.jpg")}
+      eyebrow="حسابك"
+      title="احفظ تقدّمك في حسابك"
+      subtitle="حساب مجاني يحفظ كل شيء لك."
+    >
       <View className="gap-2.5">
         {PERKS.map((text) => (
           <View key={text} className="flex-row items-center gap-3">
@@ -110,7 +114,13 @@ export function ReciterStep() {
   }, [reciters, query]);
 
   return (
-    <StepLayout art={SECTION_ART.listen} eyebrow="الاستماع" title="قارئك المفضل" subtitle="نضعه في أول قائمة الاستماع." scroll={false}>
+    <StepLayout
+      art={require("@/assets/images/onboarding/stepper/reciter.jpg")}
+      eyebrow="الاستماع"
+      title="قارئك المفضل"
+      subtitle="نضعه في أول قائمة الاستماع."
+      scroll={false}
+    >
       <SearchField value={query} onChangeText={setQuery} placeholder="ابحث عن قارئ" />
       <FlatList
         data={reciterList}
@@ -169,7 +179,12 @@ function Choice({ label, active, onPress }: { label: string; active: boolean; on
 /** How much a day: a khatma at that pace is created when onboarding finishes (and saved to the account). */
 export function WirdStep({ wird, onWird }: { wird: number | null; onWird: (pages: number | null) => void }) {
   return (
-    <StepLayout art={SECTION_ART.khatma} eyebrow="الورد اليومي" title="كم تقرأ كل يوم؟" subtitle="نبدأ لك ختمة على مهلك، وتغيّرها متى شئت.">
+    <StepLayout
+      art={require("@/assets/images/onboarding/stepper/wird.jpg")}
+      eyebrow="الورد اليومي"
+      title="كم تقرأ كل يوم؟"
+      subtitle="نبدأ لك ختمة على مهلك، وتغيّرها متى شئت."
+    >
       <View accessibilityRole="radiogroup" className="flex-row flex-wrap gap-2">
         {WIRD_PAGES.map((pages) => (
           <Choice
@@ -223,7 +238,7 @@ function ToggleRow({ title, note, value, onChange }: { title: string; note: stri
 export function NotificationsStep({ value, onChange }: { value: NotificationChoices; onChange: (value: NotificationChoices) => void }) {
   return (
     <StepLayout
-      art={SECTION_ART.adhan}
+      art={require("@/assets/images/onboarding/stepper/notifications.jpg")}
       eyebrow="التنبيهات"
       title="لا تفوتك صلاة ولا ذكر"
       subtitle="حتى والتطبيق مغلق. نطلب إذن الإشعارات مرة واحدة."
