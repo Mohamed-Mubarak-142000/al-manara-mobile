@@ -10,6 +10,8 @@ import { getHijriDate } from "@/core/calendar/hijriDate";
 import { toArabicDigits } from "@/core/text/arabic";
 import { Button } from "@/components/ui/Button";
 import { Screen, Section } from "@/components/ui/Screen";
+import { DailyHadithBanner } from "@/features/home/DailyHadithBanner";
+import { KidsBanner } from "@/features/home/KidsBanner";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { OfflineNotice } from "@/features/home/OfflineNotice";
 import { SetupPrompt } from "@/features/settings/SetupPrompt";
@@ -99,6 +101,8 @@ export default function HomeScreen() {
         <QuickActions />
         <ContinueReadingCard />
         <RamadanCard />
+        <DailyHadithBanner />
+        <KidsBanner />
       </Section>
 
       {/* Both render nothing (and no gap) when there is nothing to show. */}
