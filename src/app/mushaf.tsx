@@ -26,7 +26,7 @@ import { AYAH_PILL_HEIGHT, AyahAudioPill } from "@/features/mushaf/AyahAudioPill
 import { AyahSheet } from "@/features/mushaf/AyahSheet";
 import { JumpSheet } from "@/features/mushaf/JumpSheet";
 import { ayahIdFromTrackId, hafsPages, pageOfAyahId, type PageSource } from "@/features/mushaf/jump";
-import { MushafFixedPage } from "@/features/mushaf/MushafFixedPage";
+import { MushafPrintedPage } from "@/features/mushaf/MushafPrintedPage";
 import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
@@ -117,9 +117,10 @@ export default function MushafScreen() {
     [riwayaKey, riwayaState],
   );
   const riwayaLabel = RIWAYAT.find((entry) => entry.key === riwayaKey)?.label ?? "";
-  // Hafs at the normal size (and smaller) is laid out line for line as printed: 15 fixed lines a page,
-  // nothing scrolls. Larger sizes, and the other riwayat (no line layout), flow and scroll instead.
-  const fixedPages = riwayaKey === "hafs" && state.prefs.fontStep <= DEFAULT_FONT_STEP;
+  // Hafs in the printed layout at the normal size (and smaller) is laid out line for line as printed: 15
+  // fixed lines a page, nothing scrolls. Larger sizes, the flowing layout and the other riwayat (no line
+  // layout) flow and scroll instead.
+  const fixedPages = riwayaKey === "hafs" && state.prefs.layout === "printed" && state.prefs.fontStep <= DEFAULT_FONT_STEP;
   const [pagerHeight, setPagerHeight] = useState(0);
   const pagerExtra = useMemo(() => ({ riwaya, fixedPages, pagerHeight }), [riwaya, fixedPages, pagerHeight]);
   // Last-read and bookmarks keep to the Hafs pages (other riwayat number their ayahs differently).
@@ -221,7 +222,7 @@ export default function MushafScreen() {
               pagerHeight === 0 ? (
                 <View style={{ width }} />
               ) : (
-                <MushafFixedPage
+                <MushafPrintedPage
                   page={item}
                   width={width}
                   height={pagerHeight}
@@ -401,6 +402,40 @@ export default function MushafScreen() {
               </ScrollView>
             )}
           </View>
+
+          {riwayaKey === "hafs" && (
+            <View className="gap-3">
+              <SettingLabel>شكل الصفحة</SettingLabel>
+              <View accessibilityRole="radiogroup" className="flex-row gap-2">
+                {(
+                  [
+                    ["printed", "كالمصحف المطبوع"],
+                    ["flow", "نص متدفق"],
+                  ] as const
+                ).map(([key, label]) => {
+                  const active = state.prefs.layout === key;
+                  return (
+                    <Pressable
+                      key={key}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active }}
+                      onPress={() => reader.setLayout(key)}
+                      className={`flex-1 items-center rounded-full border px-3.5 py-2.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
+                    >
+                      <Text className={`font-sans-semibold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {state.prefs.layout === "printed" && (
+                <Text className="font-sans text-xs leading-5 text-fg-muted">
+                  {state.prefs.tajweed
+                    ? "مع التلوين تُعرض الصفحات بخط حفص المعتاد. أوقف التلوين لترى خط مصحف المدينة المطبوع."
+                    : "بخط مصحف المدينة من مجمع الملك فهد: يُنزَّل خط كل صفحة أول مرة ثم يعمل دون إنترنت."}
+                </Text>
+              )}
+            </View>
+          )}
 
           <View className="gap-3">
             <SettingLabel>حجم الخط</SettingLabel>

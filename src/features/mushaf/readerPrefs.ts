@@ -26,12 +26,20 @@ export const FONT_SIZES = [19, 22, 25, 28, 32] as const;
 /** The normal size: at it (and below) a page shows whole, like a printed mushaf; larger sizes scroll. */
 export const DEFAULT_FONT_STEP = 1;
 
+/** Hafs pages as printed (15 fixed lines), or as flowing text that resizes (the website's ReaderLayout). */
+export type ReaderLayout = "printed" | "flow";
+
 export interface ReaderPrefs {
   theme: ReaderTheme;
   fontStep: number;
-  /** On by default, like the website reader. */
+  /**
+   * Tajweed colours. Off by default on new installs, so the Hafs pages show in the King Fahd Complex's
+   * own printed fonts (MushafGlyphPage); on, they are drawn in the bundled Hafs font with the colours.
+   * A saved choice (and the account's) is kept.
+   */
   tajweed: boolean;
   riwaya: RiwayaKey;
+  layout: ReaderLayout;
 }
 
 export interface Bookmark {
@@ -66,7 +74,7 @@ interface ReaderState {
 
 const KEY = "al-manara:reader:v1";
 const DEFAULTS: ReaderState = {
-  prefs: { theme: "light", fontStep: DEFAULT_FONT_STEP, tajweed: true, riwaya: "hafs" },
+  prefs: { theme: "light", fontStep: DEFAULT_FONT_STEP, tajweed: false, riwaya: "hafs", layout: "printed" },
   bookmarks: [],
   lastRead: null,
   notes: {},
@@ -126,6 +134,9 @@ export const reader = {
   },
   setTajweed(tajweed: boolean) {
     write({ prefs: { ...read().prefs, tajweed } });
+  },
+  setLayout(layout: ReaderLayout) {
+    write({ prefs: { ...read().prefs, layout } });
   },
   setFontStep(fontStep: number) {
     write({ prefs: { ...read().prefs, fontStep: Math.max(0, Math.min(FONT_SIZES.length - 1, fontStep)) } });
