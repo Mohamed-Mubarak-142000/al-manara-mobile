@@ -12,6 +12,7 @@ import {
   totalUnits,
   unitsToSegments,
 } from "@/core/plan/schedule";
+import { buildJuzRanges } from "@/core/progress/juz";
 import { getSurahAyahCount } from "@/core/quran/surahAyahCounts";
 import { activeLearnerId, activeLearnerIdNow, currentUserIdNow, useAccount } from "@/features/account/accountStore";
 import { recordActivity } from "@/features/journey/progress";
@@ -23,7 +24,7 @@ import { supabase } from "@/lib/supabase";
 
 import { resolveSegments, spansToAyahs } from "./portion";
 import { rebasePlan, reducePlan, type PlanOp, type PlanSnapshot } from "./reducer";
-import { PLAN_OP, type PlanSyncPayload } from "./sync";
+import { PLAN_OP, knownAyahs, type PlanSyncPayload } from "./sync";
 import { loggedOn, type PlanWithLog } from "./types";
 
 /**
@@ -46,6 +47,16 @@ export interface NewPlan {
   kind: "memorize" | "review";
   startJuz: number;
   endJuz: number;
+  unitsPerDay: number;
+  farPages: number;
+  priorSurahs: number[];
+  priorJuz: number[];
+  newDays: number[];
+  reviewDays: number[];
+}
+
+/** The edit form's fields (the website's EditPlanForm). */
+export interface PlanEdit {
   unitsPerDay: number;
   farPages: number;
   priorSurahs: number[];
@@ -319,6 +330,61 @@ export const planActions = {
     // For review rows: from_unit = the older-pages cursor and to_unit = the recent window's anchor.
     apply({ type: "completeReview", planId: plan.id, day: today, from: plan.review_cursor, to: anchor, cursor }, who);
     return { ok: true };
+  },
+
+  /**
+   * Changes the current plan in place (the website's updatePlanAction): the daily amount, the review
+   * size, the days, and what was known before — so memorizing more surahs elsewhere adds them to the
+   * review without starting over. Progress, the log and the review rotation are kept.
+   */
+  async update(input: PlanEdit): Promise<PlanResult> {
+    const who = actor();
+    const current = who ? activePlan(who) : null;
+    if (!who || !current) return { ok: false, error: NO_PLAN };
+    const { plan } = current;
+    const memorize = plan.kind === "memorize";
+    if (memorize && !(PAGES_PER_DAY_OPTIONS as readonly number[]).includes(input.unitsPerDay)) return { ok: false, error: "اختر مقدارًا من القائمة" };
+    if (memorize && input.newDays.length === 0) return { ok: false, error: "اختر يومًا واحدًا على الأقل للحفظ" };
+    if (!memorize && input.priorSurahs.length === 0 && input.priorJuz.length === 0) return { ok: false, error: PICK_PRIOR };
+    if (!memorize && input.farPages < 1) return { ok: false, error: "اختر عدد صفحات المراجعة" };
+    if (input.reviewDays.length === 0) return { ok: false, error: "اختر يومًا واحدًا على الأقل للمراجعة" };
+    const priorSurahs = sorted(input.priorSurahs);
+    const priorJuz = sorted(input.priorJuz);
+
+    const { pageStarts, juzStarts } = mushafStarts();
+    const juzPages = buildJuzPages(juzStarts, pageStarts);
+    // As when the plan was made: the plan's own pages come into review as they're memorized.
+    const juzPrior = priorJuz.flatMap((juz) => {
+      const { startPage, endPage } = juzPages[juz - 1]!;
+      return Array.from({ length: endPage - startPage + 1 }, (_, index) => startPage + index);
+    });
+    const priorPages = [...new Set([...surahsToPages(pageStarts, priorSurahs, getSurahAyahCount), ...juzPrior])]
+      .filter((page) => plan.start_page === null || plan.end_page === null || page < plan.start_page || page > plan.end_page)
+      .sort((a, b) => a - b);
+    if (!memorize && priorPages.length === 0) return { ok: false, error: PICK_PRIOR };
+
+    // Only what was just added counts as newly memorized in the learner's progress.
+    const addedSurahs = priorSurahs.filter((surah) => !plan.prior_surahs.includes(surah));
+    const addedJuz = priorJuz.filter((juz) => !plan.prior_juz.includes(juz));
+    if (addedSurahs.length > 0 || addedJuz.length > 0) recordActivity(who.learnerId);
+    apply(
+      {
+        type: "update",
+        planId: plan.id,
+        changes: {
+          units_per_day: memorize ? input.unitsPerDay : plan.units_per_day,
+          far_review_pages: input.farPages,
+          prior_surahs: priorSurahs,
+          prior_juz: priorJuz,
+          prior_pages: priorPages,
+          new_days: memorize ? sorted(input.newDays) : [],
+          review_days: sorted(input.reviewDays),
+        },
+        ayahs: knownAyahs(addedSurahs, addedJuz, buildJuzRanges(juzStarts)),
+      },
+      who,
+    );
+    return { ok: true, message: "حُفظت التعديلات على خطتك." };
   },
 
   async archive(): Promise<PlanResult> {

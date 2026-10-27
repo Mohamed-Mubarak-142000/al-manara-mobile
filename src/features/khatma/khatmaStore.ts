@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { EMPTY_KHATMA, rebaseKhatma, reduceKhatma, withFinished, type KhatmaOp, type KhatmaSnapshot } from "./reducer";
 import { KHATMA_OP, type KhatmaSyncPayload } from "./sync";
 import type { KhatmaWithLog } from "./types";
+import { missedKhatmaDay } from "./view";
 
 /**
  * The current khatma, with the website's rules (features/khatma/actions.ts). Signed in: the learner's
@@ -264,6 +265,36 @@ function validate(input: NewKhatma): { unit: KhatmaUnit; perSession: number } | 
   return { unit: input.unit, perSession: input.perSession };
 }
 
+const NO_MISSED_DAY = "لا يوجد يوم فائت في الأسبوع الماضي لتسجيله.";
+
+/** The website's logKhatmaPortion: the next portion, logged against today or the missed day. */
+async function logPortion(which: "today" | "missed"): Promise<KhatmaResult> {
+  const who = actor();
+  const current = currentFor(who)?.current;
+  if (!current || current.khatma.status !== "active") return { ok: false, error: NO_KHATMA };
+  const day = which === "today" ? planDay() : missedKhatmaDay(current.khatma, current.log, planDay());
+  if (!day) return { ok: false, error: NO_MISSED_DAY };
+  if (current.log.some((entry) => entry.day === day)) return { ok: true };
+  const portion = nextPortion(current.khatma, mushafBoundaries());
+  if (!portion) return { ok: true };
+  track("khatma_day_read", { missed: which === "missed" });
+  // Reading today counts as today's activity; recording an earlier day's reading doesn't.
+  if (who && which === "today") recordActivity(who.learnerId);
+  apply(
+    {
+      type: "complete",
+      khatmaId: current.khatma.id,
+      day,
+      from: portion.from,
+      to: portion.to,
+      finished: portion.to >= TOTAL_AYAHS,
+      at: new Date().toISOString(),
+    },
+    who,
+  );
+  return { ok: true };
+}
+
 export const khatma = {
   async create(input: NewKhatma): Promise<KhatmaResult> {
     const amount = validate(input);
@@ -288,29 +319,16 @@ export const khatma = {
   },
 
   /** Marks today's portion read and moves on; the last one finishes the khatma. Safe to press twice. */
-  async completeToday(): Promise<KhatmaResult> {
-    const who = actor();
-    const current = currentFor(who)?.current;
-    if (!current || current.khatma.status !== "active") return { ok: false, error: NO_KHATMA };
-    const today = planDay();
-    if (current.log.some((entry) => entry.day === today)) return { ok: true };
-    const portion = nextPortion(current.khatma, mushafBoundaries());
-    if (!portion) return { ok: true };
-    track("khatma_day_read");
-    if (who) recordActivity(who.learnerId);
-    apply(
-      {
-        type: "complete",
-        khatmaId: current.khatma.id,
-        day: today,
-        from: portion.from,
-        to: portion.to,
-        finished: portion.to >= TOTAL_AYAHS,
-        at: new Date().toISOString(),
-      },
-      who,
-    );
-    return { ok: true };
+  completeToday(): Promise<KhatmaResult> {
+    return logPortion("today");
+  },
+
+  /**
+   * Records a portion read on a day the learner forgot to record (the latest such reading day of the
+   * last week): the next portion is logged against that day, so today's stays open.
+   */
+  completeMissed(): Promise<KhatmaResult> {
+    return logPortion("missed");
   },
 
   /** Ends the current khatma (kept in history on the account) so a new one can begin. */

@@ -19,7 +19,11 @@ export function websitePathToAppRoute(pathname: string, search: URLSearchParams)
     case "quran": {
       if (!second) return "/quran";
       const page = Number(search.get("page")) || getSurah(Number(second))?.startPage;
-      return page ? `/mushaf?page=${page}` : "/quran";
+      if (!page) return "/quran";
+      // A day's portion (?until=&wird=) opens bounded to it, as on the website.
+      const until = search.get("until");
+      const wird = search.get("wird");
+      return until && (wird === "khatma" || wird === "plan") ? `/mushaf?page=${page}&until=${until}&wird=${wird}` : `/mushaf?page=${page}`;
     }
     case "prayer-times":
       return "/prayer";

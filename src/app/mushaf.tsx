@@ -6,6 +6,8 @@ import {
   Bookmark,
   BookmarkCheck,
   ChevronDown,
+  BookOpen,
+  Check,
   ChevronRight,
   Download,
   HandHeart,
@@ -30,6 +32,15 @@ import { MushafPrintedPage } from "@/features/mushaf/MushafPrintedPage";
 import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
+import {
+  PORTION_DONE,
+  PORTION_HOME,
+  pagerIndex,
+  pagerItems,
+  parseReaderPortion,
+  portionPosition,
+  type ReaderPortion,
+} from "@/features/mushaf/readerPortion";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import {
@@ -45,8 +56,6 @@ import {
 import { recordReading } from "@/features/streak/streakStore";
 import { useSupporter } from "@/features/support/supportStore";
 import { useThemeColor } from "@/theme/useThemeColor";
-
-const PAGES = Array.from({ length: TOTAL_PAGES }, (_, index) => index + 1);
 
 /** The reader bar's square outlined button, drawn in the reader theme's own ink so it sits on any page colour. */
 function ReaderIconButton({
@@ -76,6 +85,48 @@ function ReaderIconButton({
   );
 }
 
+/** Past the portion's last page: it is read, with the way back to record it, or on into the whole mushaf. */
+function PortionDone({
+  portion,
+  width,
+  height,
+  theme,
+  onExit,
+}: {
+  portion: ReaderPortion;
+  width: number;
+  height: number;
+  theme: ReaderTheme;
+  onExit: () => void;
+}) {
+  const colors = READER_THEMES[theme];
+  const home = PORTION_HOME[portion.kind];
+  return (
+    <View style={{ width, height: height || undefined }} className="items-center justify-center gap-3 px-8">
+      <View className="size-16 items-center justify-center rounded-full" style={{ backgroundColor: colors.frame }}>
+        <Check size={32} color={colors.accent} />
+      </View>
+      <Text accessibilityRole="header" className="text-center font-sans-bold text-2xl" style={{ color: colors.ink }}>
+        أتممت وِردك، تقبّل الله منك
+      </Text>
+      <Text className="text-center font-sans text-sm leading-7" style={{ color: colors.ink, opacity: 0.7 }}>
+        ارجع إلى {home.label} لتسجّل أنك قرأته.
+      </Text>
+      <Button icon={Check} className="mt-2" onPress={() => (router.canGoBack() ? router.back() : router.replace(home.href))}>
+        {`سجّل الورد في ${home.label}`}
+      </Button>
+      {portion.to === TOTAL_PAGES && (
+        <Button variant="gold" icon={HandHeart} onPress={() => router.push("/khatm-dua")}>
+          دعاء ختم القرآن
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" icon={BookOpen} onPress={onExit}>
+        المصحف كاملًا
+      </Button>
+    </View>
+  );
+}
+
 /** A setting's small label inside the reader settings sheet. */
 function SettingLabel({ children }: { children: string }) {
   return <Text className="font-sans-bold text-base text-fg">{children}</Text>;
@@ -84,8 +135,12 @@ function SettingLabel({ children }: { children: string }) {
 /** The paged mushaf: swipe between the 604 Madinah pages, fully offline. */
 export default function MushafScreen() {
   useKeepAwake();
-  const params = useLocalSearchParams<{ page?: string }>();
+  const params = useLocalSearchParams<{ page?: string; until?: string; wird?: string }>();
   const initialPage = Math.min(TOTAL_PAGES, Math.max(1, Number(params.page) || 1));
+  // «اقرأ الآن» from the khatma or the plan: only that portion's pages, then a "done" panel.
+  const portion = useMemo(() => parseReaderPortion(initialPage, params.until, params.wird), [initialPage, params.until, params.wird]);
+  const items = useMemo(() => pagerItems(portion), [portion]);
+  const [portionDone, setPortionDone] = useState(false);
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const state = useReaderState();
@@ -144,6 +199,8 @@ export default function MushafScreen() {
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken<number>[] }) => {
     const visible = viewableItems.find((token) => token.isViewable)?.item;
     if (typeof visible !== "number") return;
+    setPortionDone(visible === PORTION_DONE);
+    if (visible === PORTION_DONE) return;
     setPage(visible);
     const top = getPage(visible)[0];
     if (top && isHafs.current) reader.saveLastRead({ page: visible, surah: top.surah, ayah: top.ayah });
@@ -153,11 +210,21 @@ export default function MushafScreen() {
   const openAyah = useCallback((ayah: MushafAyah) => setSelected(ayah), []);
   const getItemLayout = useMemo(() => (_: unknown, index: number) => ({ length: width, offset: width * index, index }), [width]);
 
-  const jumpTo = useCallback((target: number, animated = false) => {
-    const clamped = Math.min(TOTAL_PAGES, Math.max(1, target));
-    listRef.current?.scrollToIndex({ index: clamped - 1, animated });
-    setPage(clamped);
+  /** Leaves the portion for the whole mushaf, at a page. */
+  const leavePortion = useCallback((target: number) => {
+    router.replace({ pathname: "/mushaf", params: { page: String(target) } });
   }, []);
+
+  const jumpTo = useCallback(
+    (target: number, animated = false) => {
+      const clamped = Math.min(TOTAL_PAGES, Math.max(1, target));
+      // A jump out of the portion opens the whole mushaf there.
+      if (portion && (clamped < portion.from || clamped > portion.to)) return leavePortion(clamped);
+      listRef.current?.scrollToIndex({ index: pagerIndex(portion, clamped), animated });
+      setPage(clamped);
+    },
+    [portion, leavePortion],
+  );
 
   // Follow the recitation: when the next ayah is on another page and the reader was on the page of the
   // ayah before it, turn the page. A reader who has browsed elsewhere is left where they are.
@@ -171,8 +238,10 @@ export default function MushafScreen() {
     lastPlaying.current = playingId;
     if (playingId === null || previous === null || playingId === previous) return;
     const target = pageOfAyahId(playingId);
-    if (target !== null && target !== pageRef.current && pageOfAyahId(previous) === pageRef.current) jumpTo(target, true);
-  }, [playingId, jumpTo]);
+    // In a portion, the recitation turns pages only within it.
+    const inPortion = !portion || (target !== null && target >= portion.from && target <= portion.to);
+    if (target !== null && inPortion && target !== pageRef.current && pageOfAyahId(previous) === pageRef.current) jumpTo(target, true);
+  }, [playingId, jumpTo, portion]);
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.shell, paddingTop: insets.top, paddingBottom: insets.bottom + footerSpace }}>
@@ -201,14 +270,14 @@ export default function MushafScreen() {
       ) : (
         <FlatList
           ref={listRef}
-          key={riwayaKey}
-          data={PAGES}
+          key={`${riwayaKey}-${portion?.to ?? ""}`}
+          data={items}
           extraData={pagerExtra}
           horizontal
           pagingEnabled
           keyExtractor={(item) => String(item)}
           // Remounted per riwaya (key): it then opens on the page the reader was on.
-          initialScrollIndex={page - 1}
+          initialScrollIndex={pagerIndex(portion, page)}
           getItemLayout={getItemLayout}
           windowSize={3}
           initialNumToRender={1}
@@ -218,7 +287,9 @@ export default function MushafScreen() {
           onViewableItemsChanged={onViewableItemsChanged}
           onLayout={(event) => setPagerHeight(event.nativeEvent.layout.height)}
           renderItem={({ item }) =>
-            fixedPages ? (
+            item === PORTION_DONE && portion ? (
+              <PortionDone portion={portion} width={width} height={pagerHeight} theme={state.prefs.theme} onExit={() => leavePortion(portion.to)} />
+            ) : fixedPages ? (
               pagerHeight === 0 ? (
                 <View style={{ width }} />
               ) : (
@@ -275,8 +346,9 @@ export default function MushafScreen() {
                 {first ? `سورة ${getSurah(first.surah)?.name ?? ""} · الجزء ${toArabicDigits(first.juz)}` : ""}
               </Text>
               <Text className="font-sans text-xs" style={{ color: theme.accent }}>
-                {riwayaKey === "hafs" ? "" : `${RIWAYAT.find((entry) => entry.key === riwayaKey)?.short} · `}صفحة {toArabicDigits(page)} من{" "}
-                {toArabicDigits(TOTAL_PAGES)}
+                {portion
+                  ? `ورد اليوم: صفحة ${toArabicDigits(portionPosition(portion, page).position)} من ${toArabicDigits(portionPosition(portion, page).total)}`
+                  : `${riwayaKey === "hafs" ? "" : `${RIWAYAT.find((entry) => entry.key === riwayaKey)?.short} · `}صفحة ${toArabicDigits(page)} من ${toArabicDigits(TOTAL_PAGES)}`}
               </Text>
             </View>
             {(riwayaKey === "hafs" || riwaya) && <ChevronDown size={18} color={theme.accent} />}
@@ -294,8 +366,32 @@ export default function MushafScreen() {
         </Animated.View>
       )}
 
+      {/* In a portion: on its last page, "done" (one more swipe does the same); and the way out to the whole mushaf. */}
+      {chrome && portion && !portionDone && (
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(260)}
+          pointerEvents="box-none"
+          className="absolute inset-x-0 flex-row items-center justify-center gap-2"
+          style={{ bottom: insets.bottom + footerSpace + 16 }}
+        >
+          {page === portion.to && (
+            <Button
+              variant="gold"
+              icon={Check}
+              onPress={() => listRef.current?.scrollToIndex({ index: pagerIndex(portion, portion.to) + 1, animated: true })}
+            >
+              أتممت الورد
+            </Button>
+          )}
+          <Button variant="outline" size="sm" icon={BookOpen} onPress={() => leavePortion(page)}>
+            المصحف كاملًا
+          </Button>
+        </Animated.View>
+      )}
+
       {/* The khatm: on the last page, with the reader chrome, so the fixed 15-line page is left untouched. */}
-      {chrome && page === TOTAL_PAGES && (
+      {chrome && !portion && page === TOTAL_PAGES && (
         <Animated.View
           entering={FadeIn.duration(300)}
           exiting={FadeOut.duration(260)}

@@ -180,6 +180,24 @@ export function streak(logged: string[], today: string, days: readonly number[])
   return count;
 }
 
+/** How far back a forgotten session can still be recorded. */
+export const MISSED_DAYS_WINDOW = 7;
+
+/**
+ * The most recent of the learner's days in the last week that has no session logged — a session read
+ * but not recorded, which the learner can still record so the streak and pace stay true. Never before
+ * `since` (the day the plan or khatma began).
+ */
+export function missedDay(logged: string[], today: string, days: readonly number[], since: string): string | null {
+  const set = new Set(logged);
+  for (let back = 1; back <= MISSED_DAYS_WINDOW; back += 1) {
+    const day = shiftDay(today, -back);
+    if (day < since) return null;
+    if (days.includes(weekday(day)) && !set.has(day)) return day;
+  }
+  return null;
+}
+
 export function shiftDay(day: string, delta: number): string {
   const date = new Date(`${day}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + delta);

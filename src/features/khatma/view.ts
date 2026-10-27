@@ -1,5 +1,5 @@
 // Ported from eslam-platform/src/features/khatma/view.ts — keep in sync by hand (no href: the app opens the page number).
-import { daysLabel, finishDay, nextScheduledDay, planDay, shiftDay, streak, weekday, WEEKDAY_NAMES } from "@/core/plan/schedule";
+import { daysLabel, finishDay, missedDay, nextScheduledDay, planDay, shiftDay, streak, weekday, WEEKDAY_NAMES } from "@/core/plan/schedule";
 import type { KhatmaWithLog } from "./types";
 import {
   amountLabel,
@@ -40,12 +40,28 @@ export interface KhatmaView {
   streak: number;
   finished: number;
   portion: KhatmaPortion | null;
+  /** A reading day of the last week with nothing recorded: "أمس" or "يوم السبت". */
+  missed: string | null;
 }
 
 /** Not in the app's row type: the website's range columns, read when the account row has them. */
 function isFullMushaf(row: object): boolean {
   const range = row as { start_ayah?: number | null; end_ayah?: number | null };
   return (range.start_ayah ?? 0) === 0 && (range.end_ayah ?? TOTAL_AYAHS) === TOTAL_AYAHS;
+}
+
+/** The latest reading day of the last week left unrecorded, never before the khatma began. */
+export function missedKhatmaDay(
+  khatma: Pick<KhatmaWithLog["khatma"], "days" | "created_at">,
+  log: KhatmaWithLog["log"],
+  today: string,
+): string | null {
+  return missedDay(
+    log.map((row) => row.day),
+    today,
+    khatma.days,
+    planDay(new Date(khatma.created_at)),
+  );
 }
 
 export function buildKhatmaView(
@@ -64,6 +80,7 @@ export function buildKhatmaView(
   const pagesDone = khatma.position >= TOTAL_AYAHS ? 604 : pageOfIndex(boundaries, khatma.position) - 1;
   const next = nextScheduledDay(khatma.days, shiftDay(today, 1));
   const juzHint = khatma.unit === "pages" ? pagesInJuz(khatma.per_session) : null;
+  const missed = khatma.status === "active" ? missedKhatmaDay(khatma, log, today) : null;
 
   return {
     status: khatma.status === "completed" ? "completed" : "active",
@@ -82,6 +99,7 @@ export function buildKhatmaView(
       khatma.days,
     ),
     finished,
+    missed: missed === null ? null : missed === shiftDay(today, -1) ? "أمس" : `يوم ${WEEKDAY_NAMES[weekday(missed)]}`,
     portion: range && {
       done: logged !== undefined,
       from: end(range.from),

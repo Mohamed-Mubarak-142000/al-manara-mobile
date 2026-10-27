@@ -129,6 +129,11 @@ export async function sendPlanOp(payload: PlanSyncPayload) {
       );
       return;
     }
+    case "update": {
+      check(await supabase.from("memorization_plans").update(payload.changes).eq("id", payload.planId).eq("status", "active"));
+      await markMemorized(learnerId, payload.ayahs);
+      return;
+    }
     case "archive": {
       let query = supabase.from("memorization_plans").update({ status: "archived" }).eq("learner_id", learnerId).neq("status", "archived");
       query = payload.createdAt ? query.lte("created_at", payload.createdAt) : query.eq("id", payload.planId);

@@ -189,6 +189,8 @@ describe("website links", () => {
 
   it("maps the website's pages to the app's screens", () => {
     expect(route("/quran/2?page=5")).toBe("/mushaf?page=5");
+    expect(route("/quran/2?page=5&until=7&wird=khatma")).toBe("/mushaf?page=5&until=7&wird=khatma");
+    expect(route("/quran/2?page=5&until=7&wird=other")).toBe("/mushaf?page=5");
     expect(route("/quran/18")).toBe("/mushaf?page=293");
     expect(route("/prayer-times")).toBe("/prayer");
     expect(route("/dashboard")).toBe("/journey");

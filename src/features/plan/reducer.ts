@@ -15,11 +15,19 @@ export interface AyahGroup {
   ayahs: number[];
 }
 
+/** What editing a running plan changes (the website's updatePlanAction); progress, log and cursor stay. */
+export type PlanChanges = Pick<
+  MemorizationPlanRow,
+  "units_per_day" | "far_review_pages" | "prior_surahs" | "prior_juz" | "prior_pages" | "new_days" | "review_days"
+>;
+
 export type PlanOp =
   | { type: "create"; row: MemorizationPlanRow }
   | { type: "completeNew"; planId: string; day: string; from: number; to: number; finished: boolean; at: string; ayahs: AyahGroup[] }
   /** from = the older-pages cursor before, to = the recent window's anchor, cursor = the cursor after. */
   | { type: "completeReview"; planId: string; day: string; from: number; to: number; cursor: number }
+  /** `ayahs`: what the surahs and juz just added make memorized. */
+  | { type: "update"; planId: string; changes: PlanChanges; ayahs: AyahGroup[] }
   | { type: "archive"; planId: string };
 
 export function reducePlan(state: PlanSnapshot, op: PlanOp): PlanSnapshot {
@@ -44,6 +52,9 @@ export function reducePlan(state: PlanSnapshot, op: PlanOp): PlanSnapshot {
       if (state.plan.review_cursor !== op.from) return { ...state, log };
       return { plan: { ...state.plan, review_cursor: op.cursor }, log };
     }
+    case "update":
+      if (!state || state.plan.id !== op.planId || state.plan.status !== "active") return state;
+      return { ...state, plan: { ...state.plan, ...op.changes } };
     case "archive":
       return state?.plan.id === op.planId ? null : state;
   }

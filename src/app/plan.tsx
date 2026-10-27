@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { BookOpen, CalendarRange, Check, ChevronLeft, Flame, Lock, Trophy } from "lucide-react-native";
+import { BookOpen, CalendarRange, Check, ChevronLeft, Flame, Lock, Mic, Pencil, Trophy } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -16,14 +16,58 @@ import { formatDay } from "@/features/khatma/CreateKhatmaForm";
 import { SyncBadge } from "@/features/khatma/SyncBadge";
 import { getSurahs, mushafStarts } from "@/features/mushaf/mushaf";
 import { CreatePlanForm } from "@/features/plan/CreatePlanForm";
+import { EditPlanForm } from "@/features/plan/EditPlanForm";
 import { planActions, reloadPlan, usePlan } from "@/features/plan/planStore";
-import { buildTodayView, type PageLink } from "@/features/plan/view";
+import { buildTodayView, type PageLink, type PageRange, type Recitation } from "@/features/plan/view";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 const HALF: Record<PageLink["half"], string> = { full: "", first: " (النصف الأول)", second: " (النصف الثاني)" };
 
 function openPage(page: number) {
   router.push({ pathname: "/mushaf", params: { page: String(page) } });
+}
+
+/** The mushaf on just these pages, with "you've read it" and the way back here at the end. */
+function readRange(range: PageRange) {
+  router.push({ pathname: "/mushaf", params: { page: String(range.from), until: String(range.to), wird: "plan" } });
+}
+
+/** «سمّع المراجعة»: one chip per surah stretch of today's review pages, opening tasmee on it. */
+function ReciteReview({ recitations }: { recitations: Recitation[] }) {
+  const primary = useThemeColor("primary");
+  return (
+    <View className="gap-2 rounded-2xl bg-primary-soft p-4">
+      <View className="flex-row items-center gap-2">
+        <Mic size={16} color={primary} />
+        <Text className="font-sans-bold text-sm text-fg">سمّع المراجعة</Text>
+      </View>
+      <Text className="font-sans text-xs leading-5 text-fg-muted">المراجعة بالتسميع أثبت من القراءة: سمّع كل جزء من حفظك، ونوقفك عند الخطأ.</Text>
+      <View className="flex-row flex-wrap gap-2">
+        {recitations.map((recitation) => (
+          <Pressable
+            key={`${recitation.surah}-${recitation.from}`}
+            accessibilityRole="button"
+            onPress={() =>
+              router.push({
+                pathname: "/tasmee/[surah]",
+                params: { surah: String(recitation.surah), from: String(recitation.from), to: String(recitation.to) },
+              })
+            }
+            className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5"
+            style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
+          >
+            <Mic size={14} color={primary} />
+            <Text className="font-sans-semibold text-sm text-fg">
+              سورة {recitation.surahName}{" "}
+              {recitation.from === recitation.to
+                ? `(${toArabicDigits(recitation.from)})`
+                : `(${toArabicDigits(recitation.from)}–${toArabicDigits(recitation.to)})`}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 function PageRow({ link }: { link: PageLink }) {
@@ -53,6 +97,7 @@ export default function PlanScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [editing, setEditing] = useState(false);
   const names = Object.fromEntries(getSurahs().map((surah) => [surah.number, surah.name]));
   const view = state.status === "ready" && state.current ? buildTodayView(state.current, mushafStarts().pageStarts, names) : null;
 
@@ -160,6 +205,11 @@ export default function PlanScreen() {
                     </View>
                   </Pressable>
                 ))}
+                {view.newPortion.read && (
+                  <Button variant="outline" icon={BookOpen} onPress={() => readRange(view.newPortion!.read!)}>
+                    اقرأ ورد اليوم في المصحف
+                  </Button>
+                )}
                 {!view.newPortion.done && (
                   <Button icon={Check} onPress={() => run(planActions.completeNew)} disabled={busy}>
                     حفظت ورد اليوم
@@ -183,6 +233,11 @@ export default function PlanScreen() {
                     {view.recent.map((link) => (
                       <PageRow key={`r-${link.page}-${link.half}`} link={link} />
                     ))}
+                    {view.recentRead && (
+                      <Button variant="ghost" size="sm" icon={BookOpen} className="self-start" onPress={() => readRange(view.recentRead!)}>
+                        اقرأ صفحات القريب متتابعة
+                      </Button>
+                    )}
                   </>
                 )}
                 {view.far.length > 0 && (
@@ -193,6 +248,7 @@ export default function PlanScreen() {
                     ))}
                   </>
                 )}
+                {view.recitations.length > 0 && <ReciteReview recitations={view.recitations} />}
                 {!view.reviewDone && (
                   <Button variant="secondary" icon={BookOpen} onPress={() => run(planActions.completeReview)} disabled={busy}>
                     أتممت المراجعة
@@ -216,6 +272,14 @@ export default function PlanScreen() {
               )}
             </View>
             {error ? <Text className="text-center font-sans text-sm text-danger">{error}</Text> : null}
+            {view.status === "active" &&
+              (editing ? (
+                <EditPlanForm kind={view.kind} settings={view.settings} onDone={() => setEditing(false)} />
+              ) : (
+                <Button variant="outline" size="sm" icon={Pencil} onPress={() => setEditing(true)}>
+                  تعديل الخطة
+                </Button>
+              ))}
             {/* Ending a plan loses its place, so it asks first. */}
             <Button variant="ghost" size="sm" disabled={busy} onPress={() => setConfirmArchive(true)}>
               إنهاء الخطة وإنشاء خطة جديدة

@@ -13,11 +13,11 @@ import { useThemeColor } from "@/theme/useThemeColor";
 
 import { planActions, type NewPlan } from "./planStore";
 
-const FAR_OPTIONS = [0, 1, 2, 3, 5, 10, 20];
-const REVIEW_OPTIONS = [1, 2, 3, 4, 5, 10, 20];
+export const FAR_OPTIONS = [0, 1, 2, 3, 5, 10, 20];
+export const REVIEW_OPTIONS = [1, 2, 3, 4, 5, 10, 20];
 const JUZ = Array.from({ length: 30 }, (_, index) => index + 1);
 
-function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+export function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="radio"
@@ -31,7 +31,7 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <View className="gap-2">
       <Text className="font-sans-bold text-base text-fg">{label}</Text>
@@ -41,7 +41,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function DaysPicker({ days, onChange }: { days: number[]; onChange: (days: number[]) => void }) {
+export function DaysPicker({ days, onChange }: { days: number[]; onChange: (days: number[]) => void }) {
   return (
     <View className="flex-row flex-wrap gap-2">
       {WEEK_ORDER.map((day) => {
@@ -63,7 +63,7 @@ function DaysPicker({ days, onChange }: { days: number[]; onChange: (days: numbe
 }
 
 /** Whole juz by tap, or surahs from a searchable list: what the learner already knows. */
-function PriorPicker({
+export function PriorPicker({
   juz,
   surahs,
   onJuz,

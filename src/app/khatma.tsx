@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { BookOpen, Check, Flame, Trophy } from "lucide-react-native";
+import { BookOpen, Check, Flame, History, Trophy } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -133,7 +133,13 @@ export default function KhatmaScreen() {
                   <Button
                     icon={BookOpen}
                     variant="secondary"
-                    onPress={() => router.push({ pathname: "/mushaf", params: { page: String(view.portion!.startPage) } })}
+                    // Only the portion's pages, so the reader sees where today's reading ends.
+                    onPress={() =>
+                      router.push({
+                        pathname: "/mushaf",
+                        params: { page: String(view.portion!.startPage), until: String(view.portion!.endPage), wird: "khatma" },
+                      })
+                    }
                   >
                     اقرأ الآن
                   </Button>
@@ -145,6 +151,20 @@ export default function KhatmaScreen() {
                 </View>
               </View>
             ) : null}
+
+            {view.status === "active" && view.missed && (
+              <View className="gap-3 rounded-3xl border border-accent/40 bg-accent-soft p-4">
+                <View className="flex-row items-start gap-2">
+                  <History size={16} color={gold} style={{ marginTop: 6 }} />
+                  <Text className="flex-1 font-sans text-sm leading-7 text-fg">
+                    نسيت تسجيل ورد {view.missed}؟ إن كنت قرأته فسجّله، ويُحسب لك الورد الذي يليه دون أن يأخذ مكان ورد اليوم.
+                  </Text>
+                </View>
+                <Button variant="outline" size="sm" icon={Check} className="self-start" onPress={() => run(khatma.completeMissed)} disabled={busy}>
+                  {`قرأت ورد ${view.missed}`}
+                </Button>
+              </View>
+            )}
 
             <View className="flex-row gap-3">
               <View className="flex-1 items-center rounded-3xl border border-border bg-surface p-4">
