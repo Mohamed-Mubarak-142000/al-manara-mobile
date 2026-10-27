@@ -29,6 +29,8 @@ const HIDDEN = new Set([
   "adhan-voice",
   // Has its own big play button and status line.
   "radio",
+  // The adhan at prayer time: full screen, its own stop button.
+  "adhan-now",
   // Recitation check records the microphone and stops playback itself.
   "tasmee",
   // Has its own play/pause pill in the page footer (AyahAudioPill).

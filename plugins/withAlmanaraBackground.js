@@ -14,6 +14,9 @@ module.exports = function withAlmanaraBackground(config) {
       "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
       "POST_NOTIFICATIONS",
       "WAKE_LOCK",
+      // The adhan screen over the lock screen at prayer time, like an alarm clock (a full-screen
+      // notification). Android 14+ lets the user turn it off; the adhan settings say so.
+      "USE_FULL_SCREEN_INTENT",
     ];
     manifest["uses-permission"] ??= [];
     for (const name of permissions) {

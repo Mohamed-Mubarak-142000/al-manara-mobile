@@ -31,6 +31,7 @@ class AlmanaraBackgroundModule : Module() {
         "autostartHint" to DeviceAccess.autostartHint(),
         "scheduleThrough" to (0 until moments.length()).maxOfOrNull { moments.getJSONObject(it).getLong("at") }.let { it ?: 0L },
         "error" to saved.getString("scheduleError", ""),
+        "fullScreenAllowed" to AdhanScreen.fullScreenAllowed(context),
       )
     }
     AsyncFunction("openOverlaySettings") {
@@ -69,5 +70,15 @@ class AlmanaraBackgroundModule : Module() {
     AsyncFunction("replaceSchedule") { moments: String -> BackgroundState.replace(context, moments) }
     AsyncFunction("scheduleWidgetRefresh") { at: Double -> PrayerWidget.schedule(context, at.toLong()).isSuccess }
     AsyncFunction("stopAdhan") { context.stopService(Intent(context, AdhanService::class.java)) }.runOnQueue(Queues.MAIN)
+    // The adhan screen (/adhan-now): whether the adhan still plays, its notice, the lock screen, and
+    // Android 14's per-app switch for full-screen notifications.
+    Function("isAdhanPlaying") { BackgroundState.adhanPlaying }
+    AsyncFunction("dismissPrayerNotice") { AdhanScreen.dismissNotice(context) }
+    AsyncFunction("setShowOverLock") { on: Boolean ->
+      appContext.currentActivity?.let { AdhanScreen.showOverLock(it, on) }
+      Unit
+    }.runOnQueue(Queues.MAIN)
+    Function("isLocked") { AdhanScreen.locked(context) }
+    AsyncFunction("openFullScreenSettings") { AdhanScreen.openFullScreenSettings(context) }.runOnQueue(Queues.MAIN)
   }
 }

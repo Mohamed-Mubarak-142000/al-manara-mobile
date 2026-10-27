@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.content.*
 import android.media.AudioManager
 import android.provider.Settings
+import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
@@ -24,9 +25,20 @@ class PrayerReceiver : BroadcastReceiver() {
           notifications.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL
         val full = moment.optBoolean("play") && !moment.optBoolean("late") && ringing
         // A default notification for reminders; silent prayer notice when the service plays audio.
-        val notice = BackgroundState.notification(context, BackgroundState.PRAYER_CHANNEL, moment.getString("title"), moment.getString("body"), "prayer")
-          .setAutoCancel(true).setSilent(full).build()
-        runCatching { NotificationManagerCompat.from(context).notify(moment.getString("id").hashCode(), notice) }
+        // The prayer itself can open the adhan screen (almanara://adhan-now?…): on tap, and as a
+        // full-screen intent that shows it over the lock screen like an alarm (late deliveries only notify).
+        val screen = moment.optString("screen").takeIf { it.isNotEmpty() && !moment.isNull("screen") && moment.optBoolean("play") }
+        val builder = BackgroundState.notification(context, BackgroundState.PRAYER_CHANNEL, moment.getString("title"), moment.getString("body"), screen ?: "prayer")
+          .setAutoCancel(true).setSilent(full)
+        if (screen != null) {
+          builder.setCategory(NotificationCompat.CATEGORY_ALARM).setPriority(NotificationCompat.PRIORITY_MAX)
+          if (!moment.optBoolean("late") && AdhanScreen.fullScreenAllowed(context)) {
+            builder.setFullScreenIntent(BackgroundState.openApp(context, screen), true)
+          }
+        }
+        val noticeId = moment.getString("id").hashCode()
+        runCatching { NotificationManagerCompat.from(context).notify(noticeId, builder.build()) }
+          .onSuccess { if (screen != null) AdhanScreen.rememberNotice(context, noticeId) }
           .onFailure { BackgroundState.prefs(context).edit().putString("scheduleError", "إشعارات الصلاة غير مسموح بها، فعّلها من الإعدادات").apply() }
         if (full) {
           runCatching {

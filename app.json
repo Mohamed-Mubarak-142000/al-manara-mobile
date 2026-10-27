@@ -24,6 +24,7 @@
         "applinks:eslami-platform.vercel.app"
       ],
       "entitlements": {
+        "com.apple.developer.usernotifications.time-sensitive": true,
         "com.apple.security.application-groups": [
           "group.com.almanara.app"
         ]

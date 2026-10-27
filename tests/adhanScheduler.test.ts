@@ -51,7 +51,7 @@ describe("Android prayer schedule replacement", () => {
     jest.replaceProperty(Platform, "OS", "android");
     jest.clearAllMocks();
     jest.useFakeTimers().setSystemTime(new Date("2026-01-15T00:00:00Z"));
-    jest.mocked(readAdhanSettings).mockReturnValue({ enabled: true, prayers, reminderMinutes: 0 });
+    jest.mocked(readAdhanSettings).mockReturnValue({ enabled: true, prayers, reminderMinutes: 0, screen: true, screenTheme: "emerald" });
     jest
       .mocked(readAdhanVoice)
       .mockReturnValue({ id: "voice", title: "أذان", artist: "مؤذن", url: "https://example.com/adhan.mp3", offlineKey: "saved" });
@@ -83,6 +83,15 @@ describe("Android prayer schedule replacement", () => {
       jest.mocked(Notifications.cancelScheduledNotificationAsync).mock.invocationCallOrder[0],
     );
   });
+  it("opens the adhan screen at each prayer, and not when it is turned off", async () => {
+    await rescheduleAdhan(location);
+    const saved = JSON.parse(jest.mocked(background!.replaceSchedule).mock.calls[0][0]);
+    expect(saved[0].screen).toBe(`adhan-now?prayer=fajr&at=${Date.parse("2026-01-20T03:00:00Z")}`);
+    jest.mocked(readAdhanSettings).mockReturnValue({ enabled: true, prayers, reminderMinutes: 0, screen: false, screenTheme: "emerald" });
+    await rescheduleAdhan(location);
+    const without = JSON.parse(jest.mocked(background!.replaceSchedule).mock.calls[1][0]);
+    expect(without.every((moment: { screen: string | null }) => moment.screen === null)).toBe(true);
+  });
   it("retains legacy alarms if native commit fails", async () => {
     jest.mocked(background!.replaceSchedule).mockRejectedValueOnce(new Error("alarm permission"));
     await expect(rescheduleAdhan(location)).rejects.toThrow("alarm permission");
@@ -93,6 +102,8 @@ describe("Android prayer schedule replacement", () => {
       enabled: true,
       prayers: { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
       reminderMinutes: 0,
+      screen: true,
+      screenTheme: "emerald",
     });
     await expect(rescheduleAdhan(location)).resolves.toBe(0);
     expect(background!.replaceSchedule).toHaveBeenCalledWith("[]");

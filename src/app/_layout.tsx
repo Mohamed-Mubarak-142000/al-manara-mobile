@@ -122,6 +122,7 @@ function RootLayout() {
           <Stack.Screen name="share-ayah" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
           <Stack.Screen name="repeat" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
           <Stack.Screen name="adhan-voice" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+          <Stack.Screen name="adhan-now" options={{ animation: "fade", gestureEnabled: false }} />
           <Stack.Screen name="share-card" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
         </Stack>
         <ReadingStreakTracker />

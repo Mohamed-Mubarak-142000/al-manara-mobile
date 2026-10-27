@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { Bell, BellOff, ChevronLeft } from "lucide-react-native";
 import { useState } from "react";
-import { Linking, Platform, Pressable, Switch, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Linking, Platform, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import Storage from "expo-sqlite/kv-store";
 
 import { background } from "../../../modules/almanara-background";
@@ -9,6 +10,7 @@ import { BackgroundAccessHint } from "@/features/notifications/BackgroundAccessH
 import { reportReminderError, useBackgroundStatus } from "@/features/notifications/backgroundReminderStatus";
 
 import { PRAYER_LABELS } from "@/core/prayer/prayerTimesApi";
+import { TASBIH_THEMES } from "@/core/tasbih/tasbihData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -115,7 +117,56 @@ export function AdhanSettingsCard() {
             </View>
             <ChevronLeft size={18} color={primary} />
           </Pressable>
-          <Text className="mt-3 font-sans-bold text-sm text-fg">تذكير قبل الصلاة</Text>
+          <View className="mt-4 flex-row items-center justify-between">
+            <View className="flex-1">
+              <Text className="font-sans-bold text-sm text-fg">شاشة الأذان</Text>
+              <Text className="font-sans text-xs leading-5 text-fg-muted">تظهر عند الأذان ولو كان الهاتف مقفلًا، وفيها زر إيقاف الأذان.</Text>
+            </View>
+            <Switch
+              value={settings.screen}
+              onValueChange={(value) => writeAdhanSettings({ screen: value })}
+              trackColor={track}
+              thumbColor={surface}
+            />
+          </View>
+          {settings.screen && Platform.OS === "android" && status?.fullScreenAllowed === false && (
+            <Pressable
+              onPress={() => {
+                void background?.openFullScreenSettings?.().catch(reportReminderError);
+              }}
+              className="mt-3 rounded-2xl bg-accent-soft p-3"
+            >
+              <Text className="font-sans text-sm text-accent-strong">
+                شاشة الأذان على القفل تحتاج إذن «الإشعارات بملء الشاشة». اضغط لتفعيله من إعدادات الجهاز.
+              </Text>
+            </Pressable>
+          )}
+          {settings.screen && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 10 }}>
+              {TASBIH_THEMES.map((theme) => {
+                const active = theme.id === settings.screenTheme;
+                return (
+                  <Pressable
+                    key={theme.id}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={`لون شاشة الأذان: ${theme.label}`}
+                    onPress={() => writeAdhanSettings({ screenTheme: theme.id })}
+                    className={`overflow-hidden rounded-2xl border-2 ${active ? "border-primary" : "border-transparent"}`}
+                  >
+                    {/* The screen's own palette: a preview, not app chrome. */}
+                    <LinearGradient colors={theme.background} style={{ width: 76, height: 56, alignItems: "center", justifyContent: "center" }}>
+                      <View className="size-3 rounded-full" style={{ backgroundColor: theme.accent }} />
+                      <Text className="mt-1 font-sans-bold text-xs" style={{ color: theme.ink }}>
+                        {theme.label}
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+          <Text className="mt-4 font-sans-bold text-sm text-fg">تذكير قبل الصلاة</Text>
           <View className="mt-2 flex-row flex-wrap gap-2">
             {REMINDERS.map((minutes) => {
               const active = settings.reminderMinutes === minutes;

@@ -11,6 +11,7 @@ import { PRAYER_LABELS, getPrayerMonth, type PrayerMonthDay } from "@/core/praye
 import { getHijriDate } from "@/core/calendar/hijriDate";
 import { IMSAK_MINUTES } from "@/core/prayer/calculation";
 import { toArabicDigits } from "@/core/text/arabic";
+import { adhanScreenPath } from "@/core/prayer/adhanScreen";
 
 import { readAdhanSettings, type AdhanPrayer } from "./adhanSettings";
 import { readAdhanVoice, setAdhanVoice } from "./adhanSound";
@@ -97,8 +98,13 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
     ...nextMonth.map((day) => ({ day, year: next.getFullYear(), month: next.getMonth() + 1 })),
   ];
 
-  /** `play`: the prayer time itself, when the chosen muezzin's adhan is raised (not the reminders). */
-  const moments: { date: Date; timezone: string; title: string; body: string; play?: boolean }[] = [];
+  /**
+   * `play`: the prayer time itself, when the chosen muezzin's adhan is raised (not the reminders);
+   * `screen`: the adhan screen's route it opens.
+   */
+  const moments: { date: Date; timezone: string; title: string; body: string; play?: boolean; screen?: string }[] = [];
+  const screenFor = (prayer: AdhanPrayer, date: Date, iftar: boolean) =>
+    settings.screen ? adhanScreenPath({ prayer, at: date.getTime(), iftar }) : undefined;
   for (const { day, year, month } of days) {
     for (const key of ORDER) {
       if (!settings.prayers[key]) continue;
@@ -135,6 +141,7 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
                 title: "حان الآن وقت الإفطار وصلاة المغرب",
                 body: "ذهب الظمأ وابتلت العروق وثبت الأجر إن شاء الله",
                 play: true,
+                screen: screenFor(key, date, true),
               }
             : {
                 date,
@@ -142,6 +149,7 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
                 title: `حان الآن وقت صلاة ${PRAYER_LABELS[key]}`,
                 body: `حسب التوقيت المحلي لـ${location.label}`,
                 play: true,
+                screen: screenFor(key, date, false),
               },
         );
     }
@@ -164,6 +172,7 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
       timezone: moment.timezone,
       play: moment.play === true,
       voiceKey: moment.play ? (readAdhanVoice()?.offlineKey ?? null) : null,
+      screen: moment.screen ?? null,
     }));
     await background.replaceSchedule(JSON.stringify(native));
   } else {
@@ -174,7 +183,9 @@ async function replaceAdhan(location: UserLocation, version: number): Promise<nu
         body: moment.body,
         // The prayer itself raises the bundled adhan (iOS caps a notification sound at 30 s).
         sound: moment.play ? "adhan_short.wav" : "default",
-        data: { kind: "adhan", url: "/prayer", at: moment.date.getTime() },
+        // The prayer itself lights the screen through Focus modes (time-sensitive) and opens the adhan screen.
+        ...(moment.play && { interruptionLevel: "timeSensitive" as const }),
+        data: { kind: "adhan", url: moment.screen ? `/${moment.screen}` : "/prayer", at: moment.date.getTime() },
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: moment.date, channelId: CHANNEL_ID },
     }));
