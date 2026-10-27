@@ -202,6 +202,7 @@ describe("website links", () => {
     expect(route("/kids/journey/114")).toBe("/kids/journey/114");
     expect(route("/kids/rewards?tab=shop")).toBe("/kids/rewards?tab=shop");
     expect(route("/tasbih")).toBe("/tasbih");
+    expect(route("/umrah")).toBe("/umrah");
     expect(route("/ruqyah")).toBe("/ruqyah");
     expect(route("/khatm-dua")).toBe("/khatm-dua");
     expect(route("/nawawi")).toBe("/nawawi");

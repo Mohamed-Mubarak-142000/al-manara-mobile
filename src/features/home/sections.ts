@@ -17,6 +17,7 @@ import {
   Mic,
   MicVocal,
   MoonStar,
+  Plane,
   NotebookText,
   Radio,
   ScrollText,
@@ -109,6 +110,7 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "التقويم", icon: CalendarDays, tone: "clay", art: "calendar", description: "التقويم الهجري والميلادي", href: "/calendar" },
   { label: "الأذكار", icon: Sparkles, tone: "green", art: "adhkar", description: "أذكار وأدعية يومك", href: "/adhkar" },
   { label: "السبحة", icon: CircleDot, tone: "gold", art: "tasbih", description: "سبحة إلكترونية بأذكارك وعددك", href: "/tasbih" },
+  { label: "العمرة والسفر", icon: Plane, tone: "sky", art: "umrah", description: "مناسك العمرة خطوة بخطوة وأدعية السفر", href: "/umrah" },
   { label: "القصص", icon: Clapperboard, tone: "rose", art: "stories", description: "قصص الأنبياء المصوّرة", href: "/stories" },
   { label: "رحلتي", icon: BookOpenCheck, tone: "teal", art: "journey", description: "حفظك وتسميعك وإنجازاتك", href: "/journey" },
   { label: "خطة الحفظ", icon: CalendarRange, tone: "blue", art: "plan", description: "وردك اليومي من الحفظ والمراجعة", href: "/plan" },
@@ -142,7 +144,7 @@ export interface SectionGroup {
 /** The "كل الأقسام" screen, one titled grid per group. Every built section appears exactly once. */
 export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "القرآن", labels: ["المصحف", "الاستماع", "الإذاعة", "التسميع"] },
-  { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "الأحاديث", "الأربعون النووية", "التقويم"] },
+  { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "العمرة والسفر", "الأحاديث", "الأربعون النووية", "التقويم"] },
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "أدعية وابتهالات", labels: ["ابتهالات", "تواشيح", "أدعية", "دعاء ختم القرآن", "الرقية الشرعية", "أذان"] },
   { title: "للعائلة", labels: ["القصص", "الأطفال"] },

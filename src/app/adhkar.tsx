@@ -7,7 +7,7 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "r
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, duaAudioUrl, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
+import { DUAS, DUA_CATEGORY_LABELS, DUA_CHAPTERS, type Dua, type DuaCategory } from "@/core/adhkar/duasData";
 import { toArabicDigits } from "@/core/text/arabic";
 import { IconButton, ScreenHeader, enterSoft } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -16,7 +16,8 @@ import { countDhikr, getAdhkarCounts, resetDhikr, useAdhkarCounts } from "@/feat
 import { ChapterPicker } from "@/features/adhkar/ChapterPicker";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
 import { SECTION_ART } from "@/features/home/sectionArt";
-import { audio, currentTrack, usePlayerValue, type Track } from "@/features/audio/playerStore";
+import { audio } from "@/features/audio/playerStore";
+import { dhikrTrack, useListenState } from "@/features/adhkar/dhikrTrack";
 import { useScaledText } from "@/theme/textScale";
 import { useThemeColor } from "@/theme/useThemeColor";
 import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
@@ -30,20 +31,12 @@ function defaultCategory(): DuaCategory {
   return hour >= 4 && hour < 15 ? "morning" : "evening";
 }
 
-/** Split cards of one source entry share its recording, so the track is keyed by the entry. */
-function dhikrTrack(dua: Dua): Track {
-  return { id: `dhikr-${dua.id.split("-")[1]}`, title: dua.title, artist: "حصن المسلم", url: duaAudioUrl(dua) };
-}
-
 /** The card's human recording, through the app's player (the mini player shows it); tapped again, pause or resume. */
 function ListenButton({ dua }: { dua: Dua }) {
   const primary = useThemeColor("primary");
   const muted = useThemeColor("fg-muted");
   const track = dhikrTrack(dua);
-  // Just this card's state, so the player's progress ticks don't re-render every card.
-  const listening = usePlayerValue((state) =>
-    currentTrack(state)?.id !== track.id ? null : state.playing ? "playing" : state.buffering ? "loading" : "paused",
-  );
+  const listening = useListenState(track.id);
   return (
     <Pressable
       accessibilityRole="button"

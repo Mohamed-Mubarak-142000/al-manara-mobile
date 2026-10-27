@@ -26,6 +26,7 @@ const ART = {
   calendar: "Spiral calendar",
   adhkar: "Sparkles",
   tasbih: "Prayer beads",
+  umrah: "Airplane",
   stories: "Clapper board",
   journey: "Trophy",
   plan: "Calendar",

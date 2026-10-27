@@ -20,6 +20,7 @@ export const SECTION_ART = {
   calendar: require("@/assets/images/sections/calendar.png"),
   adhkar: require("@/assets/images/sections/adhkar.png"),
   tasbih: require("@/assets/images/sections/tasbih.png"),
+  umrah: require("@/assets/images/sections/umrah.png"),
   stories: require("@/assets/images/sections/stories.png"),
   journey: require("@/assets/images/sections/journey.png"),
   plan: require("@/assets/images/sections/plan.png"),
