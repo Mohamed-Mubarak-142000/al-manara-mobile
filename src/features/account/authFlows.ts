@@ -1,11 +1,10 @@
-import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { AppState, Platform } from "react-native";
 
 import { api } from "@/lib/api";
 import { recordError } from "@/lib/crashLog";
 
-import { redirectParams } from "./oauthRedirect";
+import { OAUTH_REDIRECT, redirectParams } from "./oauthRedirect";
 import { supabase } from "@/lib/supabase";
 
 export type OtpType = "signup" | "recovery" | "email";
@@ -55,9 +54,6 @@ export const authFlows = {
     return { ok: false, error: "تعذّر تغيير كلمة المرور، حاول مرة أخرى." };
   },
 };
-
-/** The app's deep link Supabase sends the user back to after Google (allow-listed in Supabase Auth). */
-export const OAUTH_REDIRECT = Linking.createURL("auth/callback");
 
 /**
  * Google sign-in with the website's Supabase Google provider: a secure browser sheet to Google, back to

@@ -30,6 +30,14 @@ export function previousStep(steps: readonly OnboardingStepId[], step: Onboardin
   return index > 0 ? steps[index - 1] : null;
 }
 
+/**
+ * Where a first run reopens: the step it was on when the app went away (Android may end the app while
+ * Google's sign-in is open in the browser), if this build still shows it; otherwise the start.
+ */
+export function resumeStep(saved: unknown, steps: readonly OnboardingStepId[]): OnboardingStepId {
+  return steps.find((step) => step === saved) ?? steps[0] ?? "intro";
+}
+
 /** The intro's main button: "التالي" through the cards, "ابدأ" on the last one. */
 export function introButtonLabel(slide: number, count: number): "التالي" | "ابدأ" {
   return slide >= count - 1 ? "ابدأ" : "التالي";

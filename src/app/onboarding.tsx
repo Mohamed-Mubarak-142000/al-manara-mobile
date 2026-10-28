@@ -16,7 +16,7 @@ import { LocationStep } from "@/features/onboarding/LocationStep";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import { SetupStepper } from "@/features/onboarding/SetupStepper";
 import { AccountStep, NotificationsStep, ReciterStep, WirdStep, type NotificationChoices } from "@/features/onboarding/SetupSteps";
-import { nextStep, onboardingSteps, previousStep, type OnboardingStepId, type SetupStepId } from "@/features/onboarding/steps";
+import { nextStep, onboardingSteps, previousStep, resumeStep, type OnboardingStepId, type SetupStepId } from "@/features/onboarding/steps";
 import { ensureAdhanPermission } from "@/features/prayer/adhanScheduler";
 import { writeAdhanSettings } from "@/features/prayer/adhanSettings";
 import { savePreferences, useSetupComplete } from "@/features/settings/preferences";
@@ -36,10 +36,16 @@ export default function OnboardingScreen() {
   // Decided once: the step list must not change under the user while the session loads.
   const [steps] = useState(() => onboardingSteps(accountState.status !== "guest" || accountState.configured));
   const setupSteps = steps.filter((id): id is SetupStepId => id !== "intro");
-  const [step, setStep] = useState<OnboardingStepId>("intro");
+  // Saved as it changes: coming back from a cold start (Android ended the app while Google's sign-in
+  // was in the browser) reopens the same step with the same choices, not the intro.
+  const [saved] = useState(() => onboarding.progress());
+  const [step, setStep] = useState<OnboardingStepId>(() => resumeStep(saved.step, steps));
   // Nothing preselected: a khatma is only created when the user picks a daily amount.
-  const [wird, setWird] = useState<number | null>(null);
-  const [alerts, setAlerts] = useState<NotificationChoices>({ adhan: true, adhkar: true });
+  const [wird, setWird] = useState<number | null>(saved.wird);
+  const [alerts, setAlerts] = useState<NotificationChoices>(saved.alerts ?? { adhan: true, adhkar: true });
+  useEffect(() => {
+    onboarding.saveProgress({ step, wird, alerts });
+  }, [step, wird, alerts]);
   const [busy, setBusy] = useState(false);
   // State lags a render behind, so two quick taps would both pass `busy` and create two khatmas.
   const finishing = useRef(false);

@@ -206,7 +206,8 @@ export function emailProblem(email: string): string | undefined {
 }
 
 /** "المتابعة باستخدام Google", above the email form on sign-in and registration, then an "أو" divider. */
-export function GoogleButton({ onDone }: { onDone: () => void }) {
+/** `onStart`: just before the browser opens (the app may be ended while it is, and start cold on return). */
+export function GoogleButton({ onDone, onStart }: { onDone: () => void; onStart?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fg = useThemeColor("fg");
@@ -231,6 +232,7 @@ export function GoogleButton({ onDone }: { onDone: () => void }) {
           Haptics.selectionAsync().catch(() => {});
           setBusy(true);
           setError(null);
+          onStart?.();
           const result = await signInWithGoogle().catch((caught: unknown) => {
             // Kept in the crash log (About → report), so a failure here can be traced.
             recordError(caught, "error");

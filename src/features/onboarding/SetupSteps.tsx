@@ -37,11 +37,13 @@ export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
   const signedIn = state.status === "signed-in";
   const restored = useSetupComplete(signedIn ? state.userId : null) && signedIn;
   // Only a sign-in made on this step moves on by itself; coming back to it while signed in stays put.
-  const wasSignedIn = useRef(signedIn);
+  // A Google sign-in that cold-started the app (it reopens here, already signed in) counts as made here.
+  const wasSignedIn = useRef(signedIn && !onboarding.googlePending());
 
   useEffect(() => {
     if (!signedIn || wasSignedIn.current) return;
     wasSignedIn.current = true;
+    onboarding.setGooglePending(false);
     const id = setTimeout(onSignedIn, 900);
     return () => clearTimeout(id);
   }, [onSignedIn, signedIn]);
@@ -83,7 +85,7 @@ export function AccountStep({ onSignedIn }: { onSignedIn: () => void }) {
           </View>
         ))}
       </View>
-      <GoogleButton onDone={() => {}} />
+      <GoogleButton onStart={() => onboarding.setGooglePending(true)} onDone={() => {}} />
       <Button size="lg" icon={UserPlus} onPress={() => router.push("/register")}>
         إنشاء حساب جديد
       </Button>

@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { SETUP_LABELS, introButtonLabel, khatmaDays, nextStep, onboardingSteps, previousStep } from "@/features/onboarding/steps";
+import { SETUP_LABELS, introButtonLabel, khatmaDays, nextStep, onboardingSteps, previousStep, resumeStep } from "@/features/onboarding/steps";
 
 describe("onboarding steps", () => {
   it("is the intro, the account, then the settings saved to it", () => {
@@ -32,5 +32,20 @@ describe("onboarding steps", () => {
   it("estimates khatma length", () => {
     expect(khatmaDays(20)).toBe(31);
     expect(khatmaDays(0)).toBe(604);
+  });
+});
+
+describe("resuming the first run", () => {
+  const steps = onboardingSteps(true);
+
+  it("reopens on the step it was on (after Google's sign-in cold-started the app)", () => {
+    expect(resumeStep("account", steps)).toBe("account");
+    expect(resumeStep("wird", steps)).toBe("wird");
+  });
+
+  it("starts over when nothing (or a step this build doesn't show) was saved", () => {
+    expect(resumeStep(null, steps)).toBe("intro");
+    expect(resumeStep("account", onboardingSteps(false))).toBe("intro");
+    expect(resumeStep(42, steps)).toBe("intro");
   });
 });
