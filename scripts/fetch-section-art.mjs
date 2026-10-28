@@ -49,6 +49,7 @@ const ART = {
   email: "E-mail",
   website: "Globe with meridians",
   certificates: "Sports medal",
+  seerah: "Camel",
 };
 
 const snake = (name) => name.toLowerCase().replace(/\s+/g, "_");

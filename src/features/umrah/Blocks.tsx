@@ -33,7 +33,7 @@ export function useUmrahText(fontSize: number, lineHeight: number) {
 }
 
 /** Play a track in the shared player (the mini player shows it), or pause/resume it if it's the one loaded. */
-function ListenButton({ track, label, tone = "light" }: { track: Track; label: string; tone?: "light" | "dark" }) {
+export function ListenButton({ track, label, tone = "light" }: { track: Track; label: string; tone?: "light" | "dark" }) {
   const state = useListenState(track.id);
   const onPrimary = useThemeColor("on-primary");
   const primary = useThemeColor("primary");

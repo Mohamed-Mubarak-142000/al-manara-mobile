@@ -22,6 +22,7 @@ export const SECTION_ART = {
   tasbih: require("@/assets/images/sections/tasbih.png"),
   umrah: require("@/assets/images/sections/umrah.png"),
   stories: require("@/assets/images/sections/stories.png"),
+  seerah: require("@/assets/images/sections/seerah.png"),
   journey: require("@/assets/images/sections/journey.png"),
   plan: require("@/assets/images/sections/plan.png"),
   khatma: require("@/assets/images/sections/khatma.png"),

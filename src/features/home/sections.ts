@@ -14,6 +14,7 @@ import {
   HandHeart,
   Headphones,
   Landmark,
+  Milestone,
   Mic,
   MicVocal,
   MoonStar,
@@ -111,6 +112,14 @@ export const APP_SECTIONS: readonly AppSection[] = [
   { label: "الأذكار", icon: Sparkles, tone: "green", art: "adhkar", description: "أذكار وأدعية يومك", href: "/adhkar" },
   { label: "السبحة", icon: CircleDot, tone: "gold", art: "tasbih", description: "سبحة إلكترونية بأذكارك وعددك", href: "/tasbih" },
   { label: "العمرة والسفر", icon: Plane, tone: "sky", art: "umrah", description: "مناسك العمرة خطوة بخطوة وأدعية السفر", href: "/umrah" },
+  {
+    label: "السيرة النبوية",
+    icon: Milestone,
+    tone: "clay",
+    art: "seerah",
+    description: "سيرة النبي ﷺ فصولًا تفاعلية على الخريطة",
+    href: "/seerah",
+  },
   { label: "القصص", icon: Clapperboard, tone: "rose", art: "stories", description: "قصص الأنبياء المصوّرة", href: "/stories" },
   { label: "رحلتي", icon: BookOpenCheck, tone: "teal", art: "journey", description: "حفظك وتسميعك وإنجازاتك", href: "/journey" },
   { label: "خطة الحفظ", icon: CalendarRange, tone: "blue", art: "plan", description: "وردك اليومي من الحفظ والمراجعة", href: "/plan" },
@@ -147,7 +156,7 @@ export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "العمرة والسفر", "الأحاديث", "الأربعون النووية", "التقويم"] },
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "أدعية وابتهالات", labels: ["ابتهالات", "تواشيح", "أدعية", "دعاء ختم القرآن", "الرقية الشرعية", "أذان"] },
-  { title: "للعائلة", labels: ["القصص", "الأطفال"] },
+  { title: "للعائلة", labels: ["السيرة النبوية", "القصص", "الأطفال"] },
   { title: "على جهازك", labels: ["المحفوظات"] },
 ];
 

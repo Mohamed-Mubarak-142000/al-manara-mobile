@@ -28,6 +28,8 @@ interface PagerProps<T> {
   gutter?: number;
   dots?: "gold" | "primary" | false;
   onIndexChange?: (index: number) => void;
+  /** The page it opens on, without scrolling there. */
+  initialIndex?: number;
   ref?: Ref<PagerHandle>;
 }
 
@@ -60,12 +62,13 @@ export function Pager<T>({
   gutter = 0,
   dots = "primary",
   onIndexChange,
+  initialIndex = 0,
   ref,
 }: PagerProps<T>) {
   const [width, setWidth] = useState(0);
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(initialIndex);
   const listRef = useRef<FlatList<T>>(null);
-  const indexRef = useRef(0);
+  const indexRef = useRef(initialIndex);
   const count = data.length;
   const countRef = useRef(count);
   const looping = loop && count > 1;
@@ -177,6 +180,7 @@ export function Pager<T>({
             showsHorizontalScrollIndicator={false}
             decelerationRate="fast"
             initialNumToRender={Math.min(pages.length, 4)}
+            initialScrollIndex={initialIndex || undefined}
             getItemLayout={getItemLayout}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={VIEWABILITY}
