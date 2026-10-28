@@ -343,7 +343,8 @@ export const planActions = {
     if (!who || !current) return { ok: false, error: NO_PLAN };
     const { plan } = current;
     const memorize = plan.kind === "memorize";
-    if (memorize && !(PAGES_PER_DAY_OPTIONS as readonly number[]).includes(input.unitsPerDay)) return { ok: false, error: "اختر مقدارًا من القائمة" };
+    if (memorize && !(PAGES_PER_DAY_OPTIONS as readonly number[]).includes(input.unitsPerDay))
+      return { ok: false, error: "اختر مقدارًا من القائمة" };
     if (memorize && input.newDays.length === 0) return { ok: false, error: "اختر يومًا واحدًا على الأقل للحفظ" };
     if (!memorize && input.priorSurahs.length === 0 && input.priorJuz.length === 0) return { ok: false, error: PICK_PRIOR };
     if (!memorize && input.farPages < 1) return { ok: false, error: "اختر عدد صفحات المراجعة" };

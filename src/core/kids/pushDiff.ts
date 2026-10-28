@@ -28,7 +28,8 @@ export function diffWrites(prev: KidsProgressState, next: KidsProgressState, gam
     if (removed.length) writes.push({ op: "setAyahs", surah, ayahs: removed, memorized: false });
   }
   for (const [surah, review] of Object.entries(next.reviewSchedule)) {
-    if (prev.reviewSchedule[Number(surah)]?.lastReviewedAt !== review.lastReviewedAt) writes.push({ op: "setReview", surah: Number(surah), review });
+    if (prev.reviewSchedule[Number(surah)]?.lastReviewedAt !== review.lastReviewedAt)
+      writes.push({ op: "setReview", surah: Number(surah), review });
   }
   const days = next.activityDates.filter((day) => !prev.activityDates.includes(day));
   if (days.length) writes.push({ op: "addActivityDays", days });

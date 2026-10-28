@@ -39,7 +39,9 @@ describe("mushaf line layout", () => {
   });
 
   it("marks Allah's name with its particles, and nothing else", () => {
-    const page3 = words(3).filter((word) => word.jalala).map((word) => word.text);
+    const page3 = words(3)
+      .filter((word) => word.jalala)
+      .map((word) => word.text);
     expect(page3.length).toBeGreaterThan(0);
     const letters = (text: string) => text.replace(/[ً-ٰٟۖ-ۭ]/g, "").replace(/ٱ/g, "ا");
     for (const text of page3) expect(letters(text)).toMatch(/لله/);

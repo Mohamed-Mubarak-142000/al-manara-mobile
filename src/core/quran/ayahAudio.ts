@@ -26,7 +26,6 @@ export function alafasyAyahUrl(globalAyahNumber: number): string {
 // App-only below (not on the website): one entry point for the ayah-by-ayah voices, so offline
 // packs and the screens build the same URLs.
 
-
 export type AyahVoice = "husary" | "muallim" | "alafasy";
 
 export const AYAH_VOICES: Record<AyahVoice, { label: string }> = {

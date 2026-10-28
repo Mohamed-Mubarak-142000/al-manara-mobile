@@ -33,7 +33,18 @@ describe("decideRestore", () => {
   });
 
   it("skips Home, auth, onboarding and modal routes", () => {
-    for (const href of ["/", "/onboarding", "/login", "/register?x=1", "/verify", "/forgot-password", "/reset-password", "/auth/callback", "/player", "/share-card"]) {
+    for (const href of [
+      "/",
+      "/onboarding",
+      "/login",
+      "/register?x=1",
+      "/verify",
+      "/forgot-password",
+      "/reset-password",
+      "/auth/callback",
+      "/player",
+      "/share-card",
+    ]) {
       expect(decideRestore({ ...base, saved: { href, at: NOW - 1000 } })).toBeNull();
     }
   });

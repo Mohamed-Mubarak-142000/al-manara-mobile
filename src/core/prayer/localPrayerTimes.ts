@@ -1,13 +1,6 @@
 // App-only: prayer times calculated on the device with `adhan`, in the same shapes the aladhan API gives,
 // so a new day (or a fresh install) without network still has times and the adhan can still be scheduled.
-import {
-  CalculationMethod,
-  Coordinates,
-  HighLatitudeRule,
-  Madhab,
-  PolarCircleResolution,
-  PrayerTimes as AdhanPrayerTimes,
-} from "adhan";
+import { CalculationMethod, Coordinates, HighLatitudeRule, Madhab, PolarCircleResolution, PrayerTimes as AdhanPrayerTimes } from "adhan";
 
 import { DEFAULT_CALC_SETTINGS, type PrayerCalcSettings } from "./calculation";
 import { resolvePlace, type ResolvedPlace, type UserLocation } from "./location";

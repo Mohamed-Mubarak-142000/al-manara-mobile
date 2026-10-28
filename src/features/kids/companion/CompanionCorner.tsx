@@ -16,7 +16,14 @@ export function SpeechBubble({ line, size = 16 }: { line: string; size?: number 
       exiting={FadeOut.duration(150)}
       accessibilityLiveRegion="polite"
       style={[
-        { backgroundColor: KIDS.white, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 4, borderColor: "rgba(255,255,255,0.6)" },
+        {
+          backgroundColor: KIDS.white,
+          borderRadius: 24,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderWidth: 4,
+          borderColor: "rgba(255,255,255,0.6)",
+        },
         PANEL_SHADOW,
       ]}
     >
@@ -47,7 +54,10 @@ export function CompanionCorner({ bottom }: { bottom: number }) {
   if (!state.companion) return null;
   // `end` is the physical left in the app's right-to-left layout, the website's corner.
   return (
-    <View pointerEvents="box-none" style={{ position: "absolute", end: 6, bottom, flexDirection: "row-reverse", alignItems: "flex-end", gap: 2 }}>
+    <View
+      pointerEvents="box-none"
+      style={{ position: "absolute", end: 6, bottom, flexDirection: "row-reverse", alignItems: "flex-end", gap: 2 }}
+    >
       <Pressable accessibilityRole="button" accessibilityLabel="رفيقك في الرحلة" onPress={() => react("greet")}>
         <Companion animal={state.companion.animal} equipped={state.companion.equipped} mood={mood} width={74} />
       </Pressable>

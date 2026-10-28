@@ -42,7 +42,16 @@ const AyahRow = memo(function AyahRow({ surahId, ayah, done }: { surahId: number
         PANEL_SHADOW,
       ]}
     >
-      <View style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: done ? KIDS.emerald : KIDS.soft }}>
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: done ? KIDS.emerald : KIDS.soft,
+        }}
+      >
         {done ? (
           <Check size={24} color={KIDS.white} />
         ) : (

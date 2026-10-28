@@ -248,7 +248,12 @@ export function SaiCounter() {
         </Text>
       </View>
 
-      <View accessible accessibilityLabel="المسعى بين الصفا والمروة" className="mt-3 w-full" style={{ aspectRatio: 320 / 130, direction: "ltr" }}>
+      <View
+        accessible
+        accessibilityLabel="المسعى بين الصفا والمروة"
+        className="mt-3 w-full"
+        style={{ aspectRatio: 320 / 130, direction: "ltr" }}
+      >
         <Svg viewBox="0 0 320 130" width="100%" height="100%">
           <Path d="M 236 92 Q 270 34 312 92 Z" fill="#d8c08a" />
           <Path d="M 8 92 Q 50 40 84 92 Z" fill="#d8c08a" />

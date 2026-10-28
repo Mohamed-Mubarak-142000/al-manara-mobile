@@ -47,7 +47,9 @@ function set(next: Snapshot) {
 function readCache(learnerId: string): KidsProgressState | null {
   const cached = readOwned<KidsProgressState>(cacheKey(learnerId));
   // An older or broken entry is ignored: the server copy replaces it.
-  return cached && cached.version === 2 && typeof cached.memorizedAyahsBySurah === "object" ? { ...DEFAULT_KIDS_PROGRESS, ...cached } : null;
+  return cached && cached.version === 2 && typeof cached.memorizedAyahsBySurah === "object"
+    ? { ...DEFAULT_KIDS_PROGRESS, ...cached }
+    : null;
 }
 
 function hasPendingWrites(learnerId: string): boolean {

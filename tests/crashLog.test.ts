@@ -10,7 +10,16 @@ jest.mock("expo-sqlite/kv-store", () => ({
 }));
 jest.mock("expo-constants", () => ({ __esModule: true, default: { expoConfig: { version: "1.2.3" } } }));
 
-import { appendEntry, buildCrashReportText, clearCrashLog, parseNativeReport, readCrashLog, recordError, setCrashRoute, toEntry } from "@/lib/crashLog";
+import {
+  appendEntry,
+  buildCrashReportText,
+  clearCrashLog,
+  parseNativeReport,
+  readCrashLog,
+  recordError,
+  setCrashRoute,
+  toEntry,
+} from "@/lib/crashLog";
 
 describe("crash log", () => {
   beforeEach(() => mockStore.clear());

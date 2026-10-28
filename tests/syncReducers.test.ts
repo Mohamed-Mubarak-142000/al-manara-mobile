@@ -137,14 +137,20 @@ describe("plan reducer", () => {
   });
 
   it("new and review on the same day are separate", () => {
-    const both = rebasePlan(base, [completeNew(0, 2), { type: "completeReview", planId: "p", day: "2026-10-06", from: 0, to: 0, cursor: 1 }]);
+    const both = rebasePlan(base, [
+      completeNew(0, 2),
+      { type: "completeReview", planId: "p", day: "2026-10-06", from: 0, to: 0, cursor: 1 },
+    ]);
     expect(both?.log.map((entry) => entry.kind)).toEqual(["review", "new"]);
   });
 
   it("archives the named plan and rebases over a missing server plan", () => {
     expect(reducePlan(base, { type: "archive", planId: "p" })).toBeNull();
     expect(reducePlan(base, { type: "archive", planId: "x" })).toBe(base);
-    const offline = rebasePlan(null, [{ type: "create", row: planRow("q") }, { ...completeNew(0, 2), planId: "q" }]);
+    const offline = rebasePlan(null, [
+      { type: "create", row: planRow("q") },
+      { ...completeNew(0, 2), planId: "q" },
+    ]);
     expect(offline?.plan).toMatchObject({ id: "q", progress_units: 2 });
   });
 });

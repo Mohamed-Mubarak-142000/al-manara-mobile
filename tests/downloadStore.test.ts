@@ -36,7 +36,15 @@ function loadWithHls(): { store: Store; hls: Hls } {
   return { store, hls };
 }
 
-const meta = (id: string, ext?: string) => ({ id, title: id, artist: "قارئ", url: `https://x/${id}.mp3`, bytes: 10, savedAt: 1, ...(ext ? { ext } : {}) });
+const meta = (id: string, ext?: string) => ({
+  id,
+  title: id,
+  artist: "قارئ",
+  url: `https://x/${id}.mp3`,
+  bytes: 10,
+  savedAt: 1,
+  ...(ext ? { ext } : {}),
+});
 
 beforeEach(() => {
   fs.reset();

@@ -26,10 +26,7 @@ export interface LineWord {
 }
 
 export type MushafLine =
-  | { kind: "surah"; surah: number }
-  | { kind: "basmala" }
-  | { kind: "text"; words: LineWord[]; width: number }
-  | { kind: "empty" };
+  { kind: "surah"; surah: number } | { kind: "basmala" } | { kind: "text"; words: LineWord[]; width: number } | { kind: "empty" };
 
 /**
  * A text line's width in ems that fills the page width at the base size. Most lines are narrower (they

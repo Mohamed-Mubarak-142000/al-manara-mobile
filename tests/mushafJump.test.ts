@@ -1,5 +1,13 @@
 /// <reference types="jest" />
-import { ayahIdFromTrackId, hafsPages, hizbStartPages, juzStartPage, pageOfAyahId, parsePageInput, surahStartPage } from "@/features/mushaf/jump";
+import {
+  ayahIdFromTrackId,
+  hafsPages,
+  hizbStartPages,
+  juzStartPage,
+  pageOfAyahId,
+  parsePageInput,
+  surahStartPage,
+} from "@/features/mushaf/jump";
 import { getPage, getSurah, juzStartPages } from "@/features/mushaf/mushaf";
 
 describe("mushaf jump helpers", () => {

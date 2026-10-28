@@ -41,7 +41,9 @@ function ReciteReview({ recitations }: { recitations: Recitation[] }) {
         <Mic size={16} color={primary} />
         <Text className="font-sans-bold text-sm text-fg">سمّع المراجعة</Text>
       </View>
-      <Text className="font-sans text-xs leading-5 text-fg-muted">المراجعة بالتسميع أثبت من القراءة: سمّع كل جزء من حفظك، ونوقفك عند الخطأ.</Text>
+      <Text className="font-sans text-xs leading-5 text-fg-muted">
+        المراجعة بالتسميع أثبت من القراءة: سمّع كل جزء من حفظك، ونوقفك عند الخطأ.
+      </Text>
       <View className="flex-row flex-wrap gap-2">
         {recitations.map((recitation) => (
           <Pressable

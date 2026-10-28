@@ -95,7 +95,15 @@ export function Celebration({ open, title, message, stars, children, onClose }: 
         <Animated.View
           entering={reduceMotion ? FadeIn : ZoomIn.springify().stiffness(260).damping(18)}
           style={[
-            { width: "100%", maxWidth: 380, backgroundColor: KIDS.white, borderRadius: 40, padding: 28, paddingTop: companion ? 8 : 28, alignItems: "center" },
+            {
+              width: "100%",
+              maxWidth: 380,
+              backgroundColor: KIDS.white,
+              borderRadius: 40,
+              padding: 28,
+              paddingTop: companion ? 8 : 28,
+              alignItems: "center",
+            },
             PANEL_SHADOW,
           ]}
         >
@@ -105,7 +113,10 @@ export function Celebration({ open, title, message, stars, children, onClose }: 
             </View>
           )}
           {stars !== undefined && (
-            <View accessibilityLabel={`${stars} من ٣ نجوم`} style={{ flexDirection: "row", gap: 4, marginBottom: 12, marginTop: companion ? 4 : -64 }}>
+            <View
+              accessibilityLabel={`${stars} من ٣ نجوم`}
+              style={{ flexDirection: "row", gap: 4, marginBottom: 12, marginTop: companion ? 4 : -64 }}
+            >
               {[0, 1, 2].map((index) => (
                 <BigStar key={index} index={index} lit={index < stars} />
               ))}
@@ -119,7 +130,9 @@ export function Celebration({ open, title, message, stars, children, onClose }: 
               {message}
             </KidsText>
           ) : null}
-          {children ? <View style={{ marginTop: 22, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>{children}</View> : null}
+          {children ? (
+            <View style={{ marginTop: 22, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>{children}</View>
+          ) : null}
         </Animated.View>
       </View>
     </Modal>

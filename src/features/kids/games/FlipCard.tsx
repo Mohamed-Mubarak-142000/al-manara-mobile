@@ -42,10 +42,31 @@ export function FlipCard({
     opacity: interpolate(turn.value, [89, 91], [0, 1], "clamp"),
   }));
   return (
-    <Animated.View entering={ZoomIn.delay(index * 40).springify().stiffness(260).damping(16)} style={{ flex: 1 }}>
-      <Pressable accessibilityRole="button" accessibilityLabel={open ? label : "بطاقة مقلوبة"} onPress={onPress} style={{ aspectRatio: aspect }}>
-        <Animated.View style={[{ position: "absolute", inset: 0, borderRadius: 24, overflow: "hidden", borderBottomWidth: 6, borderBottomColor: backShadow }, backStyle]}>
-          <LinearGradient colors={back} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+    <Animated.View
+      entering={ZoomIn.delay(index * 40)
+        .springify()
+        .stiffness(260)
+        .damping(16)}
+      style={{ flex: 1 }}
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={open ? label : "بطاقة مقلوبة"}
+        onPress={onPress}
+        style={{ aspectRatio: aspect }}
+      >
+        <Animated.View
+          style={[
+            { position: "absolute", inset: 0, borderRadius: 24, overflow: "hidden", borderBottomWidth: 6, borderBottomColor: backShadow },
+            backStyle,
+          ]}
+        >
+          <LinearGradient
+            colors={back}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
             <Star size={40} color="rgba(255,255,255,0.65)" fill="rgba(255,255,255,0.3)" />
           </LinearGradient>
         </Animated.View>

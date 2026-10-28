@@ -1,12 +1,7 @@
 import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 
-import {
-  DEFAULT_CALC_SETTINGS,
-  PRAYER_CALC_STORAGE_KEY,
-  normalizeCalcSettings,
-  type PrayerCalcSettings,
-} from "@/core/prayer/calculation";
+import { DEFAULT_CALC_SETTINGS, PRAYER_CALC_STORAGE_KEY, normalizeCalcSettings, type PrayerCalcSettings } from "@/core/prayer/calculation";
 
 let cached: PrayerCalcSettings | null = null;
 const listeners = new Set<() => void>();

@@ -358,7 +358,10 @@ export async function getSoundLibrary(category: SoundCategoryKey): Promise<Sound
  */
 export async function getRadioMediaUrl(ref: string, { fresh = false }: { fresh?: boolean } = {}): Promise<string | null> {
   try {
-    const response = await cachedFetch(`${RADIO_API}/MediaService/GetVideoHlsUrl?videoRefno=${encodeURIComponent(ref)}`, fresh ? 0 : 60 * 60 * 24 * 7);
+    const response = await cachedFetch(
+      `${RADIO_API}/MediaService/GetVideoHlsUrl?videoRefno=${encodeURIComponent(ref)}`,
+      fresh ? 0 : 60 * 60 * 24 * 7,
+    );
     if (!response.ok) return null;
     const data = (await response.json()) as { response?: { result?: string; video_url?: string } };
     const url = data.response?.video_url;

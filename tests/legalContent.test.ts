@@ -22,9 +22,7 @@ describe("legal content", () => {
   });
 
   it("takes the mission line from the privacy policy's first section", () => {
-    expect(missionText()).toBe(
-      "المنارة منصة عربية مجانية لقراءة القرآن الكريم والاستماع إليه وحفظه، مع مساحة تعليمية للأطفال.",
-    );
+    expect(missionText()).toBe("المنارة منصة عربية مجانية لقراءة القرآن الكريم والاستماع إليه وحفظه، مع مساحة تعليمية للأطفال.");
   });
 
   it("splits emails out of text without the sentence's final period", () => {

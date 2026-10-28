@@ -139,7 +139,8 @@ export function buyItem(current: KidsProgressState, itemId: string): ProgressCha
 
 /** Opens an earned chest: the change and what was inside (an item id or `gems-<n>`). */
 export function openChest(current: KidsProgressState, chestId: string): { change: ProgressChange | null; reward: string | null } {
-  if (!unopenedChests(current).some((chest) => chest.id === chestId)) return { change: null, reward: current.openedChests[chestId] ?? null };
+  if (!unopenedChests(current).some((chest) => chest.id === chestId))
+    return { change: null, reward: current.openedChests[chestId] ?? null };
   const reward = rollChest(current, chestId);
   return { change: { state: { ...current, openedChests: { ...current.openedChests, [chestId]: reward } }, games: [] }, reward };
 }

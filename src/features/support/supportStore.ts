@@ -11,7 +11,11 @@ export const INSTAPAY_NUMBER = "01050867135";
 export const QUICK_AMOUNTS = [50, 100, 200, 500] as const;
 
 /** What an approved supporter gets; shown on /support and in the onboarding support step. */
-export const SUPPORTER_PERKS = ["اسمك في قسم «داعمي المنارة» بالرئيسية", "ألوان إضافية لصفحات المصحف", "أجر المساهمة في نشر القرآن بإذن الله"] as const;
+export const SUPPORTER_PERKS = [
+  "اسمك في قسم «داعمي المنارة» بالرئيسية",
+  "ألوان إضافية لصفحات المصحف",
+  "أجر المساهمة في نشر القرآن بإذن الله",
+] as const;
 
 // ── Supporter flag (cosmetic perks only; nothing in the app is locked behind it) ──
 // Set once the account has an approved donation (features/support/donationApi.ts), and kept on the

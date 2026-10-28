@@ -32,5 +32,10 @@ export function useThemeColor(name: ThemeColor): string {
 /** `#rrggbb` at the given opacity (0–1); any other format comes back transparent rather than wrong. */
 export function withAlpha(color: string, alpha: number): string {
   if (!/^#[0-9a-f]{6}$/i.test(color)) return "transparent";
-  return color + Math.round(Math.max(0, Math.min(1, alpha)) * 255).toString(16).padStart(2, "0");
+  return (
+    color +
+    Math.round(Math.max(0, Math.min(1, alpha)) * 255)
+      .toString(16)
+      .padStart(2, "0")
+  );
 }

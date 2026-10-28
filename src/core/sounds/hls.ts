@@ -213,7 +213,8 @@ export function stripId3(bytes: Uint8Array): Uint8Array {
     bytes[start + 2] === 0x33 // 3
   ) {
     // Sizes are "syncsafe": 7 bits per byte.
-    const size = ((bytes[start + 6] & 0x7f) << 21) | ((bytes[start + 7] & 0x7f) << 14) | ((bytes[start + 8] & 0x7f) << 7) | (bytes[start + 9] & 0x7f);
+    const size =
+      ((bytes[start + 6] & 0x7f) << 21) | ((bytes[start + 7] & 0x7f) << 14) | ((bytes[start + 8] & 0x7f) << 7) | (bytes[start + 9] & 0x7f);
     const footer = bytes[start + 5] & 0x10 ? 10 : 0;
     start += 10 + size + footer;
   }

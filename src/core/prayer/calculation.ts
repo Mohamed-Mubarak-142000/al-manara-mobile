@@ -4,16 +4,7 @@ import type { PrayerKey } from "./prayerTimesApi";
 
 /** adhan-js names; each maps to an aladhan `method` id below. */
 export type CalcMethodId =
-  | "Egyptian"
-  | "UmmAlQura"
-  | "MuslimWorldLeague"
-  | "NorthAmerica"
-  | "Karachi"
-  | "Dubai"
-  | "Kuwait"
-  | "Qatar"
-  | "Singapore"
-  | "Turkey";
+  "Egyptian" | "UmmAlQura" | "MuslimWorldLeague" | "NorthAmerica" | "Karachi" | "Dubai" | "Kuwait" | "Qatar" | "Singapore" | "Turkey";
 
 export type AsrMadhab = "shafi" | "hanafi";
 
@@ -79,7 +70,9 @@ export function normalizeCalcSettings(raw: unknown): PrayerCalcSettings {
   const method = CALC_METHODS.some((entry) => entry.id === value.method) ? value.method! : DEFAULT_CALC_SETTINGS.method;
   const madhab: AsrMadhab = value.madhab === "hanafi" ? "hanafi" : "shafi";
   const saved = (value.offsets ?? {}) as Partial<PrayerOffsets>;
-  const offsets = Object.fromEntries((Object.keys(ZERO_OFFSETS) as PrayerKey[]).map((key) => [key, clampOffset(saved[key] ?? 0)])) as PrayerOffsets;
+  const offsets = Object.fromEntries(
+    (Object.keys(ZERO_OFFSETS) as PrayerKey[]).map((key) => [key, clampOffset(saved[key] ?? 0)]),
+  ) as PrayerOffsets;
   return { method, madhab, offsets };
 }
 

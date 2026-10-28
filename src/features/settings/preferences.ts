@@ -101,13 +101,10 @@ function writeState(patch: Partial<SyncState>) {
 
 /** Whether the settings screen was saved, for this account (or the guest on this device). */
 export function useSetupComplete(userId: string | null): boolean {
-  const current = useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    readState,
-  );
+  const current = useSyncExternalStore((listener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }, readState);
   return current.completed[userId ?? "guest"] === true;
 }
 
@@ -141,7 +138,12 @@ export function savePreferences({ complete = false }: { complete?: boolean } = {
   const serialized = JSON.stringify(prefs);
   if (!complete && serialized === readState().sent) return;
   writeState({ sent: serialized });
-  enqueue<PrefsPayload>({ kind: PREFS_OP, owner: userId, payload: { userId, prefs, completed: complete }, dedupeKey: `${PREFS_OP}:${userId}` });
+  enqueue<PrefsPayload>({
+    kind: PREFS_OP,
+    owner: userId,
+    payload: { userId, prefs, completed: complete },
+    dedupeKey: `${PREFS_OP}:${userId}`,
+  });
 }
 
 // ── Reading ──
@@ -169,7 +171,10 @@ async function applyPreferences(prefs: Partial<AppPreferences>) {
         if (readAdhkarReminders()[kind].enabled !== prefs.adhkar[kind]) await setAdhkarReminder(kind, prefs.adhkar[kind]);
       }
     },
-    async () => typeof prefs.outsideAdhkar === "boolean" && prefs.outsideAdhkar !== readOutsideAdhkarNotifications() && setOutsideAdhkarNotifications(prefs.outsideAdhkar),
+    async () =>
+      typeof prefs.outsideAdhkar === "boolean" &&
+      prefs.outsideAdhkar !== readOutsideAdhkarNotifications() &&
+      setOutsideAdhkarNotifications(prefs.outsideAdhkar),
     async () => prefs.adhanVoice !== undefined && (await setAdhanVoice(prefs.adhanVoice)),
   ];
   for (const step of steps) {

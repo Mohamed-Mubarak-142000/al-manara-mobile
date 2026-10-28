@@ -138,7 +138,18 @@ export function KidsQuiz({ surahId }: { surahId: number }) {
     return (
       <KidsScroll>
         <KidsPanel className="items-center">
-          <View style={{ width: 80, height: 80, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: KIDS.gold, borderBottomWidth: 7, borderBottomColor: KIDS.goldShadow }}>
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 24,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: KIDS.gold,
+              borderBottomWidth: 7,
+              borderBottomColor: KIDS.goldShadow,
+            }}
+          >
             <Sparkles size={40} color={KIDS.white} />
           </View>
           <KidsText size={28} bold center className="mt-5">
@@ -173,7 +184,19 @@ export function KidsQuiz({ surahId }: { surahId: number }) {
 
   return (
     <KidsScroll gap={16}>
-      <View style={[{ borderRadius: 999, backgroundColor: "rgba(255,255,255,0.95)", paddingHorizontal: 20, paddingVertical: 12, borderWidth: 4, borderColor: "rgba(255,255,255,0.6)" }, PANEL_SHADOW]}>
+      <View
+        style={[
+          {
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderWidth: 4,
+            borderColor: "rgba(255,255,255,0.6)",
+          },
+          PANEL_SHADOW,
+        ]}
+      >
         <View className="flex-row items-center justify-between">
           <KidsText size={16} bold>
             السؤال {toArabicDigits(Math.min(current + 1, questions.length))} من {toArabicDigits(questions.length)}

@@ -1,12 +1,5 @@
 /// <reference types="jest" />
-import {
-  createAutoAdvance,
-  dayKey,
-  indexFromOffset,
-  liveSponsors,
-  nextIndex,
-  parseSponsorCache,
-} from "@/features/home/SponsorRotation";
+import { createAutoAdvance, dayKey, indexFromOffset, liveSponsors, nextIndex, parseSponsorCache } from "@/features/home/SponsorRotation";
 
 const sponsor = (id: string, starts_on?: string, ends_on?: string) => ({
   id,
@@ -43,7 +36,12 @@ describe("sponsor carousel indexes", () => {
 
 describe("sponsor cache", () => {
   it("keeps only sponsors running today (inclusive)", () => {
-    const list = [sponsor("a", "2026-10-01", "2026-10-06"), sponsor("b", "2026-10-07", "2026-10-30"), sponsor("c", "2026-09-01", "2026-10-05"), sponsor("d")];
+    const list = [
+      sponsor("a", "2026-10-01", "2026-10-06"),
+      sponsor("b", "2026-10-07", "2026-10-30"),
+      sponsor("c", "2026-09-01", "2026-10-05"),
+      sponsor("d"),
+    ];
     expect(liveSponsors(list, "2026-10-06").map((item) => item.id)).toEqual(["a", "d"]);
   });
 

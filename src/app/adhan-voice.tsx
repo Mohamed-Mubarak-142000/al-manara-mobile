@@ -120,54 +120,54 @@ export default function AdhanVoiceScreen() {
             className={`mx-4 mb-2.5 rounded-3xl border px-4 py-3 ${selected || downloading ? "border-primary bg-primary-soft" : "border-border bg-surface"}`}
             style={{ opacity: saving && !downloading ? 0.55 : 1 }}
           >
-          <View className="flex-row items-center gap-3">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={previewing ? "إيقاف" : "استمع"}
-              onPress={() => (playing?.id === item.id ? audio.toggle() : audio.playTrack(item))}
-              className="size-11 items-center justify-center rounded-2xl bg-primary-soft"
-            >
-              {previewing ? <Pause size={16} color={primary} fill={primary} /> : <Play size={16} color={primary} fill={primary} />}
-            </Pressable>
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              disabled={saving}
-              onPress={() => {
-                void choose(item);
-              }}
-              className="flex-1 flex-row items-center gap-2"
-            >
-              <View className="flex-1">
-                <Text numberOfLines={1} className="font-sans-bold text-sm text-fg">
-                  {item.artist}
-                </Text>
-                <Text numberOfLines={1} className="font-sans text-xs text-fg-muted">
-                  {item.title}
-                </Text>
-                {downloading ? (
-                  <Text numberOfLines={1} className="font-sans-bold text-xs text-primary">
-                    جارٍ تنزيل الأذان وحفظه… قد يستغرق دقيقة
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={previewing ? "إيقاف" : "استمع"}
+                onPress={() => (playing?.id === item.id ? audio.toggle() : audio.playTrack(item))}
+                className="size-11 items-center justify-center rounded-2xl bg-primary-soft"
+              >
+                {previewing ? <Pause size={16} color={primary} fill={primary} /> : <Play size={16} color={primary} fill={primary} />}
+              </Pressable>
+              <Pressable
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                disabled={saving}
+                onPress={() => {
+                  void choose(item);
+                }}
+                className="flex-1 flex-row items-center gap-2"
+              >
+                <View className="flex-1">
+                  <Text numberOfLines={1} className="font-sans-bold text-sm text-fg">
+                    {item.artist}
                   </Text>
-                ) : (
-                  selected &&
-                  chosen?.offlineKey && (
+                  <Text numberOfLines={1} className="font-sans text-xs text-fg-muted">
+                    {item.title}
+                  </Text>
+                  {downloading ? (
                     <Text numberOfLines={1} className="font-sans-bold text-xs text-primary">
-                      محفوظ على الجهاز للأذان دون إنترنت
+                      جارٍ تنزيل الأذان وحفظه… قد يستغرق دقيقة
                     </Text>
-                  )
-                )}
-              </View>
-              {downloading ? <ActivityIndicator color={primary} /> : selected && <Check size={18} color={primary} />}
-            </Pressable>
-            {/* The preview: save it for listening offline (the alarm keeps its own copy). */}
-            <TrackDownloadButton track={item} />
-          </View>
-          {failed && (
-            <Text accessibilityRole="alert" className="mt-2 font-sans text-xs leading-5 text-danger">
-              {failed}
-            </Text>
-          )}
+                  ) : (
+                    selected &&
+                    chosen?.offlineKey && (
+                      <Text numberOfLines={1} className="font-sans-bold text-xs text-primary">
+                        محفوظ على الجهاز للأذان دون إنترنت
+                      </Text>
+                    )
+                  )}
+                </View>
+                {downloading ? <ActivityIndicator color={primary} /> : selected && <Check size={18} color={primary} />}
+              </Pressable>
+              {/* The preview: save it for listening offline (the alarm keeps its own copy). */}
+              <TrackDownloadButton track={item} />
+            </View>
+            {failed && (
+              <Text accessibilityRole="alert" className="mt-2 font-sans text-xs leading-5 text-danger">
+                {failed}
+              </Text>
+            )}
           </View>
         );
       }}

@@ -93,7 +93,9 @@ describe("kids rewards", () => {
   });
 
   it("earns gems for stations, badges and opened chests", () => {
-    expect(gemBalance(base({ passedQuizSurahs: [1], unlockedBadgeIds: ["first-step"], openedChests: { "surah-1": "gems-15" } }))).toBe(10 + 5 + 15);
+    expect(gemBalance(base({ passedQuizSurahs: [1], unlockedBadgeIds: ["first-step"], openedChests: { "surah-1": "gems-15" } }))).toBe(
+      10 + 5 + 15,
+    );
   });
 
   it("counts full weeks of consecutive days", () => {
@@ -115,7 +117,13 @@ describe("kids daily challenge and streak", () => {
   it("completes the day after its three tasks", () => {
     const now = new Date("2026-10-13T10:00:00Z");
     let state = base();
-    for (const event of [{ type: "listen" }, { type: "learn" }, { type: "quiz" }, { type: "game", game: "arrange" }, { type: "game", game: "kids_recite" }] as const)
+    for (const event of [
+      { type: "listen" },
+      { type: "learn" },
+      { type: "quiz" },
+      { type: "game", game: "arrange" },
+      { type: "game", game: "kids_recite" },
+    ] as const)
       state = applyDailyEvent(state, event, now);
     expect(completedDailyDays(state)).toEqual(["2026-10-13"]);
   });
@@ -130,7 +138,12 @@ describe("kids daily challenge and streak", () => {
 describe("kids sync writes (the website's pushDiff)", () => {
   it("writes only what changed, with the game rows last", () => {
     const prev = base({ memorizedAyahsBySurah: { 112: [1] } });
-    const change = actions.recordGame(actions.setAyahsMemorized(prev, 112, [2], true).state, { game: "arrange", surah: 112, score: 1, total: 1 });
+    const change = actions.recordGame(actions.setAyahsMemorized(prev, 112, [2], true).state, {
+      game: "arrange",
+      surah: 112,
+      score: 1,
+      total: 1,
+    });
     const writes = diffWrites(prev, change.state, change.games);
     expect(writes[0]).toEqual({ op: "setAyahs", surah: 112, ayahs: [2], memorized: true });
     expect(writes.at(-1)).toEqual({ op: "addGames", games: change.games });

@@ -286,66 +286,72 @@ export default function MushafScreen() {
         </View>
       ) : (
         <GestureDetector gesture={pinch}>
-        <FlatList
-          ref={listRef}
-          key={`${riwayaKey}-${portion?.to ?? ""}`}
-          data={items}
-          extraData={pagerExtra}
-          horizontal
-          pagingEnabled
-          scrollEnabled={!zoomed}
-          keyExtractor={(item) => String(item)}
-          // Remounted per riwaya (key): it then opens on the page the reader was on.
-          initialScrollIndex={pagerIndex(portion, page)}
-          getItemLayout={getItemLayout}
-          windowSize={3}
-          initialNumToRender={1}
-          maxToRenderPerBatch={2}
-          showsHorizontalScrollIndicator={false}
-          viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
-          onViewableItemsChanged={onViewableItemsChanged}
-          onLayout={(event) => setPagerHeight(event.nativeEvent.layout.height)}
-          renderItem={({ item }) =>
-            item === PORTION_DONE && portion ? (
-              <PortionDone portion={portion} width={width} height={pagerHeight} theme={state.prefs.theme} onExit={() => leavePortion(portion.to)} />
-            ) : fixedPages ? (
-              pagerHeight === 0 ? (
-                <View style={{ width }} />
+          <FlatList
+            ref={listRef}
+            key={`${riwayaKey}-${portion?.to ?? ""}`}
+            data={items}
+            extraData={pagerExtra}
+            horizontal
+            pagingEnabled
+            scrollEnabled={!zoomed}
+            keyExtractor={(item) => String(item)}
+            // Remounted per riwaya (key): it then opens on the page the reader was on.
+            initialScrollIndex={pagerIndex(portion, page)}
+            getItemLayout={getItemLayout}
+            windowSize={3}
+            initialNumToRender={1}
+            maxToRenderPerBatch={2}
+            showsHorizontalScrollIndicator={false}
+            viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+            onViewableItemsChanged={onViewableItemsChanged}
+            onLayout={(event) => setPagerHeight(event.nativeEvent.layout.height)}
+            renderItem={({ item }) =>
+              item === PORTION_DONE && portion ? (
+                <PortionDone
+                  portion={portion}
+                  width={width}
+                  height={pagerHeight}
+                  theme={state.prefs.theme}
+                  onExit={() => leavePortion(portion.to)}
+                />
+              ) : fixedPages ? (
+                pagerHeight === 0 ? (
+                  <View style={{ width }} />
+                ) : (
+                  <ZoomedPage width={width} height={pagerHeight} zoom={zoom} background={theme.shell}>
+                    {(frame) => (
+                      <MushafPrintedPage
+                        page={item}
+                        width={frame.width}
+                        height={frame.height}
+                        theme={state.prefs.theme}
+                        selected={selected?.id ?? null}
+                        playingId={playingId}
+                        tajweed={state.prefs.tajweed}
+                        onTap={toggleChrome}
+                        onAyahLongPress={openAyah}
+                      />
+                    )}
+                  </ZoomedPage>
+                )
               ) : (
-                <ZoomedPage width={width} height={pagerHeight} zoom={zoom} background={theme.shell}>
-                  {(frame) => (
-                    <MushafPrintedPage
-                      page={item}
-                      width={frame.width}
-                      height={frame.height}
-                      theme={state.prefs.theme}
-                      selected={selected?.id ?? null}
-                      playingId={playingId}
-                      tajweed={state.prefs.tajweed}
-                      onTap={toggleChrome}
-                      onAyahLongPress={openAyah}
-                    />
-                  )}
-                </ZoomedPage>
+                <MushafPageView
+                  page={item}
+                  width={width}
+                  theme={state.prefs.theme}
+                  fontSize={fontSize}
+                  // The default size (and smaller) shows the whole page like a printed mushaf; larger sizes scroll.
+                  fit={state.prefs.fontStep <= DEFAULT_FONT_STEP}
+                  selected={selected?.id ?? null}
+                  playingId={playingId}
+                  tajweed={state.prefs.tajweed}
+                  riwaya={riwaya}
+                  onTap={toggleChrome}
+                  onAyahLongPress={openAyah}
+                />
               )
-            ) : (
-              <MushafPageView
-                page={item}
-                width={width}
-                theme={state.prefs.theme}
-                fontSize={fontSize}
-                // The default size (and smaller) shows the whole page like a printed mushaf; larger sizes scroll.
-                fit={state.prefs.fontStep <= DEFAULT_FONT_STEP}
-                selected={selected?.id ?? null}
-                playingId={playingId}
-                tajweed={state.prefs.tajweed}
-                riwaya={riwaya}
-                onTap={toggleChrome}
-                onAyahLongPress={openAyah}
-              />
-            )
-          }
-        />
+            }
+          />
         </GestureDetector>
       )}
 

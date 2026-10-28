@@ -52,17 +52,21 @@ function render(name, width, height, html) {
   const file = path.join(workDir, `${name}.html`);
   fs.writeFileSync(file, `<!doctype html><html><head><meta charset="utf-8"><style>${BASE_CSS}</style></head><body>${html}</body></html>`);
   const out = path.join(outDir, `${name}.png`);
-  execFileSync(CHROME, [
-    "--headless=new",
-    "--disable-gpu",
-    "--hide-scrollbars",
-    "--force-device-scale-factor=1",
-    "--allow-file-access-from-files",
-    "--virtual-time-budget=3000",
-    `--window-size=${width},${height}`,
-    `--screenshot=${out}`,
-    pathToFileURL(file).href,
-  ], { stdio: "ignore" });
+  execFileSync(
+    CHROME,
+    [
+      "--headless=new",
+      "--disable-gpu",
+      "--hide-scrollbars",
+      "--force-device-scale-factor=1",
+      "--allow-file-access-from-files",
+      "--virtual-time-budget=3000",
+      `--window-size=${width},${height}`,
+      `--screenshot=${out}`,
+      pathToFileURL(file).href,
+    ],
+    { stdio: "ignore" },
+  );
   console.log(`${path.relative(root, out)} (${width}×${height}, ${(fs.statSync(out).size / 1024).toFixed(0)} KB)`);
 }
 
@@ -73,7 +77,11 @@ fs.mkdirSync(workDir, { recursive: true });
 const PHONE_W = 660;
 const SHOT_H = Math.round((PHONE_W / 720) * (1600 - CROP_TOP - CROP_BOTTOM));
 for (const [name, title, subtitle] of SCREENS) {
-  render(`screenshot-${name}`, 1080, 1920, `
+  render(
+    `screenshot-${name}`,
+    1080,
+    1920,
+    `
     <div style="position:absolute;inset:0;background:linear-gradient(160deg,#00473a 0%,#012a22 70%);"></div>
     <div style="position:absolute;width:900px;height:900px;border-radius:50%;background:radial-gradient(circle,rgba(205,162,62,.28),transparent 65%);top:-380px;left:90px;"></div>
     <div style="position:absolute;top:96px;left:0;right:0;text-align:center;padding:0 60px;">
@@ -84,11 +92,16 @@ for (const [name, title, subtitle] of SCREENS) {
       <div style="width:${PHONE_W}px;height:${SHOT_H}px;border-radius:52px;overflow:hidden;background:#fff;">
         <img src="${url(`store/screens/${name}.jpg`)}" style="display:block;width:${PHONE_W}px;margin-top:-${Math.round((PHONE_W / 720) * CROP_TOP)}px;">
       </div>
-    </div>`);
+    </div>`,
+  );
 }
 
 // ── Feature graphic, 1024×500 ──
-render("feature-graphic", 1024, 500, `
+render(
+  "feature-graphic",
+  1024,
+  500,
+  `
   <img src="${url("assets/images/scenes/quran-terrace.webp")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
   <div style="position:absolute;inset:0;background:linear-gradient(270deg,rgba(1,42,34,.96) 0%,rgba(1,42,34,.88) 42%,rgba(1,42,34,.25) 78%,rgba(1,42,34,.1) 100%);"></div>
   <div style="position:absolute;top:0;bottom:0;right:64px;display:flex;align-items:center;gap:34px;">
@@ -100,10 +113,16 @@ render("feature-graphic", 1024, 500, `
       <div style="color:#e8d7a6;font-weight:600;font-size:30px;margin-top:10px;">قرآن · أذان · أذكار · أحاديث</div>
       <div style="color:rgba(255,255,255,.82);font-weight:400;font-size:22px;margin-top:14px;">علمٌ ينير قلبك، ومعرفةٌ ترافق يومك</div>
     </div>
-  </div>`);
+  </div>`,
+);
 
 // ── Store icon, 512×512 ──
-render("icon-512", 512, 512, `
-  <img src="${url("assets/images/brand/icon.png")}" style="position:absolute;inset:0;width:512px;height:512px;object-fit:cover;">`);
+render(
+  "icon-512",
+  512,
+  512,
+  `
+  <img src="${url("assets/images/brand/icon.png")}" style="position:absolute;inset:0;width:512px;height:512px;object-fit:cover;">`,
+);
 
 fs.rmSync(workDir, { recursive: true, force: true });

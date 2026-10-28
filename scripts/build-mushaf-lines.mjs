@@ -44,8 +44,10 @@ function compact(markup) {
 async function fetchPage(page, attempt = 1) {
   try {
     const verses = [];
-    for (let next = 1; next; ) {
-      const response = await fetch(`${API}/${page}?words=true&word_fields=text_qpc_hafs,line_number,text_uthmani_tajweed&per_page=50&page=${next}`);
+    for (let next = 1; next;) {
+      const response = await fetch(
+        `${API}/${page}?words=true&word_fields=text_qpc_hafs,line_number,text_uthmani_tajweed&per_page=50&page=${next}`,
+      );
       if (!response.ok) throw new Error(`quran.com answered ${response.status} for page ${page}`);
       const body = await response.json();
       verses.push(...body.verses);
@@ -70,7 +72,8 @@ function buildPage(page, verses) {
       const text = word.text_qpc_hafs;
       const end = word.char_type_name === "end";
       if (end !== /^[٠-٩]+$/.test(text)) throw new Error(`Page ${page}: unexpected ayah end ${JSON.stringify(text)}`);
-      if (end && text !== String(ayah).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d])) throw new Error(`Page ${page}: end ${text} for ${verse.verse_key}`);
+      if (end && text !== String(ayah).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]))
+        throw new Error(`Page ${page}: end ${text} for ${verse.verse_key}`);
       const markup = !end && word.text_uthmani_tajweed?.includes("<") ? word.text_uthmani_tajweed : null;
       if (markup && /<(?!\/?rule\b)/.test(markup)) throw new Error(`Page ${page}: unknown tag in ${markup}`);
       (lines[line - 1] ??= []).push(markup ? [text, compact(markup)] : text);
@@ -105,7 +108,8 @@ for (let page = 1; page <= 604; page += 1) {
   const verses = await fetchPage(page);
   const [surah, ayah] = verses[0].verse_key.split(":").map(Number);
   const [startSurah, startAyah] = pageStarts[page - 1];
-  if (surah !== startSurah || ayah !== startAyah) throw new Error(`Page ${page} starts at ${surah}:${ayah}, the bundle says ${startSurah}:${startAyah}`);
+  if (surah !== startSurah || ayah !== startAyah)
+    throw new Error(`Page ${page} starts at ${surah}:${ayah}, the bundle says ${startSurah}:${startAyah}`);
   const { lines, lineWidths } = buildPage(page, verses);
   pages.push(lines);
   widths.push(lineWidths);
@@ -117,7 +121,9 @@ if (surahNames.length !== 114) throw new Error("surah-names.json is not loaded")
 
 all.sort((a, b) => a - b);
 const pct = (p) => all[Math.floor((all.length - 1) * p)].toFixed(2);
-console.log(`Lines: ${all.length}, em p10 ${pct(0.1)} p50 ${pct(0.5)} p80 ${pct(0.8)} p90 ${pct(0.9)} p95 ${pct(0.95)} p99 ${pct(0.99)} max ${pct(1)}`);
+console.log(
+  `Lines: ${all.length}, em p10 ${pct(0.1)} p50 ${pct(0.5)} p80 ${pct(0.8)} p90 ${pct(0.9)} p95 ${pct(0.95)} p99 ${pct(0.99)} max ${pct(1)}`,
+);
 // Each page is stored as its own JSON string: requiring the module then only creates 604 strings, and the
 // reader parses a page when it is shown.
 fs.writeFileSync(out, JSON.stringify({ rules, pages: pages.map((lines, index) => JSON.stringify([lines, widths[index]])) }));

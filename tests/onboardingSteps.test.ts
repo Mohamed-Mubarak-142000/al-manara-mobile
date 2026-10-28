@@ -1,5 +1,13 @@
 /// <reference types="jest" />
-import { SETUP_LABELS, introButtonLabel, khatmaDays, nextStep, onboardingSteps, previousStep, resumeStep } from "@/features/onboarding/steps";
+import {
+  SETUP_LABELS,
+  introButtonLabel,
+  khatmaDays,
+  nextStep,
+  onboardingSteps,
+  previousStep,
+  resumeStep,
+} from "@/features/onboarding/steps";
 
 describe("onboarding steps", () => {
   it("is the intro, the account, then the settings saved to it", () => {

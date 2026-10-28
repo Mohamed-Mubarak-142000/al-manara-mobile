@@ -69,7 +69,8 @@ function publishSignedIn(session: Session, profile: Profile | null, learners: Le
   } catch {
     // Default below.
   }
-  const activeLearner = learners.find((learner) => learner.id === chosen) ?? learners.find((learner) => learner.kind === "self") ?? learners[0] ?? null;
+  const activeLearner =
+    learners.find((learner) => learner.id === chosen) ?? learners.find((learner) => learner.kind === "self") ?? learners[0] ?? null;
   set({
     status: "signed-in",
     userId: session.user.id,

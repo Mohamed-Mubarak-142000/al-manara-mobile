@@ -97,7 +97,10 @@ export function FloatingTabBar({ blurTarget }: { blurTarget: RefObject<View | nu
 
   return (
     <View className="px-3 pt-1.5" style={{ paddingBottom: Math.max(insets.bottom, 10) }} pointerEvents="box-none">
-      <View className="overflow-hidden rounded-[28px] shadow-card" style={{ borderWidth: 0.5, borderColor: withAlpha(dark ? "#ffffff" : "#000000", 0.06) }}>
+      <View
+        className="overflow-hidden rounded-[28px] shadow-card"
+        style={{ borderWidth: 0.5, borderColor: withAlpha(dark ? "#ffffff" : "#000000", 0.06) }}
+      >
         <BlurView
           blurTarget={blurTarget}
           blurMethod="dimezisBlurViewSdk31Plus"

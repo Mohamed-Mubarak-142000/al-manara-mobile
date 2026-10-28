@@ -27,7 +27,7 @@ function serve(routes: Record<string, string | number[]>) {
 beforeEach(() => fs.reset());
 
 describe("downloadHls", () => {
-  const master = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS=\"mp4a.40.2\"\na/index.m3u8\n";
+  const master = '#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=64000,CODECS="mp4a.40.2"\na/index.m3u8\n';
 
   it("appends packed AAC segments without their ID3 tags and names the file .aac", async () => {
     serve({

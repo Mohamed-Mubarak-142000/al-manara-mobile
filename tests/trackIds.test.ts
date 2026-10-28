@@ -38,7 +38,11 @@ describe("ayah URLs back to their ayah", () => {
 
   it("finds the ayah of a track playing from a saved pack through its backup stream", () => {
     const remote = remoteAyahUrl("husary", 2, 255);
-    expect(ayahRefOf({ url: "file:///doc/ayahs/husary/2/255.mp3", fallbackUrls: [remote] })).toEqual({ voice: "husary", surah: 2, ayah: 255 });
+    expect(ayahRefOf({ url: "file:///doc/ayahs/husary/2/255.mp3", fallbackUrls: [remote] })).toEqual({
+      voice: "husary",
+      surah: 2,
+      ayah: 255,
+    });
     expect(ayahRefOf({ url: "https://x/2.mp3" })).toBeNull();
   });
 });
@@ -86,7 +90,12 @@ describe("downloadStore with normalized ids", () => {
   it("finds a sound saved on the sounds screen from the adhan picker", async () => {
     fs.dirs.add("doc/audio");
     const store = load();
-    await store.downloads.start({ id: "sound-archive:x/1.mp3", title: "أذان", artist: "مؤذن", url: "https://archive.org/download/x/1.mp3" });
+    await store.downloads.start({
+      id: "sound-archive:x/1.mp3",
+      title: "أذان",
+      artist: "مؤذن",
+      url: "https://archive.org/download/x/1.mp3",
+    });
     expect(store.localUriFor("adhan-voice-archive:x/1.mp3")).toBe(store.localUriFor("sound-archive:x/1.mp3"));
     expect(store.downloadEntry("adhan-voice-archive:x/1.mp3")?.status).toBe("done");
   });

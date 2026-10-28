@@ -41,10 +41,7 @@ export type TrackDownloadKind = "file" | "ayah-pack" | null;
  * How a track can be saved: as one file, as its surah's ayah pack, or not at all (live streams and
  * radio-library clips while their HLS is encrypted at the source).
  */
-export function trackDownloadKind(
-  track: { url: string; fallbackUrls?: string[]; live?: boolean },
-  hlsAllowed: boolean,
-): TrackDownloadKind {
+export function trackDownloadKind(track: { url: string; fallbackUrls?: string[]; live?: boolean }, hlsAllowed: boolean): TrackDownloadKind {
   if (track.live) return null;
   if (ayahRefOf(track)) return "ayah-pack";
   if (track.url.startsWith(RADIO_REF)) return hlsAllowed ? "file" : null;

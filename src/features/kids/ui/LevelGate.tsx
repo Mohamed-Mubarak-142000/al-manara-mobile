@@ -19,7 +19,9 @@ export function LevelGate({ surahId, children }: { surahId: number; children: Re
   return (
     <KidsScroll>
       <KidsPanel className="items-center">
-        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: KIDS.soft, alignItems: "center", justifyContent: "center" }}>
+        <View
+          style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: KIDS.soft, alignItems: "center", justifyContent: "center" }}
+        >
           <Lock size={40} color={KIDS.muted} />
         </View>
         <KidsText size={28} bold center className="mt-5">

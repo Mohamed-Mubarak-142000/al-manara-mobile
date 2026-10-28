@@ -82,7 +82,10 @@ function Medal() {
       ].map((spark, index) => (
         <Spark key={index} {...spark} />
       ))}
-      <Animated.View style={style} className="size-24 items-center justify-center rounded-full border-2 border-gold/50 bg-gold/15 shadow-gold">
+      <Animated.View
+        style={style}
+        className="size-24 items-center justify-center rounded-full border-2 border-gold/50 bg-gold/15 shadow-gold"
+      >
         <View className="size-18 items-center justify-center rounded-full bg-gold">
           <Sparkles size={36} color="#012a22" />
         </View>
@@ -112,9 +115,7 @@ export function AdhkarCelebration({ category, onClose }: { category: DuaCategory
             <Text className="font-sans-bold text-sm text-gold-soft">أحسنت! ما شاء الله</Text>
             <Text className="mt-1 text-center font-display-bold text-2xl text-hero-fg">{copy.title}</Text>
             <Text className="mt-3 text-center font-sans text-base leading-7 text-white/80">{copy.body}</Text>
-            <Text className="mt-3 text-center font-quran-fallback text-lg leading-9 text-gold-soft">
-              ﴿فَاذْكُرُونِي أَذْكُرْكُمْ﴾
-            </Text>
+            <Text className="mt-3 text-center font-quran-fallback text-lg leading-9 text-gold-soft">﴿فَاذْكُرُونِي أَذْكُرْكُمْ﴾</Text>
             <Button className="mt-5 self-stretch" variant="gold" size="lg" onPress={onClose}>
               الحمد لله
             </Button>

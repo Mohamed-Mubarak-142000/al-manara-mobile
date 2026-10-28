@@ -168,7 +168,10 @@ export const MushafFixedPage = memo(function MushafFixedPage({
           {first ? `الجزء ${toArabicDigits(first.juz)} · ${hizbLabel(first.hizbQuarter, toArabicDigits)}` : ""}
         </Text>
       </View>
-      <View className={`flex-1 items-center ${opening ? "justify-center" : ""}`} style={{ paddingHorizontal: PAD_X, paddingVertical: PAD_Y }}>
+      <View
+        className={`flex-1 items-center ${opening ? "justify-center" : ""}`}
+        style={{ paddingHorizontal: PAD_X, paddingVertical: PAD_Y }}
+      >
         <View style={{ width: lineWidth }}>{lines.map(renderLine)}</View>
       </View>
       <View className="items-center justify-center" style={{ height: FOOTER }}>

@@ -14,20 +14,14 @@
       "infoPlist": {
         "CFBundleDevelopmentRegion": "ar",
         "ExpoLocalization_forcesRTL": true,
-        "CFBundleLocalizations": [
-          "ar"
-        ],
+        "CFBundleLocalizations": ["ar"],
         "NSSpeechRecognitionUsageDescription": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
         "NSMicrophoneUsageDescription": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك."
       },
-      "associatedDomains": [
-        "applinks:eslami-platform.vercel.app"
-      ],
+      "associatedDomains": ["applinks:eslami-platform.vercel.app"],
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true,
-        "com.apple.security.application-groups": [
-          "group.com.almanara.app"
-        ]
+        "com.apple.security.application-groups": ["group.com.almanara.app"]
       }
     },
     "android": {
@@ -184,10 +178,7 @@
               "pathPrefix": "/recordings"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -214,9 +205,7 @@
       [
         "expo-localization",
         {
-          "supportedLocales": [
-            "ar"
-          ],
+          "supportedLocales": ["ar"],
           "forcesRTL": true
         }
       ],
@@ -231,9 +220,7 @@
         "expo-notifications",
         {
           "color": "#003e32",
-          "sounds": [
-            "./assets/audio/adhan_short.wav"
-          ]
+          "sounds": ["./assets/audio/adhan_short.wav"]
         }
       ],
       "expo-sharing",
@@ -242,9 +229,7 @@
         {
           "microphonePermission": "يستخدم المنارة الميكروفون في التسميع ليستمع إلى تلاوتك من حفظك.",
           "speechRecognitionPermission": "يستخدم المنارة التعرّف على الكلام في التسميع ليتابع تلاوتك وينبهك عند الخطأ.",
-          "androidSpeechServicePackages": [
-            "com.google.android.googlequicksearchbox"
-          ]
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
         }
       ],
       [
@@ -258,9 +243,7 @@
       [
         "react-native-android-widget",
         {
-          "fonts": [
-            "./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/700Bold/IBMPlexSansArabic_700Bold.ttf"
-          ],
+          "fonts": ["./node_modules/@expo-google-fonts/ibm-plex-sans-arabic/700Bold/IBMPlexSansArabic_700Bold.ttf"],
           "widgets": [
             {
               "name": "NextPrayer",

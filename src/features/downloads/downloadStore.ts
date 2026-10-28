@@ -168,7 +168,18 @@ async function startHls(track: Downloadable) {
       patch(track.id, null);
       return;
     }
-    patch(track.id, { status: "done", meta: { id: track.id, title: track.title, artist: track.artist, url: track.url, bytes: result.bytes, savedAt: Date.now(), ext: result.ext } });
+    patch(track.id, {
+      status: "done",
+      meta: {
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        url: track.url,
+        bytes: result.bytes,
+        savedAt: Date.now(),
+        ext: result.ext,
+      },
+    });
     trackEvent("surah_downloaded");
   } catch (error) {
     if (error instanceof DownloadCancelledError || job.cancelled) patch(track.id, null);
@@ -216,7 +227,14 @@ export const downloads = {
         patch(track.id, null);
         return;
       }
-      const meta: DownloadMeta = { id: track.id, title: track.title, artist: track.artist, url, bytes: file.size ?? 0, savedAt: Date.now() };
+      const meta: DownloadMeta = {
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        url,
+        bytes: file.size ?? 0,
+        savedAt: Date.now(),
+      };
       patch(track.id, { status: "done", meta });
       trackEvent("surah_downloaded");
     } catch {

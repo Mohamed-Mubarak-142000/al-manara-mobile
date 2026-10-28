@@ -126,81 +126,99 @@ export function remoteWriter(supabase: Client, learnerId: string) {
     async setAyahs(surah: number, ayahs: number[], memorized: boolean) {
       if (ayahs.length === 0) return;
       if (memorized) {
-        check(await supabase.from("memorized_ayahs").upsert(
-          ayahs.map((ayah) => ({ learner_id, surah, ayah })),
-          { onConflict: "learner_id,surah,ayah", ignoreDuplicates: true },
-        ));
+        check(
+          await supabase.from("memorized_ayahs").upsert(
+            ayahs.map((ayah) => ({ learner_id, surah, ayah })),
+            { onConflict: "learner_id,surah,ayah", ignoreDuplicates: true },
+          ),
+        );
       } else {
         check(await supabase.from("memorized_ayahs").delete().eq("learner_id", learner_id).eq("surah", surah).in("ayah", ayahs));
       }
     },
     async setReview(surah: number, review: KidsSurahReview) {
-      check(await supabase
-        .from("review_schedule")
-        .upsert(
-          { learner_id, surah, interval_index: review.intervalIndex, last_reviewed_at: review.lastReviewedAt, due_at: review.dueAt },
-          { onConflict: "learner_id,surah" },
-        ));
+      check(
+        await supabase
+          .from("review_schedule")
+          .upsert(
+            { learner_id, surah, interval_index: review.intervalIndex, last_reviewed_at: review.lastReviewedAt, due_at: review.dueAt },
+            { onConflict: "learner_id,surah" },
+          ),
+      );
     },
     async addActivityDays(days: string[]) {
       if (days.length === 0) return;
-      check(await supabase.from("activity_days").upsert(
-        days.map((day) => ({ learner_id, day })),
-        { onConflict: "learner_id,day", ignoreDuplicates: true },
-      ));
+      check(
+        await supabase.from("activity_days").upsert(
+          days.map((day) => ({ learner_id, day })),
+          { onConflict: "learner_id,day", ignoreDuplicates: true },
+        ),
+      );
     },
     async addBadges(badgeIds: string[]) {
       if (badgeIds.length === 0) return;
-      check(await supabase.from("learner_badges").upsert(
-        badgeIds.map((badge_id) => ({ learner_id, badge_id })),
-        { onConflict: "learner_id,badge_id", ignoreDuplicates: true },
-      ));
+      check(
+        await supabase.from("learner_badges").upsert(
+          badgeIds.map((badge_id) => ({ learner_id, badge_id })),
+          { onConflict: "learner_id,badge_id", ignoreDuplicates: true },
+        ),
+      );
     },
     async addListens(surahs: number[]) {
       if (surahs.length === 0) return;
-      check(await supabase.from("listen_completions").upsert(
-        surahs.map((surah) => ({ learner_id, surah })),
-        { onConflict: "learner_id,surah", ignoreDuplicates: true },
-      ));
+      check(
+        await supabase.from("listen_completions").upsert(
+          surahs.map((surah) => ({ learner_id, surah })),
+          { onConflict: "learner_id,surah", ignoreDuplicates: true },
+        ),
+      );
     },
     async addGames(games: GameRecord[]) {
       if (games.length === 0) return;
-      check(await supabase.from("game_sessions").insert(
-        games.map((game) => ({
-          learner_id,
-          game: game.game,
-          surah: game.surah ?? null,
-          score: game.score,
-          total: game.total,
-          stars: game.stars ?? null,
-          moves: game.moves ?? null,
-        })),
-      ));
+      check(
+        await supabase.from("game_sessions").insert(
+          games.map((game) => ({
+            learner_id,
+            game: game.game,
+            surah: game.surah ?? null,
+            score: game.score,
+            total: game.total,
+            stars: game.stars ?? null,
+            moves: game.moves ?? null,
+          })),
+        ),
+      );
     },
     async setProfile(companion: KidsCompanion | null) {
-      check(await supabase.from("kids_profile").upsert(
-        {
-          learner_id,
-          companion: companion?.animal ?? null,
-          equipped: companion?.equipped ?? [],
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "learner_id" },
-      ));
+      check(
+        await supabase.from("kids_profile").upsert(
+          {
+            learner_id,
+            companion: companion?.animal ?? null,
+            equipped: companion?.equipped ?? [],
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "learner_id" },
+        ),
+      );
     },
     async addDailyTasks(tasks: { day: string; taskId: string }[]) {
       if (tasks.length === 0) return;
-      check(await supabase.from("kids_daily_tasks").upsert(
-        tasks.map(({ day, taskId }) => ({ learner_id, day, task_id: taskId })),
-        { onConflict: "learner_id,day,task_id", ignoreDuplicates: true },
-      ));
+      check(
+        await supabase.from("kids_daily_tasks").upsert(
+          tasks.map(({ day, taskId }) => ({ learner_id, day, task_id: taskId })),
+          { onConflict: "learner_id,day,task_id", ignoreDuplicates: true },
+        ),
+      );
     },
     async addRewards(rewards: { kind: "item" | "chest"; refId: string; rewardId?: string }[]) {
       if (rewards.length === 0) return;
-      check(await supabase.from("kids_rewards").upsert(
-        rewards.map(({ kind, refId, rewardId }) => ({ learner_id, kind, ref_id: refId, reward_id: rewardId ?? null })),
-        { onConflict: "learner_id,kind,ref_id", ignoreDuplicates: true },
-      ));
+      check(
+        await supabase.from("kids_rewards").upsert(
+          rewards.map(({ kind, refId, rewardId }) => ({ learner_id, kind, ref_id: refId, reward_id: rewardId ?? null })),
+          { onConflict: "learner_id,kind,ref_id", ignoreDuplicates: true },
+        ),
+      );
     },
     async reset() {
       // The companion stays: a reset clears learning progress, not who the child travels with.

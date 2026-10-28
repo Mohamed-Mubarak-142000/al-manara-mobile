@@ -319,9 +319,7 @@ function AyahRow({
             <Text key={wordIndex}>
               {/* A hidden word keeps its width: same text, painted in the placeholder's own solid colour
                   (transparent text still showed on iPhone, seen on the website). */}
-              <Text style={wordIndex < shown ? undefined : { color: placeholder, backgroundColor: placeholder }}>
-                {word}
-              </Text>{" "}
+              <Text style={wordIndex < shown ? undefined : { color: placeholder, backgroundColor: placeholder }}>{word}</Text>{" "}
             </Text>
           ))}
           <Text style={{ color: accent }}>﴿{toArabicDigits(item.ayah.ayah)}﴾</Text>

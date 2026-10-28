@@ -36,7 +36,8 @@ export function dayKey(date: Date): string {
 /** Sponsors running on `today` (inclusive dates); a cached list must not outlive its sponsors. */
 export function liveSponsors<T extends SponsorItem>(sponsors: T[], today: string): T[] {
   return sponsors.filter(
-    (sponsor) => (!sponsor.starts_on || sponsor.starts_on.slice(0, 10) <= today) && (!sponsor.ends_on || sponsor.ends_on.slice(0, 10) >= today),
+    (sponsor) =>
+      (!sponsor.starts_on || sponsor.starts_on.slice(0, 10) <= today) && (!sponsor.ends_on || sponsor.ends_on.slice(0, 10) >= today),
   );
 }
 
@@ -48,7 +49,11 @@ export function parseSponsorCache(raw: string | null | undefined): SponsorItem[]
     if (!Array.isArray(value)) return [];
     return value.filter(
       (item): item is SponsorItem =>
-        !!item && typeof item === "object" && typeof item.id === "string" && typeof item.name === "string" && typeof item.message === "string",
+        !!item &&
+        typeof item === "object" &&
+        typeof item.id === "string" &&
+        typeof item.name === "string" &&
+        typeof item.message === "string",
     );
   } catch {
     return [];

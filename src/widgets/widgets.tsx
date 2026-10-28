@@ -104,7 +104,12 @@ export function TasbihWidget({ data }: { data: TasbihWidgetData }) {
         accessibilityLabel="افتح الأذكار"
         style={{ width: "match_parent", flexDirection: "column" }}
       >
-        <TextWidget text={data.text} maxLines={3} truncate="END" style={{ fontSize: 14, color: C.ivory, fontFamily: FONT, textAlign: "right" }} />
+        <TextWidget
+          text={data.text}
+          maxLines={3}
+          truncate="END"
+          style={{ fontSize: 14, color: C.ivory, fontFamily: FONT, textAlign: "right" }}
+        />
         <TextWidget text={data.source} maxLines={1} style={{ fontSize: 10, color: C.faint, fontFamily: FONT, textAlign: "right" }} />
       </FlexWidget>
       <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
@@ -121,7 +126,10 @@ export function TasbihWidget({ data }: { data: TasbihWidgetData }) {
         </FlexWidget>
         <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
           <FlexWidget clickAction="TASBIH_TARGET" accessibilityLabel="غيّر العدد ٣٣ أو ١٠٠" style={{ ...chip, marginHorizontal: 4 }}>
-            <TextWidget text={toArabicDigits(data.target === 33 ? 100 : 33)} style={{ fontSize: 12, color: C.goldSoft, fontFamily: FONT }} />
+            <TextWidget
+              text={toArabicDigits(data.target === 33 ? 100 : 33)}
+              style={{ fontSize: 12, color: C.goldSoft, fontFamily: FONT }}
+            />
           </FlexWidget>
           <FlexWidget clickAction="TASBIH_RESET" accessibilityLabel="صفّر العدّاد" style={chip}>
             <TextWidget text="صفّر" style={{ fontSize: 12, color: C.ivory, fontFamily: FONT }} />

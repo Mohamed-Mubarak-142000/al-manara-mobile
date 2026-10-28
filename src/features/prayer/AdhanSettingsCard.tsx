@@ -120,7 +120,9 @@ export function AdhanSettingsCard() {
           <View className="mt-4 flex-row items-center justify-between">
             <View className="flex-1">
               <Text className="font-sans-bold text-sm text-fg">شاشة الأذان</Text>
-              <Text className="font-sans text-xs leading-5 text-fg-muted">تظهر عند الأذان ولو كان الهاتف مقفلًا، وفيها زر إيقاف الأذان.</Text>
+              <Text className="font-sans text-xs leading-5 text-fg-muted">
+                تظهر عند الأذان ولو كان الهاتف مقفلًا، وفيها زر إيقاف الأذان.
+              </Text>
             </View>
             <Switch
               value={settings.screen}
@@ -155,7 +157,10 @@ export function AdhanSettingsCard() {
                     className={`overflow-hidden rounded-2xl border-2 ${active ? "border-primary" : "border-transparent"}`}
                   >
                     {/* The screen's own palette: a preview, not app chrome. */}
-                    <LinearGradient colors={theme.background} style={{ width: 76, height: 56, alignItems: "center", justifyContent: "center" }}>
+                    <LinearGradient
+                      colors={theme.background}
+                      style={{ width: 76, height: 56, alignItems: "center", justifyContent: "center" }}
+                    >
                       <View className="size-3 rounded-full" style={{ backgroundColor: theme.accent }} />
                       <Text className="mt-1 font-sans-bold text-xs" style={{ color: theme.ink }}>
                         {theme.label}

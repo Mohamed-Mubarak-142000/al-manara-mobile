@@ -1,11 +1,4 @@
-import {
-  AudioModule,
-  RecordingPresets,
-  setAudioModeAsync,
-  useAudioPlayer,
-  useAudioPlayerStatus,
-  useAudioRecorder,
-} from "expo-audio";
+import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus, useAudioRecorder } from "expo-audio";
 import { Mic, Pause, Play, Square, Trash2 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -93,7 +86,9 @@ export function ReciteRecorder() {
         </KidsButton>
       )}
       {status === "recorded" && uri && (
-        <View style={{ width: "100%", maxWidth: 420, alignItems: "center", gap: 8, borderRadius: 24, backgroundColor: KIDS.cream, padding: 12 }}>
+        <View
+          style={{ width: "100%", maxWidth: 420, alignItems: "center", gap: 8, borderRadius: 24, backgroundColor: KIDS.cream, padding: 12 }}
+        >
           <KidsText size={14} bold style={{ color: KIDS.honey }}>
             اسمع صوتك
           </KidsText>
@@ -105,7 +100,8 @@ export function ReciteRecorder() {
             onPress={() => {
               if (playerStatus.playing) player.pause();
               else {
-                if (playerStatus.didJustFinish || (playerStatus.duration > 0 && playerStatus.currentTime >= playerStatus.duration - 0.1)) void player.seekTo(0);
+                if (playerStatus.didJustFinish || (playerStatus.duration > 0 && playerStatus.currentTime >= playerStatus.duration - 0.1))
+                  void player.seekTo(0);
                 kidsAudio.pause();
                 player.play();
               }

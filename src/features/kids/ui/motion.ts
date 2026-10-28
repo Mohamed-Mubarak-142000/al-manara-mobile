@@ -7,7 +7,13 @@ export function useShake(trigger: unknown, kind: "shake" | "pop" | null) {
   const scale = useSharedValue(1);
   useEffect(() => {
     if (kind === "shake")
-      x.value = withSequence(withTiming(-10, { duration: 70 }), withTiming(10, { duration: 80 }), withTiming(-6, { duration: 80 }), withTiming(6, { duration: 80 }), withTiming(0, { duration: 70 }));
+      x.value = withSequence(
+        withTiming(-10, { duration: 70 }),
+        withTiming(10, { duration: 80 }),
+        withTiming(-6, { duration: 80 }),
+        withTiming(6, { duration: 80 }),
+        withTiming(0, { duration: 70 }),
+      );
     if (kind === "pop") scale.value = withSequence(withTiming(1.06, { duration: 200 }), withTiming(1, { duration: 200 }));
   }, [trigger, kind, x, scale]);
   return useAnimatedStyle(() => ({ transform: [{ translateX: x.value }, { scale: scale.value }] }));

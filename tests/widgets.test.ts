@@ -4,7 +4,10 @@ import { INITIAL_TASBIH, applyTasbih, currentDhikr, hourIndex, isComplete, norma
 const mockStore = new Map<string, string>();
 jest.mock("expo-sqlite/kv-store", () => ({
   __esModule: true,
-  default: { getItemSync: (key: string) => mockStore.get(key) ?? null, setItemSync: (key: string, value: string) => mockStore.set(key, value) },
+  default: {
+    getItemSync: (key: string) => mockStore.get(key) ?? null,
+    setItemSync: (key: string, value: string) => mockStore.set(key, value),
+  },
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

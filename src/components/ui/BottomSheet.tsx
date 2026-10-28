@@ -113,7 +113,11 @@ export function BottomSheet({
         <Animated.View className="absolute inset-0 bg-black" style={backdrop}>
           <Pressable accessibilityRole="button" accessibilityLabel="إغلاق" className="flex-1" onPress={onClose} />
         </Animated.View>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 justify-end" pointerEvents="box-none">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1 justify-end"
+          pointerEvents="box-none"
+        >
           <Animated.View
             accessibilityViewIsModal
             className="overflow-hidden rounded-t-4xl bg-surface"

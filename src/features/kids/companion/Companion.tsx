@@ -129,7 +129,9 @@ function Mouth({ mood, animal }: { mood: CompanionMood; animal: CompanionAnimal 
       ) : (
         <Path d="M90 104 Q95 111 100 104 Q105 111 110 104" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" />
       )}
-      {animal === "rabbit" && mood !== "cheer" && <Rect x="96" y="106" width="8" height="8" rx="2" fill="#ffffff" stroke={INK} strokeWidth="2" />}
+      {animal === "rabbit" && mood !== "cheer" && (
+        <Rect x="96" y="106" width="8" height="8" rx="2" fill="#ffffff" stroke={INK} strokeWidth="2" />
+      )}
     </G>
   );
 }
@@ -137,7 +139,9 @@ function Mouth({ mood, animal }: { mood: CompanionMood; animal: CompanionAnimal 
 function BackItems({ equipped }: { equipped: string[] }) {
   return (
     <G>
-      {equipped.includes("cape") && <Path d="M58 128 Q100 120 142 128 L158 214 Q100 226 42 214 Z" fill="#e84a67" stroke="#a52640" strokeWidth="3" />}
+      {equipped.includes("cape") && (
+        <Path d="M58 128 Q100 120 142 128 L158 214 Q100 226 42 214 Z" fill="#e84a67" stroke="#a52640" strokeWidth="3" />
+      )}
       {equipped.includes("backpack") && (
         <G stroke="#7a4e2a" strokeWidth="3">
           <Rect x="132" y="138" width="40" height="54" rx="12" fill="#f5b92e" />
@@ -241,22 +245,40 @@ function useBodyMotion(mood: CompanionMood) {
     scale.value = 1;
     if (reduceMotion) return;
     const ease = Easing.inOut(Easing.ease);
-    if (mood === "idle") y.value = withRepeat(withSequence(withTiming(-4, { duration: 1300, easing: ease }), withTiming(0, { duration: 1300, easing: ease })), -1);
-    if (mood === "sleepy") y.value = withRepeat(withSequence(withTiming(2, { duration: 1700, easing: ease }), withTiming(0, { duration: 1700, easing: ease })), -1);
+    if (mood === "idle")
+      y.value = withRepeat(
+        withSequence(withTiming(-4, { duration: 1300, easing: ease }), withTiming(0, { duration: 1300, easing: ease })),
+        -1,
+      );
+    if (mood === "sleepy")
+      y.value = withRepeat(
+        withSequence(withTiming(2, { duration: 1700, easing: ease }), withTiming(0, { duration: 1700, easing: ease })),
+        -1,
+      );
     if (mood === "happy") {
-      y.value = withRepeat(withSequence(withTiming(-6, { duration: 450, easing: ease }), withTiming(0, { duration: 450, easing: ease })), -1);
+      y.value = withRepeat(
+        withSequence(withTiming(-6, { duration: 450, easing: ease }), withTiming(0, { duration: 450, easing: ease })),
+        -1,
+      );
       rotate.value = withRepeat(
         withSequence(withTiming(-4, { duration: 225 }), withTiming(4, { duration: 450 }), withTiming(0, { duration: 225 })),
         -1,
       );
     }
     if (mood === "cheer") {
-      y.value = withRepeat(withSequence(withTiming(-26, { duration: 300, easing: Easing.out(Easing.ease) }), withTiming(0, { duration: 300 })), -1);
+      y.value = withRepeat(
+        withSequence(withTiming(-26, { duration: 300, easing: Easing.out(Easing.ease) }), withTiming(0, { duration: 300 })),
+        -1,
+      );
       scale.value = withRepeat(withSequence(withTiming(1.05, { duration: 300 }), withTiming(1, { duration: 300 })), -1);
     }
     if (mood === "thinking")
       rotate.value = withRepeat(
-        withSequence(withTiming(-6, { duration: 900, easing: ease }), withTiming(-6, { duration: 1200 }), withTiming(0, { duration: 900, easing: ease })),
+        withSequence(
+          withTiming(-6, { duration: 900, easing: ease }),
+          withTiming(-6, { duration: 1200 }),
+          withTiming(0, { duration: 900, easing: ease }),
+        ),
         -1,
       );
   }, [mood, reduceMotion, y, rotate, scale]);
@@ -286,7 +308,12 @@ export const Companion = memo(function Companion({ animal, equipped = [], mood =
   const rightArm = mood === "cheer" ? -140 : mood === "thinking" ? -150 : -20;
   const h = height ?? (width * 270) / 200;
   return (
-    <Animated.View style={[{ width, height: h }, style, motion]} accessible accessibilityRole="image" accessibilityLabel={companionInfo(animal).name}>
+    <Animated.View
+      style={[{ width, height: h }, style, motion]}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={companionInfo(animal).name}
+    >
       <Svg width={width} height={h} viewBox="0 -46 200 270">
         <BackItems equipped={worn} />
         {animal === "fox" && (

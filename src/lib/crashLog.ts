@@ -172,7 +172,9 @@ export function buildCrashReportText(
   const lines = [`Al-Manara crash report · app ${info.appVersion} · ${info.os} · ${info.device} · ${iso(info.now)}`];
   lines.push("", `== Process exits (${report.exits.length}) ==`);
   for (const e of report.exits) {
-    lines.push(`${iso(e.at)} ${e.reason} [${importanceLabel(e.importance)}] status=${e.status} pss=${e.pssKb}KB rss=${e.rssKb}KB ${e.description ?? ""}`.trim());
+    lines.push(
+      `${iso(e.at)} ${e.reason} [${importanceLabel(e.importance)}] status=${e.status} pss=${e.pssKb}KB rss=${e.rssKb}KB ${e.description ?? ""}`.trim(),
+    );
   }
   lines.push("", `== Native crashes (${report.native.length}) ==`);
   for (const c of report.native) {

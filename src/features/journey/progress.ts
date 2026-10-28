@@ -70,12 +70,10 @@ export async function scheduleCompletedSurahs(learnerId: string, surahs: number[
  */
 export async function markAyahsMemorized(learnerId: string, surah: number, ayahs: number[]): Promise<boolean> {
   if (!supabase || ayahs.length === 0) return false;
-  const { error } = await supabase
-    .from("memorized_ayahs")
-    .upsert(
-      ayahs.map((ayah) => ({ learner_id: learnerId, surah, ayah })),
-      { onConflict: "learner_id,surah,ayah", ignoreDuplicates: true },
-    );
+  const { error } = await supabase.from("memorized_ayahs").upsert(
+    ayahs.map((ayah) => ({ learner_id: learnerId, surah, ayah })),
+    { onConflict: "learner_id,surah,ayah", ignoreDuplicates: true },
+  );
   if (error) return false;
   await scheduleCompletedSurahs(learnerId, [surah]).catch(() => {});
   recordActivity(learnerId);

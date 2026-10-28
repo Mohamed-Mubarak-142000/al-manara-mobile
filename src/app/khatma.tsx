@@ -160,7 +160,14 @@ export default function KhatmaScreen() {
                     نسيت تسجيل ورد {view.missed}؟ إن كنت قرأته فسجّله، ويُحسب لك الورد الذي يليه دون أن يأخذ مكان ورد اليوم.
                   </Text>
                 </View>
-                <Button variant="outline" size="sm" icon={Check} className="self-start" onPress={() => run(khatma.completeMissed)} disabled={busy}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={Check}
+                  className="self-start"
+                  onPress={() => run(khatma.completeMissed)}
+                  disabled={busy}
+                >
                   {`قرأت ورد ${view.missed}`}
                 </Button>
               </View>

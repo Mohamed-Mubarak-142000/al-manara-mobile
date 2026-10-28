@@ -60,7 +60,13 @@ export async function restoreLastRoute(onboardingDone: boolean): Promise<void> {
     } catch {
       launchedByLink = true; // Unsure: leave the app where it opened.
     }
-    const target = decideRestore({ saved: coldStartRoute, now: Date.now(), launchedByLink, onboardingDone, lastRestoreAt: readLastRestoreAt() });
+    const target = decideRestore({
+      saved: coldStartRoute,
+      now: Date.now(),
+      launchedByLink,
+      onboardingDone,
+      lastRestoreAt: readLastRestoreAt(),
+    });
     if (!target) return;
     markRestored();
     router.push(target as Href);
@@ -74,7 +80,13 @@ export async function restoreLastRoute(onboardingDone: boolean): Promise<void> {
  * launch link was ours, not the user's, so the screen they started from is reopened after all.
  */
 export function restoreAfterAuthRedirect(onboardingDone: boolean) {
-  const target = decideRestore({ saved: coldStartRoute, now: Date.now(), launchedByLink: false, onboardingDone, lastRestoreAt: readLastRestoreAt() });
+  const target = decideRestore({
+    saved: coldStartRoute,
+    now: Date.now(),
+    launchedByLink: false,
+    onboardingDone,
+    lastRestoreAt: readLastRestoreAt(),
+  });
   if (!target) return;
   markRestored();
   router.push(target as Href);
