@@ -7,6 +7,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import { getBasmala, getPage, getSurah, hizbLabel, type MushafAyah } from "./mushaf";
 import { READER_THEMES, type ReaderTheme } from "./readerPrefs";
 import type { RiwayaMushaf } from "./riwayat";
+import { SurahFrame } from "./SurahFrame";
 import { useTajweed } from "./tajweedStore";
 
 interface MushafPageViewProps {
@@ -46,19 +47,15 @@ function SurahBanner({
 }) {
   const colors = READER_THEMES[theme];
   const info = getSurah(surah);
+  const [width, setWidth] = useState(0);
   return (
-    <View className="mb-2 mt-1">
-      <View
-        className="items-center justify-center rounded-2xl border py-2"
-        style={{ backgroundColor: colors.frame, borderColor: colors.accent }}
-      >
-        <Text className="font-display-bold text-lg" style={{ color: colors.accent }}>
-          سورة {info?.name}
-        </Text>
-        <Text className="font-sans text-[11px]" style={{ color: colors.ink, opacity: 0.6 }}>
-          {info?.meccan ? "مكية" : "مدنية"}
-        </Text>
-      </View>
+    <View className="mb-2 mt-1" onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+      {/* The same printed header as the Hafs pages, one text line high. */}
+      {width > 0 ? (
+        <SurahFrame surah={surah} width={width} height={Math.round(fontSize * 2.3)} theme={theme} />
+      ) : (
+        <View accessibilityLabel={`سورة ${info?.name ?? ""}`} style={{ height: Math.round(fontSize * 2.3) }} />
+      )}
       {basmala && (
         <Text
           className="mt-2 text-center font-quran"

@@ -8,6 +8,7 @@ import {
   ChevronDown,
   BookOpen,
   Check,
+  ChevronLeft,
   ChevronRight,
   Download,
   HandHeart,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,6 +31,8 @@ import { AyahSheet } from "@/features/mushaf/AyahSheet";
 import { JumpSheet } from "@/features/mushaf/JumpSheet";
 import { ayahIdFromTrackId, hafsPages, pageOfAyahId, type PageSource } from "@/features/mushaf/jump";
 import { MushafPrintedPage } from "@/features/mushaf/MushafPrintedPage";
+import { pageZoom, stepAfterPinch } from "@/features/mushaf/pageZoom";
+import { ZoomedPage } from "@/features/mushaf/ZoomedPage";
 import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
 import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
@@ -172,12 +176,25 @@ export default function MushafScreen() {
     [riwayaKey, riwayaState],
   );
   const riwayaLabel = RIWAYAT.find((entry) => entry.key === riwayaKey)?.label ?? "";
-  // Hafs in the printed layout at the normal size (and smaller) is laid out line for line as printed: 15
-  // fixed lines a page, nothing scrolls. Larger sizes, the flowing layout and the other riwayat (no line
-  // layout) flow and scroll instead.
-  const fixedPages = riwayaKey === "hafs" && state.prefs.layout === "printed" && state.prefs.fontStep <= DEFAULT_FONT_STEP;
+  // Hafs is always the printed page, line for line: 15 fixed lines, the same breaks whatever the size or
+  // tajweed. The size control scales the whole page (panned when larger), it never reflows it. The other
+  // riwayat (no line layout) flow in their own mushaf.
+  const fixedPages = riwayaKey === "hafs";
+  const zoom = fixedPages ? pageZoom(state.prefs.fontStep) : 1;
+  // A larger page pans under the finger, so the pages turn with the arrows instead of a swipe.
+  const zoomed = zoom > 1;
   const [pagerHeight, setPagerHeight] = useState(0);
-  const pagerExtra = useMemo(() => ({ riwaya, fixedPages, pagerHeight }), [riwaya, fixedPages, pagerHeight]);
+  const pagerExtra = useMemo(() => ({ riwaya, fixedPages, pagerHeight, zoom }), [riwaya, fixedPages, pagerHeight, zoom]);
+  // Pinch the printed page to change its size (snapped to the size steps).
+  const fontStep = state.prefs.fontStep;
+  const pinch = useMemo(
+    () =>
+      Gesture.Pinch()
+        .runOnJS(true)
+        .enabled(fixedPages)
+        .onEnd((event) => reader.setFontStep(stepAfterPinch(fontStep, event.scale))),
+    [fixedPages, fontStep],
+  );
   // Last-read and bookmarks keep to the Hafs pages (other riwayat number their ayahs differently).
   const isHafs = useRef(riwayaKey === "hafs");
   useEffect(() => {
@@ -268,6 +285,7 @@ export default function MushafScreen() {
           </Button>
         </View>
       ) : (
+        <GestureDetector gesture={pinch}>
         <FlatList
           ref={listRef}
           key={`${riwayaKey}-${portion?.to ?? ""}`}
@@ -275,6 +293,7 @@ export default function MushafScreen() {
           extraData={pagerExtra}
           horizontal
           pagingEnabled
+          scrollEnabled={!zoomed}
           keyExtractor={(item) => String(item)}
           // Remounted per riwaya (key): it then opens on the page the reader was on.
           initialScrollIndex={pagerIndex(portion, page)}
@@ -293,17 +312,21 @@ export default function MushafScreen() {
               pagerHeight === 0 ? (
                 <View style={{ width }} />
               ) : (
-                <MushafPrintedPage
-                  page={item}
-                  width={width}
-                  height={pagerHeight}
-                  theme={state.prefs.theme}
-                  selected={selected?.id ?? null}
-                  playingId={playingId}
-                  tajweed={state.prefs.tajweed}
-                  onTap={toggleChrome}
-                  onAyahLongPress={openAyah}
-                />
+                <ZoomedPage width={width} height={pagerHeight} zoom={zoom} background={theme.shell}>
+                  {(frame) => (
+                    <MushafPrintedPage
+                      page={item}
+                      width={frame.width}
+                      height={frame.height}
+                      theme={state.prefs.theme}
+                      selected={selected?.id ?? null}
+                      playingId={playingId}
+                      tajweed={state.prefs.tajweed}
+                      onTap={toggleChrome}
+                      onAyahLongPress={openAyah}
+                    />
+                  )}
+                </ZoomedPage>
               )
             ) : (
               <MushafPageView
@@ -323,6 +346,7 @@ export default function MushafScreen() {
             )
           }
         />
+        </GestureDetector>
       )}
 
       {chrome && (
@@ -363,6 +387,34 @@ export default function MushafScreen() {
             />
           )}
           <ReaderIconButton icon={ALargeSmall} label="إعدادات القراءة" ink={theme.ink} onPress={() => setSettingsOpen(true)} />
+        </Animated.View>
+      )}
+
+      {/* A zoomed page pans under the finger: the pages turn with these arrows (RTL: the next page is to the left). */}
+      {chrome && zoomed && !portionDone && (
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(260)}
+          pointerEvents="box-none"
+          className="absolute inset-x-0 flex-row items-center justify-between px-4"
+          style={{ bottom: insets.bottom + footerSpace + 72 }}
+        >
+          <ReaderIconButton
+            icon={ChevronRight}
+            label="الصفحة السابقة"
+            ink={theme.ink}
+            onPress={() => jumpTo(Math.max(portion?.from ?? 1, page - 1), true)}
+          />
+          <ReaderIconButton
+            icon={ChevronLeft}
+            label="الصفحة التالية"
+            ink={theme.ink}
+            onPress={() =>
+              portion && page >= portion.to
+                ? listRef.current?.scrollToIndex({ index: pagerIndex(portion, portion.to) + 1, animated: true })
+                : jumpTo(Math.min(portion?.to ?? TOTAL_PAGES, page + 1), true)
+            }
+          />
         </Animated.View>
       )}
 
@@ -499,42 +551,14 @@ export default function MushafScreen() {
             )}
           </View>
 
-          {riwayaKey === "hafs" && (
-            <View className="gap-3">
-              <SettingLabel>شكل الصفحة</SettingLabel>
-              <View accessibilityRole="radiogroup" className="flex-row gap-2">
-                {(
-                  [
-                    ["printed", "كالمصحف المطبوع"],
-                    ["flow", "نص متدفق"],
-                  ] as const
-                ).map(([key, label]) => {
-                  const active = state.prefs.layout === key;
-                  return (
-                    <Pressable
-                      key={key}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: active }}
-                      onPress={() => reader.setLayout(key)}
-                      className={`flex-1 items-center rounded-full border px-3.5 py-2.5 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
-                    >
-                      <Text className={`font-sans-semibold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{label}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              {state.prefs.layout === "printed" && (
-                <Text className="font-sans text-xs leading-5 text-fg-muted">
-                  {state.prefs.tajweed
-                    ? "مع التلوين تُعرض الصفحات بخط حفص المعتاد. أوقف التلوين لترى خط مصحف المدينة المطبوع."
-                    : "بخط مصحف المدينة من مجمع الملك فهد: يُنزَّل خط كل صفحة أول مرة ثم يعمل دون إنترنت."}
-                </Text>
-              )}
-            </View>
-          )}
-
           <View className="gap-3">
-            <SettingLabel>حجم الخط</SettingLabel>
+            <SettingLabel>{riwayaKey === "hafs" ? "حجم الصفحة" : "حجم الخط"}</SettingLabel>
+            {riwayaKey === "hafs" && (
+              <Text className="font-sans text-xs leading-5 text-fg-muted">
+                تكبر الصفحة كما هي بأسطرها الخمسة عشر وتتنقّل فيها بإصبعك، ويمكنك التكبير بإصبعين.
+                {state.prefs.tajweed ? "" : " وتظهر بخط مصحف المدينة المطبوع، يُنزَّل خط كل صفحة أول مرة ثم يعمل دون إنترنت."}
+              </Text>
+            )}
             <View className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-2 py-1.5">
               <Pressable
                 accessibilityRole="button"

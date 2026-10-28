@@ -7,6 +7,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import { getPage, getSurah, hizbLabel, type MushafAyah } from "./mushaf";
 import { LINES_PER_PAGE, TARGET_LINE_EM, getPageLines, type LineWord, type MushafLine } from "./mushafLines";
 import { READER_THEMES, type ReaderTheme } from "./readerPrefs";
+import { SurahFrame } from "./SurahFrame";
 
 interface MushafFixedPageProps {
   page: number;
@@ -119,27 +120,7 @@ export const MushafFixedPage = memo(function MushafFixedPage({
 
   const renderLine = (line: MushafLine, index: number) => {
     if (line.kind === "empty") return opening ? null : <View key={index} style={{ height: slot }} />;
-    if (line.kind === "surah") {
-      const info = getSurah(line.surah);
-      return (
-        <View key={index} style={{ height: slot }} className="justify-center">
-          <View
-            className="flex-row items-center justify-between rounded-xl border px-4"
-            style={{ height: slot * 0.82, backgroundColor: colors.frame, borderColor: colors.accent }}
-          >
-            <Text className="font-sans-bold" style={{ color: colors.accent, fontSize: fontSize * 0.55 }}>
-              {info?.meccan ? "مكية" : "مدنية"}
-            </Text>
-            <Text className="font-display-bold" style={{ color: colors.accent, fontSize: fontSize * 0.85 }}>
-              سورة {info?.name}
-            </Text>
-            <Text className="font-sans-bold" style={{ color: colors.accent, fontSize: fontSize * 0.55 }}>
-              {toArabicDigits(info?.ayahCount ?? 0)} آية
-            </Text>
-          </View>
-        </View>
-      );
-    }
+    if (line.kind === "surah") return <SurahFrame key={index} surah={line.surah} width={lineWidth} height={slot} theme={theme} />;
     if (line.kind === "basmala") {
       return (
         <Text

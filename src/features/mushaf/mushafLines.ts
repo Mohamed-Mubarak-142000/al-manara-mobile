@@ -134,6 +134,19 @@ export function getPageLines(page: number): MushafLine[] {
     return { kind: "text", words, width: widths[index] ?? TARGET_LINE_EM };
   });
 
+  // The print sets a surah's title (and basmala) at the foot of the page before it when the surah
+  // starts overleaf (al-Nisa's title closes page 76): the same lines as the printed glyph page.
+  if (page > 2) {
+    let free = 0;
+    while (free < lines.length && lines[lines.length - 1 - free]!.kind === "empty") free += 1;
+    const last = lines.findLast((line) => line.kind === "text");
+    const next = last?.kind === "text" ? last.words.at(-1)!.surah + 1 : 0;
+    if (free > 0 && next >= 2 && next <= 114) {
+      const opening: MushafLine[] = next === 9 ? [{ kind: "surah", surah: next }] : [{ kind: "surah", surah: next }, { kind: "basmala" }];
+      opening.slice(0, free).forEach((line, index) => (lines[lines.length - free + index] = line));
+    }
+  }
+
   parsed.set(page, lines);
   if (parsed.size > 8) parsed.delete(parsed.keys().next().value!);
   return lines;

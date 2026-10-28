@@ -7,6 +7,7 @@ import { toArabicDigits } from "@/core/text/arabic";
 import type { GlyphPage } from "./glyphStore";
 import { getPage, getSurah, hizbLabel, type MushafAyah } from "./mushaf";
 import { READER_THEMES, type ReaderTheme } from "./readerPrefs";
+import { SurahFrame } from "./SurahFrame";
 
 interface MushafGlyphPageProps {
   page: number;
@@ -142,27 +143,7 @@ export const MushafGlyphPage = memo(function MushafGlyphPage({
   // Each line's place among the lines of words, whose widths were measured.
   const measuredIndex = lines.map((_, index) => lines.slice(0, index).filter((line) => line.kind === "words").length);
   const renderLine = (line: GlyphLine, index: number) => {
-    if (line.kind === "surah") {
-      const info = getSurah(line.surah);
-      return (
-        <View key={index} style={{ height: slot }} className="justify-center">
-          <View
-            className="flex-row items-center justify-between rounded-xl border px-4"
-            style={{ height: slot * 0.82, backgroundColor: colors.frame, borderColor: colors.accent }}
-          >
-            <Text className="font-sans-bold" style={{ color: colors.accent, fontSize: size * 0.55 }}>
-              {info?.meccan ? "مكية" : "مدنية"}
-            </Text>
-            <Text className="font-display-bold" style={{ color: colors.accent, fontSize: size * 0.85 }}>
-              سورة {info?.name}
-            </Text>
-            <Text className="font-sans-bold" style={{ color: colors.accent, fontSize: size * 0.55 }}>
-              {toArabicDigits(info?.ayahCount ?? 0)} آية
-            </Text>
-          </View>
-        </View>
-      );
-    }
+    if (line.kind === "surah") return <SurahFrame key={index} surah={line.surah} width={lineWidth} height={slot} theme={theme} />;
     if (line.kind === "basmala") {
       return (
         <Text
