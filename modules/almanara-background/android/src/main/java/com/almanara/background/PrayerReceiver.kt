@@ -38,7 +38,10 @@ class PrayerReceiver : BroadcastReceiver() {
         }
         val noticeId = moment.getString("id").hashCode()
         runCatching { NotificationManagerCompat.from(context).notify(noticeId, builder.build()) }
-          .onSuccess { if (screen != null) AdhanScreen.rememberNotice(context, noticeId) }
+          .onSuccess {
+            if (screen != null) AdhanScreen.rememberNotice(context, noticeId)
+            if (screen != null && !moment.optBoolean("late")) AdhanScreen.openIfInUse(context, screen)
+          }
           .onFailure { BackgroundState.prefs(context).edit().putString("scheduleError", "إشعارات الصلاة غير مسموح بها، فعّلها من الإعدادات").apply() }
         if (full) {
           runCatching {

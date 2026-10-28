@@ -15,6 +15,15 @@ export function useNotificationLinks(ready: boolean) {
     }
     open(Notifications.getLastNotificationResponse());
     const subscription = Notifications.addNotificationResponseReceivedListener(open);
-    return () => subscription.remove();
+    // iOS only shows a banner while the app is open: the prayer itself opens its adhan screen at once,
+    // as it does from the lock screen. (Android's notices are native and open the screen themselves.)
+    const received = Notifications.addNotificationReceivedListener((notification) => {
+      const { kind, url } = notification.request.content.data ?? {};
+      if (kind === "adhan" && typeof url === "string" && url.startsWith("/adhan-now")) router.push(url as Href);
+    });
+    return () => {
+      subscription.remove();
+      received.remove();
+    };
   }, [ready]);
 }

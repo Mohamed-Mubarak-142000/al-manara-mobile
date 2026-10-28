@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.view.WindowManager
 
@@ -36,6 +37,23 @@ internal object AdhanScreen {
 
   /** Whether the phone is locked now (the screen then shows over the lock screen, no unlock needed). */
   fun locked(context: Context): Boolean = context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true
+
+  /**
+   * The full-screen intent only opens the screen when the phone is off or locked; while someone is
+   * using it Android shows a heads-up instead. Then open it directly: allowed while the app is on
+   * screen, or with the "display over other apps" permission the minute dhikr uses (Android 15 also
+   * wants that overlay showing); otherwise Android drops the launch and the heads-up stays.
+   */
+  fun openIfInUse(context: Context, path: String) {
+    val interactive = context.getSystemService(PowerManager::class.java)?.isInteractive == true
+    if (!interactive || locked(context)) return
+    runCatching {
+      context.startActivity(
+        Intent(Intent.ACTION_VIEW, Uri.parse("almanara://$path")).setPackage(context.packageName)
+          .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+      )
+    }
+  }
 
   /** Android 14+ lets the user switch full-screen notifications off per app; earlier versions always allow them. */
   fun fullScreenAllowed(context: Context): Boolean =
