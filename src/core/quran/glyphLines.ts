@@ -1,30 +1,37 @@
-// Ported from eslam-platform/src/features/quran/glyphApi.ts (getGlyphLines, V1 only) — keep in sync by hand.
+// Ported from eslam-platform/src/features/quran/glyphApi.ts (getGlyphLines) — keep in sync by hand.
 // The line building is pure here, so it is tested on recorded pages; features/mushaf/glyphStore.ts fetches
 // the verses and keeps the built lines on the device.
 
 /*
  * The printed Madinah page, line by line, from quran.com: each word as a glyph code of the King Fahd
- * Complex's per-page font (QCF V1, the 1405 print, whose page breaks match the app's bundled mushaf),
- * with the line it sits on.
+ * Complex's per-page font, with the line it sits on. V1 is the 1405 print, whose page breaks match the
+ * app's bundled mushaf; the tajweed font (V4, in colour) is drawn on the 1421 print, whose layout
+ * differs on 25 pages.
  */
 
 const BASE_URL = "https://api.quran.com/api/v4";
-/** quran.com's id for the V1 (1405) Madinah mushaf, which picks the page and line numbers the words report. */
-const MUSHAF_V1 = 2;
+
+export type GlyphEdition = "v1" | "tajweed";
+
+/** quran.com's mushaf ids, which pick the page and line numbers the words report. */
+const MUSHAF_ID: Record<GlyphEdition, number> = { v1: 2, tajweed: 1 };
+const CODE_FIELD: Record<GlyphEdition, "code_v1" | "code_v2"> = { v1: "code_v1", tajweed: "code_v2" };
 
 /** The page's font file. quran.com serves TTFs beside the website's WOFF2s; native text needs the TTF. */
-export function glyphFontUrl(page: number): string {
-  return `https://static.qurancdn.com/fonts/quran/hafs/v1/ttf/p${page}.ttf`;
+export function glyphFontUrl(page: number, edition: GlyphEdition = "v1"): string {
+  return edition === "v1"
+    ? `https://static.qurancdn.com/fonts/quran/hafs/v1/ttf/p${page}.ttf`
+    : `https://verses.quran.foundation/fonts/quran/hafs/v4/colrv1/ttf/p${page}.ttf`;
 }
 
 /** One part (50 verses) of a page's verses with the fields the lines are built from. */
-export function glyphVersesUrl(page: number, part: number): string {
+export function glyphVersesUrl(page: number, part: number, edition: GlyphEdition = "v1"): string {
   const params = new URLSearchParams({
     words: "true",
-    word_fields: "code_v1,line_number,page_number",
+    word_fields: `${CODE_FIELD[edition]},line_number,page_number`,
     per_page: "50",
     page: String(part),
-    mushaf: String(MUSHAF_V1),
+    mushaf: String(MUSHAF_ID[edition]),
   });
   return `${BASE_URL}/verses/by_page/${page}?${params}`;
 }
@@ -34,6 +41,7 @@ export interface GlyphRawWord {
   line_number: number;
   page_number: number;
   code_v1?: string;
+  code_v2?: string;
 }
 
 export interface GlyphRawVerse {
@@ -65,7 +73,7 @@ export function glyphLinesOnPage(page: number): number {
  * surah's title and basmala: before its first ayah, or at the foot of the page when the surah starts
  * overleaf. Null when the data doesn't add up (the reader then keeps its own text page).
  */
-export function buildGlyphLines(page: number, verses: readonly GlyphRawVerse[]): GlyphLine[] | null {
+export function buildGlyphLines(page: number, verses: readonly GlyphRawVerse[], edition: GlyphEdition = "v1"): GlyphLine[] | null {
   const total = glyphLinesOnPage(page);
   const byLine = new Map<number, { surah: number; ayah: number; code: string; id: number; end: boolean }[]>();
   const seen = new Set<string>();
@@ -75,7 +83,7 @@ export function buildGlyphLines(page: number, verses: readonly GlyphRawVerse[]):
     seen.add(verse.verse_key);
     const [surah, ayah] = verse.verse_key.split(":").map(Number) as [number, number];
     for (const word of verse.words) {
-      const code = word.code_v1;
+      const code = word[CODE_FIELD[edition]];
       if (word.page_number !== page || !code) continue;
       const line = byLine.get(word.line_number) ?? [];
       line.push({ surah, ayah, code, id: verse.id, end: word.char_type_name === "end" });

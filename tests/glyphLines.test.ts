@@ -80,4 +80,10 @@ describe("printed mushaf lines", () => {
     expect(glyphVersesUrl(76, 1)).toContain("word_fields=code_v1%2Cline_number%2Cpage_number");
     expect(glyphFontUrl(76)).toBe("https://static.qurancdn.com/fonts/quran/hafs/v1/ttf/p76.ttf");
   });
+
+  it("asks for the 1421 print's codes and the coloured COLRv1 font with tajweed", () => {
+    expect(glyphVersesUrl(76, 1, "tajweed")).toContain("mushaf=1");
+    expect(glyphVersesUrl(76, 1, "tajweed")).toContain("word_fields=code_v2%2Cline_number%2Cpage_number");
+    expect(glyphFontUrl(76, "tajweed")).toBe("https://verses.quran.foundation/fonts/quran/hafs/v4/colrv1/ttf/p76.ttf");
+  });
 });

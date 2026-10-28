@@ -5,7 +5,7 @@ import type { GlyphLine, GlyphWord } from "@/core/quran/glyphLines";
 import { toArabicDigits } from "@/core/text/arabic";
 
 import type { GlyphPage } from "./glyphStore";
-import { getPage, getSurah, hizbLabel, type MushafAyah } from "./mushaf";
+import { getAllAyahs, getPage, getSurah, hizbLabel, type MushafAyah } from "./mushaf";
 import { READER_THEMES, type ReaderTheme } from "./readerPrefs";
 import { SurahFrame } from "./SurahFrame";
 
@@ -38,8 +38,8 @@ const CENTRE_BELOW = 0.8;
 const MEASURE_SIZE = 40;
 const BASMALA = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ";
 
-/** Each page's line widths at MEASURE_SIZE, measured once per session. */
-const measured = new Map<number, number[]>();
+/** Each page font's line widths at MEASURE_SIZE, measured once per session. */
+const measured = new Map<string, number[]>();
 
 /**
  * One page exactly as the Madinah mushaf prints it (the website's MushafGlyphPage): each word a glyph
@@ -60,7 +60,7 @@ export const MushafGlyphPage = memo(function MushafGlyphPage({
 }: MushafGlyphPageProps) {
   const colors = READER_THEMES[theme];
   const { family, lines } = glyph;
-  const [widths, setWidths] = useState<number[] | null>(() => measured.get(page) ?? null);
+  const [widths, setWidths] = useState<number[] | null>(() => measured.get(family) ?? null);
   const pending = useRef<number[]>([]);
   const first = getPage(page)[0];
   const dark = theme === "night" || theme === "dusk";
@@ -85,9 +85,10 @@ export const MushafGlyphPage = memo(function MushafGlyphPage({
   // A page held back by the height keeps the print's proportions: as wide as its widest line.
   const lineWidth = Math.min(available, (widest * size) / MEASURE_SIZE);
 
+  // By number, not from the page: the tajweed print sets a few ayahs on the page before or after.
   const openAyah = (ayahId: number) => {
-    const ayah = getPage(page).find((entry) => entry.id === ayahId);
-    if (ayah) onAyahLongPress(ayah);
+    const ayah = getAllAyahs()[ayahId - 1];
+    if (ayah?.id === ayahId) onAyahLongPress(ayah);
   };
 
   const word = (entry: GlyphWord, index: number, fontSize: number) => (
@@ -123,7 +124,7 @@ export const MushafGlyphPage = memo(function MushafGlyphPage({
                 pending.current[index] = event.nativeEvent.layout.width;
                 if (pending.current.filter((value) => value > 0).length === wordLines.length) {
                   const result = [...pending.current];
-                  measured.set(page, result);
+                  measured.set(family, result);
                   setWidths(result);
                 }
               }}

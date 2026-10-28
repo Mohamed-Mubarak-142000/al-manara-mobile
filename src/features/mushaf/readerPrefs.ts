@@ -30,9 +30,8 @@ export interface ReaderPrefs {
   theme: ReaderTheme;
   fontStep: number;
   /**
-   * Tajweed colours. Off by default on new installs, so the Hafs pages show in the King Fahd Complex's
-   * own printed fonts (MushafGlyphPage); on, they are drawn in the bundled Hafs font with the colours.
-   * A saved choice (and the account's) is kept.
+   * Tajweed colours: the Hafs pages in the King Fahd Complex's coloured printed font instead of its
+   * plain one (MushafGlyphPage). Off by default on new installs; a saved choice (and the account's) is kept.
    */
   tajweed: boolean;
   riwaya: RiwayaKey;
