@@ -155,6 +155,8 @@ export function TawafCounter() {
         accessible
         accessibilityLabel="الكعبة من أعلى، والطائف يدور حولها والكعبة عن يساره"
         className="mt-3 aspect-square w-full max-w-[304px] self-center"
+        // Left-to-right, so the labels' offsets are the drawing's own x (RTL would swap left and right).
+        style={{ direction: "ltr" }}
       >
         <Svg viewBox="0 0 260 260" width="100%" height="100%">
           <Circle cx="130" cy="130" r="122" fill="rgba(255,255,255,0.06)" stroke="rgba(232,215,166,0.25)" />
@@ -246,7 +248,7 @@ export function SaiCounter() {
         </Text>
       </View>
 
-      <View accessible accessibilityLabel="المسعى بين الصفا والمروة" className="mt-3 w-full" style={{ aspectRatio: 320 / 130 }}>
+      <View accessible accessibilityLabel="المسعى بين الصفا والمروة" className="mt-3 w-full" style={{ aspectRatio: 320 / 130, direction: "ltr" }}>
         <Svg viewBox="0 0 320 130" width="100%" height="100%">
           <Path d="M 236 92 Q 270 34 312 92 Z" fill="#d8c08a" />
           <Path d="M 8 92 Q 50 40 84 92 Z" fill="#d8c08a" />
