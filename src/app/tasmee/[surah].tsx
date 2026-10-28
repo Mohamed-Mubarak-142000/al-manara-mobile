@@ -241,6 +241,20 @@ function MistakeSheet({
   );
 }
 
+/** `color` laid over `base` at the given opacity, as one solid `#rrggbb` (base comes back for any other format). */
+function mixHex(color: string, base: string, alpha: number): string {
+  const hex = /^#[0-9a-f]{6}$/i;
+  if (!hex.test(color) || !hex.test(base)) return base;
+  const channel = (value: string, at: number) => parseInt(value.slice(at, at + 2), 16);
+  return (
+    "#" +
+    [1, 3, 5]
+      .map((at) => Math.round(channel(color, at) * alpha + channel(base, at) * (1 - alpha)))
+      .map((value) => value.toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
 /**
  * One ayah of the session. Its own component with plain props, so (with the React Compiler) a new
  * speech result re-renders only the ayah whose words changed, not the whole surah word by word.
@@ -267,6 +281,7 @@ function AyahRow({
   onMark: (index: number, mark: Mark) => void;
 }) {
   const accent = useThemeColor("accent-strong");
+  const placeholder = mixHex(useThemeColor("primary"), useThemeColor("surface"), 0.12);
   const ayahText = useScaledText(22, 48);
   return (
     <View
@@ -302,8 +317,9 @@ function AyahRow({
         >
           {item.words.map((word, wordIndex) => (
             <Text key={wordIndex}>
-              {/* A hidden word keeps its width: same text, painted in the placeholder colour. */}
-              <Text style={wordIndex < shown ? undefined : { color: "transparent", backgroundColor: "rgba(0,85,68,0.12)" }}>
+              {/* A hidden word keeps its width: same text, painted in the placeholder's own solid colour
+                  (transparent text still showed on iPhone, seen on the website). */}
+              <Text style={wordIndex < shown ? undefined : { color: placeholder, backgroundColor: placeholder }}>
                 {word}
               </Text>{" "}
             </Text>
