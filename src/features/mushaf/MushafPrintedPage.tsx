@@ -13,22 +13,20 @@ interface MushafPrintedPageProps {
   theme: ReaderTheme;
   selected: number | null;
   playingId: number | null;
-  tajweed: boolean;
   onTap: () => void;
   onAyahLongPress: (ayah: MushafAyah) => void;
 }
 
 /**
- * A Hafs page on its 15 printed lines, in the King Fahd Complex's own print: each page's QCF font,
- * fetched once and kept (V1, or the coloured V4 with tajweed). Until that page's font has loaded
- * (offline on a first visit), the bundled Hafs font draws the same lines.
+ * A Hafs page on its 15 printed lines, in the King Fahd Complex's coloured tajweed print: each page's
+ * V4 font, fetched once and kept. Until that page's font has loaded (offline on a first visit), the
+ * bundled Hafs font draws the same lines with the tajweed colours.
  */
 export const MushafPrintedPage = memo(function MushafPrintedPage(props: MushafPrintedPageProps) {
-  const glyph = useGlyphPage(props.page, props.tajweed ? "tajweed" : "v1", props.theme, true);
+  const glyph = useGlyphPage(props.page, "tajweed", props.theme, true);
   if (glyph?.status === "ready") {
-    const { tajweed: _tajweed, ...rest } = props;
-    // Keyed by font: the plain and the tajweed print measure differently.
-    return <MushafGlyphPage key={glyph.page.family} {...rest} glyph={glyph.page} />;
+    // Keyed by font: each theme's copy of the font is its own family.
+    return <MushafGlyphPage key={glyph.page.family} {...props} glyph={glyph.page} />;
   }
   return <MushafFixedPage {...props} />;
 });

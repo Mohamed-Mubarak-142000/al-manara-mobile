@@ -13,7 +13,7 @@ import {
 } from "@/core/quran/glyphLines";
 
 import { TOTAL_PAGES } from "./mushaf";
-import { READER_THEMES, type ReaderTheme } from "./readerPrefs";
+import { DARK_READER_THEMES, READER_THEMES, type ReaderTheme } from "./readerPrefs";
 
 /*
  * The printed pages' data on the device: each Hafs page's font (quran.com's TTF: QCF V1, or the
@@ -34,7 +34,6 @@ export type GlyphPageState = { status: "loading" } | { status: "ready"; page: Gl
 const dir = new Directory(Paths.document, "mushaf-glyphs");
 /** quran.com's page fonts are 40–300 KB; anything this small is an error page, not a font. */
 const MIN_FONT_BYTES = 8_000;
-const DARK_THEMES: readonly ReaderTheme[] = ["night", "dusk"];
 
 const states = new Map<string, GlyphPageState>();
 const loading = new Map<string, Promise<void>>();
@@ -109,7 +108,7 @@ async function fontFor(page: number, edition: GlyphEdition, theme: ReaderTheme):
   if (edition === "v1") return original;
   const themed = new File(dir, `t${page}-${theme}.ttf`);
   if (themed.exists && (themed.size ?? 0) >= MIN_FONT_BYTES) return themed;
-  const colours = themeTajweedFont(await original.bytes(), READER_THEMES[theme].ink, DARK_THEMES.includes(theme));
+  const colours = themeTajweedFont(await original.bytes(), READER_THEMES[theme].ink, DARK_READER_THEMES.includes(theme));
   if (themed.exists) themed.delete();
   themed.write(colours);
   return themed;

@@ -10,32 +10,30 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Download,
   HandHeart,
   Lock,
   Minus,
+  Palette,
   Plus,
   type LucideIcon,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, ScrollView, Switch, Text, View, useWindowDimensions, type ViewToken } from "react-native";
+import { FlatList, Pressable, Text, View, useWindowDimensions, type ViewToken } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { TAJWEED_RULES } from "@/core/quran/tajweedApi";
 import { toArabicDigits } from "@/core/text/arabic";
 import { currentTrack, usePlayer } from "@/features/audio/playerStore";
 import { AYAH_PILL_HEIGHT, AyahAudioPill } from "@/features/mushaf/AyahAudioPill";
 import { AyahSheet } from "@/features/mushaf/AyahSheet";
 import { JumpSheet } from "@/features/mushaf/JumpSheet";
-import { ayahIdFromTrackId, hafsPages, pageOfAyahId, type PageSource } from "@/features/mushaf/jump";
+import { ayahIdFromTrackId, hafsPages, pageOfAyahId } from "@/features/mushaf/jump";
 import { MushafPrintedPage } from "@/features/mushaf/MushafPrintedPage";
 import { pageZoom, stepAfterPinch } from "@/features/mushaf/pageZoom";
+import { TajweedLegendSheet } from "@/features/mushaf/TajweedLegendSheet";
 import { ZoomedPage } from "@/features/mushaf/ZoomedPage";
-import { MushafPageView } from "@/features/mushaf/MushafPageView";
 import { TOTAL_PAGES, getPage, getSurah, type MushafAyah } from "@/features/mushaf/mushaf";
-import { RIWAYAT, isRiwayaDownloaded, riwayaFontFamily, riwayat, useRiwaya } from "@/features/mushaf/riwayat";
 import {
   PORTION_DONE,
   PORTION_HOME,
@@ -48,7 +46,7 @@ import {
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import {
-  DEFAULT_FONT_STEP,
+  DARK_READER_THEMES,
   FONT_SIZES,
   READER_THEMES,
   SUPPORTER_THEMES,
@@ -131,6 +129,9 @@ function PortionDone({
   );
 }
 
+/** A little longer than the bottom sheet's closing slide. */
+const SHEET_CLOSE_MS = 320;
+
 /** A setting's small label inside the reader settings sheet. */
 function SettingLabel({ children }: { children: string }) {
   return <Text className="font-sans-bold text-base text-fg">{children}</Text>;
@@ -151,8 +152,7 @@ export default function MushafScreen() {
   const supporter = useSupporter();
   const player = usePlayer();
   const primaryColor = useThemeColor("primary");
-  const borderColor = useThemeColor("border");
-  const onPrimary = useThemeColor("on-primary");
+  const mutedColor = useThemeColor("fg-muted");
   const [page, setPage] = useState(initialPage);
   // Counts today for the streak even when the reader reopens on yesterday's page.
   useEffect(() => {
@@ -161,54 +161,35 @@ export default function MushafScreen() {
   const [chrome, setChrome] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
   const listRef = useRef<FlatList<number>>(null);
   const [selected, setSelected] = useState<MushafAyah | null>(null);
   const theme = READER_THEMES[state.prefs.theme];
   const fontSize = FONT_SIZES[state.prefs.fontStep] ?? FONT_SIZES[1];
 
-  const riwayaKey = state.prefs.riwaya;
-  const riwayaState = useRiwaya(riwayaKey);
-  const riwaya = useMemo(
-    () =>
-      riwayaKey !== "hafs" && riwayaState?.status === "ready"
-        ? { mushaf: riwayaState.mushaf, fontFamily: riwayaFontFamily(riwayaKey) }
-        : null,
-    [riwayaKey, riwayaState],
-  );
-  const riwayaLabel = RIWAYAT.find((entry) => entry.key === riwayaKey)?.label ?? "";
-  // Hafs is always the printed page, line for line: 15 fixed lines, the same breaks whatever the size or
-  // tajweed. The size control scales the whole page (panned when larger), it never reflows it. The other
-  // riwayat (no line layout) flow in their own mushaf.
-  const fixedPages = riwayaKey === "hafs";
-  const zoom = fixedPages ? pageZoom(state.prefs.fontStep) : 1;
+  const darkPage = DARK_READER_THEMES.includes(state.prefs.theme);
+  // The printed page, line for line: 15 fixed lines in the tajweed print. The size control scales the
+  // whole page (panned when larger), it never reflows it.
+  const zoom = pageZoom(state.prefs.fontStep);
   // A larger page pans under the finger, so the pages turn with the arrows instead of a swipe.
   const zoomed = zoom > 1;
   const [pagerHeight, setPagerHeight] = useState(0);
-  const pagerExtra = useMemo(() => ({ riwaya, fixedPages, pagerHeight, zoom }), [riwaya, fixedPages, pagerHeight, zoom]);
+  const pagerExtra = useMemo(() => ({ pagerHeight, zoom }), [pagerHeight, zoom]);
   // Pinch the printed page to change its size (snapped to the size steps).
   const fontStep = state.prefs.fontStep;
   const pinch = useMemo(
     () =>
       Gesture.Pinch()
         .runOnJS(true)
-        .enabled(fixedPages)
         .onEnd((event) => reader.setFontStep(stepAfterPinch(fontStep, event.scale))),
-    [fixedPages, fontStep],
+    [fontStep],
   );
-  // Last-read and bookmarks keep to the Hafs pages (other riwayat number their ayahs differently).
-  const isHafs = useRef(riwayaKey === "hafs");
-  useEffect(() => {
-    isHafs.current = riwayaKey === "hafs";
-  }, [riwayaKey]);
 
-  const source: PageSource = useMemo(() => (riwaya ? (target: number) => riwaya.mushaf.pages[target - 1] ?? [] : hafsPages), [riwaya]);
-  // Ayah-by-ayah audio is Hafs-numbered, so it is only highlighted on the Hafs pages.
-  const ayahAudioId = ayahIdFromTrackId(currentTrack(player)?.id);
-  const playingId = riwayaKey === "hafs" ? ayahAudioId : null;
+  const playingId = ayahIdFromTrackId(currentTrack(player)?.id);
   // Room under the pages for the recitation pill, so it never covers the last line or the page number.
   const footerSpace = currentTrack(player) ? AYAH_PILL_HEIGHT + 12 : 0;
 
-  const first = source(page)[0];
+  const first = hafsPages(page)[0];
   const pageBookmarked = first ? isBookmarked(state, first.surah, first.ayah) : false;
 
   // Viewability is direction-agnostic, so the current page is right in RTL and LTR alike.
@@ -220,7 +201,7 @@ export default function MushafScreen() {
     if (visible === PORTION_DONE) return;
     setPage(visible);
     const top = getPage(visible)[0];
-    if (top && isHafs.current) reader.saveLastRead({ page: visible, surah: top.surah, ayah: top.ayah });
+    if (top) reader.saveLastRead({ page: visible, surah: top.surah, ayah: top.ayah });
   }, []);
 
   const toggleChrome = useCallback(() => setChrome((value) => !value), []);
@@ -263,97 +244,55 @@ export default function MushafScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: theme.shell, paddingTop: insets.top, paddingBottom: insets.bottom + footerSpace }}>
       <StatusBar style={state.prefs.theme === "night" || state.prefs.theme === "dusk" ? "light" : "dark"} hidden={!chrome} />
-      {riwayaKey !== "hafs" && !riwaya ? (
-        <View className="flex-1 items-center justify-center gap-4 px-8">
-          <Text className="text-center font-sans-bold text-xl" style={{ color: theme.ink }}>
-            رواية {riwayaLabel}
-          </Text>
-          <Text className="text-center font-sans text-sm leading-7" style={{ color: theme.ink, opacity: 0.7 }}>
-            {riwayaState?.status === "downloading" || riwayaState?.status === "opening"
-              ? "جارٍ تجهيز المصحف…"
-              : riwayaState?.status === "failed"
-                ? "تعذّر تنزيل الرواية الآن، حاول مجددًا بعد قليل."
-                : "مصحف هذه الرواية يُنزَّل مرة واحدة (نحو ١٫٥ ميجابايت) ثم يعمل دون إنترنت."}
-          </Text>
-          {riwayaState?.status !== "downloading" && riwayaState?.status !== "opening" && (
-            <Button icon={Download} onPress={() => riwayat.download(riwayaKey)}>
-              تنزيل المصحف
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onPress={() => reader.setRiwaya("hafs")}>
-            العودة إلى رواية حفص
-          </Button>
-        </View>
-      ) : (
-        <GestureDetector gesture={pinch}>
-          <FlatList
-            ref={listRef}
-            key={`${riwayaKey}-${portion?.to ?? ""}`}
-            data={items}
-            extraData={pagerExtra}
-            horizontal
-            pagingEnabled
-            scrollEnabled={!zoomed}
-            keyExtractor={(item) => String(item)}
-            // Remounted per riwaya (key): it then opens on the page the reader was on.
-            initialScrollIndex={pagerIndex(portion, page)}
-            getItemLayout={getItemLayout}
-            windowSize={3}
-            initialNumToRender={1}
-            maxToRenderPerBatch={2}
-            showsHorizontalScrollIndicator={false}
-            viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
-            onViewableItemsChanged={onViewableItemsChanged}
-            onLayout={(event) => setPagerHeight(event.nativeEvent.layout.height)}
-            renderItem={({ item }) =>
-              item === PORTION_DONE && portion ? (
-                <PortionDone
-                  portion={portion}
-                  width={width}
-                  height={pagerHeight}
-                  theme={state.prefs.theme}
-                  onExit={() => leavePortion(portion.to)}
-                />
-              ) : fixedPages ? (
-                pagerHeight === 0 ? (
-                  <View style={{ width }} />
-                ) : (
-                  <ZoomedPage width={width} height={pagerHeight} zoom={zoom} background={theme.shell}>
-                    {(frame) => (
-                      <MushafPrintedPage
-                        page={item}
-                        width={frame.width}
-                        height={frame.height}
-                        theme={state.prefs.theme}
-                        selected={selected?.id ?? null}
-                        playingId={playingId}
-                        tajweed={state.prefs.tajweed}
-                        onTap={toggleChrome}
-                        onAyahLongPress={openAyah}
-                      />
-                    )}
-                  </ZoomedPage>
-                )
-              ) : (
-                <MushafPageView
-                  page={item}
-                  width={width}
-                  theme={state.prefs.theme}
-                  fontSize={fontSize}
-                  // The default size (and smaller) shows the whole page like a printed mushaf; larger sizes scroll.
-                  fit={state.prefs.fontStep <= DEFAULT_FONT_STEP}
-                  selected={selected?.id ?? null}
-                  playingId={playingId}
-                  tajweed={state.prefs.tajweed}
-                  riwaya={riwaya}
-                  onTap={toggleChrome}
-                  onAyahLongPress={openAyah}
-                />
-              )
-            }
-          />
-        </GestureDetector>
-      )}
+      <GestureDetector gesture={pinch}>
+        <FlatList
+          ref={listRef}
+          key={portion?.to ?? ""}
+          data={items}
+          extraData={pagerExtra}
+          horizontal
+          pagingEnabled
+          scrollEnabled={!zoomed}
+          keyExtractor={(item) => String(item)}
+          initialScrollIndex={pagerIndex(portion, page)}
+          getItemLayout={getItemLayout}
+          windowSize={3}
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          showsHorizontalScrollIndicator={false}
+          viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+          onViewableItemsChanged={onViewableItemsChanged}
+          onLayout={(event) => setPagerHeight(event.nativeEvent.layout.height)}
+          renderItem={({ item }) =>
+            item === PORTION_DONE && portion ? (
+              <PortionDone
+                portion={portion}
+                width={width}
+                height={pagerHeight}
+                theme={state.prefs.theme}
+                onExit={() => leavePortion(portion.to)}
+              />
+            ) : pagerHeight === 0 ? (
+              <View style={{ width }} />
+            ) : (
+              <ZoomedPage width={width} height={pagerHeight} zoom={zoom} background={theme.shell}>
+                {(frame) => (
+                  <MushafPrintedPage
+                    page={item}
+                    width={frame.width}
+                    height={frame.height}
+                    theme={state.prefs.theme}
+                    selected={selected?.id ?? null}
+                    playingId={playingId}
+                    onTap={toggleChrome}
+                    onAyahLongPress={openAyah}
+                  />
+                )}
+              </ZoomedPage>
+            )
+          }
+        />
+      </GestureDetector>
 
       {chrome && (
         <Animated.View
@@ -366,7 +305,6 @@ export default function MushafScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="الانتقال إلى سورة أو جزء أو صفحة"
-            disabled={riwayaKey !== "hafs" && !riwaya}
             onPress={() => setJumpOpen(true)}
             hitSlop={6}
             className="flex-1 flex-row items-center gap-1.5"
@@ -378,20 +316,19 @@ export default function MushafScreen() {
               <Text className="font-sans text-xs" style={{ color: theme.accent }}>
                 {portion
                   ? `ورد اليوم: صفحة ${toArabicDigits(portionPosition(portion, page).position)} من ${toArabicDigits(portionPosition(portion, page).total)}`
-                  : `${riwayaKey === "hafs" ? "" : `${RIWAYAT.find((entry) => entry.key === riwayaKey)?.short} · `}صفحة ${toArabicDigits(page)} من ${toArabicDigits(TOTAL_PAGES)}`}
+                  : `صفحة ${toArabicDigits(page)} من ${toArabicDigits(TOTAL_PAGES)}`}
               </Text>
             </View>
-            {(riwayaKey === "hafs" || riwaya) && <ChevronDown size={18} color={theme.accent} />}
+            <ChevronDown size={18} color={theme.accent} />
           </Pressable>
-          {riwayaKey === "hafs" && (
-            <ReaderIconButton
-              icon={pageBookmarked ? BookmarkCheck : Bookmark}
-              label={pageBookmarked ? "إزالة العلامة" : "حفظ علامة على هذه الصفحة"}
-              ink={theme.ink}
-              color={pageBookmarked ? theme.accent : theme.ink}
-              onPress={() => first && reader.toggleBookmark({ surah: first.surah, ayah: first.ayah, page })}
-            />
-          )}
+          <ReaderIconButton
+            icon={pageBookmarked ? BookmarkCheck : Bookmark}
+            label={pageBookmarked ? "إزالة العلامة" : "حفظ علامة على هذه الصفحة"}
+            ink={theme.ink}
+            color={pageBookmarked ? theme.accent : theme.ink}
+            onPress={() => first && reader.toggleBookmark({ surah: first.surah, ayah: first.ayah, page })}
+          />
+          <ReaderIconButton icon={Palette} label="ألوان التجويد" ink={theme.ink} onPress={() => setLegendOpen(true)} />
           <ReaderIconButton icon={ALargeSmall} label="إعدادات القراءة" ink={theme.ink} onPress={() => setSettingsOpen(true)} />
         </Animated.View>
       )}
@@ -465,35 +402,14 @@ export default function MushafScreen() {
 
       <AyahAudioPill theme={state.prefs.theme} bottom={insets.bottom + 4} />
 
-      <JumpSheet visible={jumpOpen} page={page} source={source} onJump={jumpTo} onClose={() => setJumpOpen(false)} />
+      <JumpSheet visible={jumpOpen} page={page} source={hafsPages} onJump={jumpTo} onClose={() => setJumpOpen(false)} />
 
-      <AyahSheet ayah={selected} riwaya={riwayaKey === "hafs" ? null : riwayaLabel} onClose={() => setSelected(null)} />
+      <AyahSheet ayah={selected} onClose={() => setSelected(null)} />
+
+      <TajweedLegendSheet visible={legendOpen} dark={darkPage} onClose={() => setLegendOpen(false)} />
 
       <BottomSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} title="إعدادات القراءة" icon={ALargeSmall}>
         <View className="gap-6">
-          <View className="gap-3">
-            <SettingLabel>الرواية</SettingLabel>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {RIWAYAT.map((entry) => {
-                const active = entry.key === riwayaKey;
-                const local = entry.key === "hafs" || isRiwayaDownloaded(entry.key);
-                return (
-                  <Pressable
-                    key={entry.key}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    onPress={() => reader.setRiwaya(entry.key)}
-                    className={`flex-row items-center gap-1.5 rounded-full border px-3.5 py-2 ${active ? "border-primary bg-primary" : "border-border bg-surface"}`}
-                    style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
-                  >
-                    <Text className={`font-sans-semibold text-sm ${active ? "text-on-primary" : "text-fg"}`}>{entry.short}</Text>
-                    {!local && <Download size={13} color={active ? onPrimary : primaryColor} />}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-
           <View className="gap-3">
             <SettingLabel>لون الصفحة</SettingLabel>
             <View className="flex-row flex-wrap gap-2.5">
@@ -532,39 +448,30 @@ export default function MushafScreen() {
             </View>
           </View>
 
-          <View className="gap-3">
-            <View className="flex-row items-center justify-between">
-              <SettingLabel>تلوين أحكام التجويد</SettingLabel>
-              <Switch
-                value={state.prefs.tajweed}
-                onValueChange={reader.setTajweed}
-                trackColor={{ false: borderColor, true: primaryColor }}
-                thumbColor="#ffffff"
-              />
+          {/* The two sheets are separate windows: the key opens once this one has slid away. */}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setSettingsOpen(false);
+              setTimeout(() => setLegendOpen(true), SHEET_CLOSE_MS);
+            }}
+            className="flex-row items-center gap-3 rounded-2xl border border-border bg-surface p-4"
+            style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
+          >
+            <Palette size={20} color={primaryColor} />
+            <View className="flex-1">
+              <Text className="font-sans-bold text-base text-fg">ألوان التجويد</Text>
+              <Text className="font-sans text-xs leading-5 text-fg-muted">ما يعنيه كل لون في المصحف</Text>
             </View>
-            {state.prefs.tajweed && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                {/* One chip per colour: several rules share a colour (the idgham greens, for instance). */}
-                {Object.values(TAJWEED_RULES)
-                  .filter((rule, index, all) => all.findIndex((other) => other.color === rule.color) === index)
-                  .map((rule) => (
-                    <View key={rule.color} className="flex-row items-center gap-1.5 rounded-full border border-border px-3 py-1.5">
-                      <View className="size-2.5 rounded-full" style={{ backgroundColor: rule.color }} />
-                      <Text className="font-sans text-xs text-fg">{rule.label}</Text>
-                    </View>
-                  ))}
-              </ScrollView>
-            )}
-          </View>
+            <ChevronLeft size={18} color={mutedColor} />
+          </Pressable>
 
           <View className="gap-3">
-            <SettingLabel>{riwayaKey === "hafs" ? "حجم الصفحة" : "حجم الخط"}</SettingLabel>
-            {riwayaKey === "hafs" && (
-              <Text className="font-sans text-xs leading-5 text-fg-muted">
-                تكبر الصفحة كما هي بأسطرها الخمسة عشر وتتنقّل فيها بإصبعك، ويمكنك التكبير بإصبعين.
-                {state.prefs.tajweed ? "" : " وتظهر بخط مصحف المدينة المطبوع، يُنزَّل خط كل صفحة أول مرة ثم يعمل دون إنترنت."}
-              </Text>
-            )}
+            <SettingLabel>حجم الصفحة</SettingLabel>
+            <Text className="font-sans text-xs leading-5 text-fg-muted">
+              تكبر الصفحة كما هي بأسطرها الخمسة عشر وتتنقّل فيها بإصبعك، ويمكنك التكبير بإصبعين. يُنزَّل خط كل صفحة أول مرة ثم يعمل دون
+              إنترنت.
+            </Text>
             <View className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-2 py-1.5">
               <Pressable
                 accessibilityRole="button"

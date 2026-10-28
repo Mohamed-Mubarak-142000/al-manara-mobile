@@ -18,7 +18,6 @@ interface MushafFixedPageProps {
   selected: number | null;
   /** Global id of the ayah the player is reciting, for a soft highlight. */
   playingId: number | null;
-  tajweed: boolean;
   onTap: () => void;
   onAyahLongPress: (ayah: MushafAyah) => void;
 }
@@ -48,7 +47,6 @@ const Word = memo(function Word({
   color,
   jalala,
   accent,
-  tajweed,
   highlight,
   onLongPress,
 }: {
@@ -58,11 +56,10 @@ const Word = memo(function Word({
   color: string;
   jalala: string;
   accent: string;
-  tajweed: boolean;
   highlight: string | undefined;
   onLongPress: (ayahId: number) => void;
 }) {
-  const segments = tajweed && word.tajweed;
+  const segments = word.tajweed;
   return (
     <Text
       className="font-quran"
@@ -89,7 +86,8 @@ const Word = memo(function Word({
 });
 
 /**
- * One Madinah page as printed: 15 fixed lines, each justified to the page width, Allah's name in red. It is
+ * One Madinah page as printed: 15 fixed lines, each justified to the page width, coloured by tajweed rule
+ * where the bundle has the colours (else Allah's name in red). It is
  * sized from the screen, so it never scrolls and never moves until the reader turns the page.
  * Long-press a word for its ayah's tafsir, audio, sharing and bookmarks; tap for the controls.
  */
@@ -100,7 +98,6 @@ export const MushafFixedPage = memo(function MushafFixedPage({
   theme,
   selected,
   playingId,
-  tajweed,
   onTap,
   onAyahLongPress,
 }: MushafFixedPageProps) {
@@ -120,7 +117,7 @@ export const MushafFixedPage = memo(function MushafFixedPage({
 
   const renderLine = (line: MushafLine, index: number) => {
     if (line.kind === "empty") return opening ? null : <View key={index} style={{ height: slot }} />;
-    if (line.kind === "surah") return <SurahFrame key={index} surah={line.surah} width={lineWidth} height={slot} theme={theme} />;
+    if (line.kind === "surah") return <SurahFrame key={index} surah={line.surah} width={lineWidth} height={slot} />;
     if (line.kind === "basmala") {
       return (
         <Text
@@ -149,7 +146,6 @@ export const MushafFixedPage = memo(function MushafFixedPage({
             color={colors.ink}
             jalala={colors.jalala}
             accent={colors.accent}
-            tajweed={tajweed}
             highlight={word.ayahId === selected || word.ayahId === playingId ? highlightColor : undefined}
             onLongPress={openAyah}
           />

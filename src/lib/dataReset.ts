@@ -5,7 +5,7 @@ import Storage from "expo-sqlite/kv-store";
  * A clean start on demand. Updates normally keep the app's data, as on every Android app. When a build
  * must start from scratch (old test builds left bad state behind), bump DATA_VERSION: the first launch
  * of that build clears everything this app keeps on the phone before any other module reads it
- * (settings, the guest khatma, the sign-in session, downloaded recitations, hadith and riwayat), so it
+ * (settings, the guest khatma, the sign-in session, downloaded recitations, hadith and page fonts), so it
  * opens on onboarding like a fresh install. What is on the account comes back after signing in.
  *
  * index.ts imports this before expo-router, so nothing has read storage yet. Synchronous on purpose.
@@ -59,4 +59,19 @@ function resetIfNeeded() {
   }
 }
 
+/** Folders earlier builds downloaded that nothing reads any more: the other riwayat's mushafs. */
+const LEFTOVERS = ["riwayat"];
+
+function removeLeftovers() {
+  for (const name of LEFTOVERS) {
+    try {
+      const leftover = new Directory(Paths.document, name);
+      if (leftover.exists) leftover.delete();
+    } catch {
+      // Tried again next launch.
+    }
+  }
+}
+
 resetIfNeeded();
+removeLeftovers();

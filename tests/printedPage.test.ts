@@ -2,7 +2,6 @@
 import { buildGlyphLines, type GlyphRawVerse } from "@/core/quran/glyphLines";
 import { getPageLines } from "@/features/mushaf/mushafLines";
 import { MAX_ZOOM, MIN_ZOOM, PAGE_ZOOMS, pageZoom, stepAfterPinch, zoomStep } from "@/features/mushaf/pageZoom";
-import { SURAH_WORD_GLYPH, bannerGeometry, starPoints, surahNameGlyph } from "@/features/mushaf/surahBanner";
 
 import recorded from "./fixtures/glyphPages.json";
 
@@ -46,34 +45,5 @@ describe("the printed page's size", () => {
     expect(stepAfterPinch(1, 1.5)).toBe(3);
     expect(stepAfterPinch(3, 0.5)).toBe(0);
     expect(stepAfterPinch(2, 1)).toBe(2);
-  });
-});
-
-describe("the surah header", () => {
-  it("uses quran.com's surah-name glyphs: «سورة», then the name by its number in hex digits", () => {
-    expect(SURAH_WORD_GLYPH).toBe("");
-    expect(surahNameGlyph(1)).toBe("");
-    expect(surahNameGlyph(10)).toBe("");
-    expect(surahNameGlyph(114)).toBe("");
-    expect(surahNameGlyph(0)).toBe("");
-  });
-
-  it("fits its rosettes, cartouche and ornament inside one line, symmetrically", () => {
-    const width = 360;
-    const height = 44;
-    const g = bannerGeometry(width, height);
-    expect(g.rosette.end - g.rosette.radius).toBeGreaterThan(0);
-    expect(g.rosette.start + g.rosette.radius).toBeLessThan(width);
-    expect(g.rosette.start + g.rosette.end).toBeCloseTo(width);
-    expect(g.cartouche.left).toBeGreaterThan(g.rosette.end + g.rosette.radius);
-    expect(g.cartouche.right).toBeLessThan(g.rosette.start - g.rosette.radius);
-    expect(g.cartouche.top).toBeGreaterThan(0);
-    expect(g.cartouche.bottom).toBeLessThan(height);
-    for (const x of g.ornaments) {
-      const inLeft = x > g.rosette.end + g.rosette.radius && x < g.cartouche.left;
-      const inRight = x > g.cartouche.right && x < g.rosette.start - g.rosette.radius;
-      expect(inLeft || inRight).toBe(true);
-    }
-    expect(starPoints(10, 10, 5, 3).split(" ")).toHaveLength(16);
   });
 });

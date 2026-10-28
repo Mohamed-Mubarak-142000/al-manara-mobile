@@ -1,8 +1,6 @@
 import Storage from "expo-sqlite/kv-store";
 import { useSyncExternalStore } from "react";
 
-import type { RiwayaKey } from "./riwayat";
-
 export type ReaderTheme = "light" | "sepia" | "night" | "emerald" | "dusk";
 
 /** The website reader's three themes (MushafReader.tsx THEMES), as plain values. */
@@ -19,6 +17,9 @@ export const READER_THEMES: Record<
   dusk: { label: "غسقي", shell: "#16121f", page: "#1e1a2b", ink: "#ece6f5", frame: "#2b2540", accent: "#d9b35a", jalala: "#f08a7e" },
 };
 
+/** Themes whose pages are dark: the tajweed colours there are the font's dark palette. */
+export const DARK_READER_THEMES: readonly ReaderTheme[] = ["night", "dusk"];
+
 /** Page colours that come with the supporter pack. */
 export const SUPPORTER_THEMES: readonly ReaderTheme[] = ["emerald", "dusk"];
 
@@ -29,12 +30,6 @@ export const DEFAULT_FONT_STEP = 1;
 export interface ReaderPrefs {
   theme: ReaderTheme;
   fontStep: number;
-  /**
-   * Tajweed colours: the Hafs pages in the King Fahd Complex's coloured printed font instead of its
-   * plain one (MushafGlyphPage). Off by default on new installs; a saved choice (and the account's) is kept.
-   */
-  tajweed: boolean;
-  riwaya: RiwayaKey;
 }
 
 export interface Bookmark {
@@ -69,7 +64,7 @@ interface ReaderState {
 
 const KEY = "al-manara:reader:v1";
 const DEFAULTS: ReaderState = {
-  prefs: { theme: "light", fontStep: DEFAULT_FONT_STEP, tajweed: false, riwaya: "hafs" },
+  prefs: { theme: "light", fontStep: DEFAULT_FONT_STEP },
   bookmarks: [],
   lastRead: null,
   notes: {},
@@ -104,7 +99,7 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-/** Theme, size, tajweed and riwaya outside React (settings sync). */
+/** Theme and size outside React (settings sync). */
 export function readReaderPrefs(): ReaderPrefs {
   return read().prefs;
 }
@@ -123,12 +118,6 @@ export const reader = {
   },
   setTheme(theme: ReaderTheme) {
     write({ prefs: { ...read().prefs, theme } });
-  },
-  setRiwaya(riwaya: RiwayaKey) {
-    write({ prefs: { ...read().prefs, riwaya } });
-  },
-  setTajweed(tajweed: boolean) {
-    write({ prefs: { ...read().prefs, tajweed } });
   },
   setFontStep(fontStep: number) {
     write({ prefs: { ...read().prefs, fontStep: Math.max(0, Math.min(FONT_SIZES.length - 1, fontStep)) } });

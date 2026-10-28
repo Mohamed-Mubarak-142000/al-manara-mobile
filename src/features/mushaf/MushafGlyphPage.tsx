@@ -28,7 +28,7 @@ const HEADER = 26;
 const FOOTER = 24;
 const PAD_X = 10;
 const PAD_Y = 6;
-/** The text page's 15 slots: the 8-line opening pages keep the same line size and sit centred. */
+/** The text page's 15 slots, which every page but the two opening ones shares. */
 const SLOTS = 15;
 /** A printed line's height, in units of the glyph size (the website's LINE_HEIGHT). */
 const LINE_HEIGHT = 1.8;
@@ -77,11 +77,12 @@ export const MushafGlyphPage = memo(function MushafGlyphPage({
   const wordLines = lines.filter((line): line is Extract<GlyphLine, { kind: "words" }> => line.kind === "words");
 
   const textHeight = Math.max(0, height - HEADER - FOOTER - PAD_Y * 2);
-  const slot = textHeight / SLOTS;
   const available = width - PAD_X * 2;
   const widest = widths ? Math.max(...widths, 1) : 1;
   const byWidth = (MEASURE_SIZE * available) / widest;
-  const size = Math.min(byWidth, slot / LINE_HEIGHT);
+  // The opening pages' 8 lines fill the width as on the website, set at their printed spacing and centred.
+  const size = Math.min(byWidth, textHeight / ((opening ? lines.length : SLOTS) * LINE_HEIGHT));
+  const slot = opening ? size * LINE_HEIGHT : textHeight / SLOTS;
   // A page held back by the height keeps the print's proportions: as wide as its widest line.
   const lineWidth = Math.min(available, (widest * size) / MEASURE_SIZE);
 
@@ -144,7 +145,7 @@ export const MushafGlyphPage = memo(function MushafGlyphPage({
   // Each line's place among the lines of words, whose widths were measured.
   const measuredIndex = lines.map((_, index) => lines.slice(0, index).filter((line) => line.kind === "words").length);
   const renderLine = (line: GlyphLine, index: number) => {
-    if (line.kind === "surah") return <SurahFrame key={index} surah={line.surah} width={lineWidth} height={slot} theme={theme} />;
+    if (line.kind === "surah") return <SurahFrame key={index} surah={line.surah} width={lineWidth} height={slot} />;
     if (line.kind === "basmala") {
       return (
         <Text

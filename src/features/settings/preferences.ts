@@ -13,7 +13,6 @@ import {
 } from "@/features/adhkar/adhkarReminders";
 import { readAdhkarToastEnabled, setAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
 import { readReaderPrefs, reader, type ReaderTheme } from "@/features/mushaf/readerPrefs";
-import type { RiwayaKey } from "@/features/mushaf/riwayat";
 import { onboarding } from "@/features/onboarding/onboardingStore";
 import { readAdhanSettings, writeAdhanSettings, type AdhanSettings } from "@/features/prayer/adhanSettings";
 import { readAdhanVoice, setAdhanVoice } from "@/features/prayer/adhanSound";
@@ -40,7 +39,8 @@ export interface AppPreferences {
   outsideAdhkar: boolean;
   adhkarToast: boolean;
   textScale: number;
-  reader: { theme: ReaderTheme; fontStep: number; tajweed: boolean; riwaya: RiwayaKey };
+  /** Accounts saved by earlier builds also carry `tajweed` and `riwaya`, which are ignored now. */
+  reader: { theme: ReaderTheme; fontStep: number };
   favoriteReciterId: number | null;
 }
 
@@ -59,7 +59,7 @@ export function snapshotPreferences(): AppPreferences {
     outsideAdhkar: readOutsideAdhkarNotifications(),
     adhkarToast: readAdhkarToastEnabled(),
     textScale: readTextScale(),
-    reader: { theme: prefs.theme, fontStep: prefs.fontStep, tajweed: prefs.tajweed, riwaya: prefs.riwaya },
+    reader: { theme: prefs.theme, fontStep: prefs.fontStep },
     favoriteReciterId: onboarding.favoriteReciter(),
   };
 }
@@ -161,8 +161,6 @@ async function applyPreferences(prefs: Partial<AppPreferences>) {
       if (!prefs.reader) return;
       reader.setTheme(prefs.reader.theme);
       reader.setFontStep(prefs.reader.fontStep);
-      reader.setTajweed(prefs.reader.tajweed);
-      reader.setRiwaya(prefs.reader.riwaya);
     },
     // These may ask for notification permission (once), and the voice downloads its recording.
     async () => {

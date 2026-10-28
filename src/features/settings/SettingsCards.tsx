@@ -1,6 +1,17 @@
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
-import { ALargeSmall, Bell, BellOff, BellRing, BookOpen, CalendarHeart, LocateFixed, Sparkles } from "lucide-react-native";
+import {
+  ALargeSmall,
+  Bell,
+  BellOff,
+  BellRing,
+  BookOpen,
+  CalendarHeart,
+  ChevronLeft,
+  LocateFixed,
+  Palette,
+  Sparkles,
+} from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { AppState, Linking, Pressable, Switch, Text, View } from "react-native";
 
@@ -9,7 +20,8 @@ import { useAccount } from "@/features/account/accountStore";
 import { REMINDER_TOPICS, settings, type SettingsResult } from "@/features/account/settings";
 import { setAdhkarReminder, useAdhkarReminders, type ReminderKind } from "@/features/adhkar/adhkarReminders";
 import { setAdhkarToastEnabled, useAdhkarToastEnabled } from "@/features/adhkar/AdhkarToaster";
-import { FONT_SIZES, reader, useReaderState } from "@/features/mushaf/readerPrefs";
+import { DARK_READER_THEMES, FONT_SIZES, reader, useReaderState } from "@/features/mushaf/readerPrefs";
+import { TajweedLegendSheet } from "@/features/mushaf/TajweedLegendSheet";
 import { reportReminderError } from "@/features/notifications/backgroundReminderStatus";
 import { CityDropdown } from "@/features/prayer/CityDropdown";
 import { chooseCity, requestPreciseLocation, useUserLocation } from "@/features/prayer/locationStore";
@@ -275,26 +287,23 @@ export function LocationCard() {
 export function ReadingCard() {
   const { prefs } = useReaderState();
   const primary = useThemeColor("primary");
-  const border = useThemeColor("border");
-  const surface = useThemeColor("surface");
+  const muted = useThemeColor("fg-muted");
+  const [legendOpen, setLegendOpen] = useState(false);
   return (
     <View className="gap-4 rounded-3xl border border-border bg-surface p-4 shadow-card">
       <View className="flex-row items-center gap-3">
         <BookOpen size={20} color={primary} />
         <Text className="flex-1 font-sans-bold text-base text-fg">المصحف</Text>
       </View>
-      <View className="flex-row items-center gap-3">
+      <Pressable accessibilityRole="button" onPress={() => setLegendOpen(true)} className="flex-row items-center gap-3">
+        <Palette size={20} color={primary} />
         <View className="flex-1">
           <Text className="font-sans-bold text-sm text-fg">ألوان التجويد</Text>
-          <Text className="font-sans text-xs text-fg-muted">تلوين أحكام التجويد في رواية حفص</Text>
+          <Text className="font-sans text-xs text-fg-muted">المصحف ملوّن بأحكام التجويد، اضغط لتعرف معنى كل لون.</Text>
         </View>
-        <Switch
-          value={prefs.tajweed}
-          onValueChange={reader.setTajweed}
-          trackColor={{ false: border, true: primary }}
-          thumbColor={surface}
-        />
-      </View>
+        <ChevronLeft size={18} color={muted} />
+      </Pressable>
+      <TajweedLegendSheet visible={legendOpen} dark={DARK_READER_THEMES.includes(prefs.theme)} onClose={() => setLegendOpen(false)} />
       <View className="gap-2">
         <Text className="font-sans-bold text-sm text-fg">حجم خط المصحف</Text>
         <View className="flex-row gap-2">
