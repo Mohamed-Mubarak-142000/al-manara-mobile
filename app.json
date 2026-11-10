@@ -2,8 +2,8 @@
   "expo": {
     "name": "المنارة",
     "slug": "mmubarakdev",
-    "version": "1.4.0",
-    "orientation": "portrait",
+    "version": "1.4.1",
+    "orientation": "default",
     "icon": "./assets/images/brand/icon.png",
     "scheme": "almanara",
     "userInterfaceStyle": "automatic",
@@ -319,8 +319,9 @@
         "expo-build-properties",
         {
           "android": {
-            "enableMinifyInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keep class com.almanara.background.** { *; }\n-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile"
           }
         }
       ]

@@ -20,6 +20,7 @@ import { usePushRegistration } from "@/features/notifications/usePushRegistratio
 import { useAdhanSchedule } from "@/features/prayer/useAdhanSchedule";
 import { APP_FONTS } from "@/theme/fonts";
 import { trackScreen, withTelemetry } from "@/lib/telemetry";
+import { lockPhonePortrait } from "@/lib/orientation";
 import { startOutbox } from "@/lib/outbox";
 import { restoreLastRoute, useRouteMemory } from "@/lib/useRouteMemory";
 // Registers the outbox handlers before anything is flushed.
@@ -36,6 +37,7 @@ SplashScreen.preventAutoHideAsync();
 // One calm splash: the logo on emerald, fading out (iOS; Android 12+ runs its own system exit).
 SplashScreen.setOptions({ fade: true, duration: 400 });
 applySavedTextScale();
+lockPhonePortrait();
 // Khatma/plan changes made offline are queued and sent when the connection returns.
 startOutbox();
 
