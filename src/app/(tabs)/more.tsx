@@ -82,6 +82,17 @@ export default function MoreScreen() {
         <AccountCard />
         <SupportLink />
 
+        <GroupTitle>المساعدة</GroupTitle>
+        <Group>
+          <LinkRow
+            art={SECTION_ART.about}
+            title="دليل استخدام التطبيق"
+            hint="كل قسم بيعمل إيه، وتلاقيه فين، وتستخدمه إزاي بالصور"
+            onPress={() => router.push("/guide")}
+            last
+          />
+        </Group>
+
         <GroupTitle>الإعدادات</GroupTitle>
         <Group>
           <LinkRow

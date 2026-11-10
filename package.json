@@ -89,7 +89,8 @@
     "test": "jest",
     "build:tafsir": "node scripts/build-tafsir.mjs",
     "build:surah-names": "node scripts/build-surah-names.mjs",
-    "build:tajweed": "node scripts/build-tajweed.mjs"
+    "build:tajweed": "node scripts/build-tajweed.mjs",
+    "build:guide-shots": "node scripts/build-guide-shots.mjs"
   },
   "private": true,
   "jest": {
