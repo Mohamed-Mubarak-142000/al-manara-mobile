@@ -34,7 +34,7 @@ const missing = [...new Set(wanted)].filter((key) => !present.has(key));
 const unused = [...present.keys()].filter((key) => !wanted.includes(key));
 
 // Quoted only when needed, like Prettier, so a rerun leaves a formatted file unchanged.
-const prop = (key) => (/^[A-Za-z_$][w$]*$/.test(key) ? key : `"${key}"`);
+const prop = (key) => (/^[A-Za-z_$][\w$]*$/.test(key) ? key : `"${key}"`);
 const lines = [...present].map(([key, file]) => `  ${prop(key)}: require("@/assets/images/guide/${file}"),`);
 writeFileSync(
   outFile,
