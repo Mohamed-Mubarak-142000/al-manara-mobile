@@ -1,5 +1,4 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 import {
   BookmarkCheck,
   Check,
@@ -32,10 +31,10 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { activeLearnerId, useAccount } from "@/features/account/accountStore";
 import { audio, currentTrack, getPlayerState, usePlayerValue } from "@/features/audio/playerStore";
 import { ayahSource } from "@/features/downloads/ayahPacks";
-import { loadSurahReview, markAyahsMemorized, markSurahReviewed, recordActivity } from "@/features/journey/progress";
+import { loadSurahReview, markAyahsMemorized, markSurahReviewed, saveTasmeeSession } from "@/features/journey/progress";
 import { getSurah, getSurahAyahs, type MushafAyah } from "@/features/mushaf/mushaf";
 import { playErrorTone } from "@/features/tasmee/errorTone";
-import { useSpeech, type SpeechError } from "@/features/tasmee/useSpeech";
+import { openMicSettings, speechAvailable, useSpeech, type SpeechError } from "@/features/tasmee/useSpeech";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/telemetry";
 import { useScaledText } from "@/theme/textScale";
@@ -62,14 +61,6 @@ const fresh = (ayahs: MushafAyah[]): Item[] => ayahs.map((ayah) => ({ ayah, word
 /** The player has toggle() but no pause(): only pause what is actually playing. */
 function pauseAudio() {
   if (getPlayerState().playing) audio.toggle();
-}
-
-function speechSupported(): boolean {
-  try {
-    return ExpoSpeechRecognitionModule.isRecognitionAvailable();
-  } catch {
-    return false;
-  }
 }
 
 /** Plays (or pauses) one ayah in al-Husary's voice, like the website's AyahPlay. */
@@ -405,7 +396,7 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
   const all = useMemo(() => getSurahAyahs(surahNumber).filter((ayah) => ayah.ayah >= from && ayah.ayah <= to), [surahNumber, from, to]);
   const ayahCount = getSurah(surahNumber)?.ayahCount ?? all.length;
 
-  const [supported] = useState(speechSupported);
+  const [supported] = useState(speechAvailable);
   const [modeChoice, setModeChoice] = useState<Mode | null>(null);
   const mode: Mode = modeChoice ?? (supported ? "voice" : "manual");
   const [sessionAyahs, setSessionAyahs] = useState(all);
@@ -436,12 +427,12 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
 
   async function save(final: Item[]) {
     if (!supabase || !learnerId) return;
-    setSaved("saving");
     const numbers = final.map((item) => item.ayah.ayah);
     const ayahFrom = Math.min(...numbers);
     const ayahTo = Math.max(...numbers);
     const mistakes = final.filter((item) => item.mark === "mistake").length;
-    const { error } = await supabase.from("tasmee_sessions").insert({
+    // Queued on the device first, so it is never lost to a dropped connection; the outbox sends it.
+    const queued = saveTasmeeSession({
       learner_id: learnerId,
       surah: surahNumber,
       ayah_from: ayahFrom,
@@ -449,8 +440,7 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
       correct: final.filter((item) => item.mark === "correct").length,
       mistakes,
     });
-    setSaved(error ? "failed" : "saved");
-    if (!error) recordActivity(learnerId);
+    setSaved(queued ? "saved" : "failed");
     // The website's automatic review: the whole surah, due, recited without a mistake.
     const review = await loadSurahReview(learnerId, surahNumber).catch(() => null);
     if (review && countsAsReview({ ayahFrom, ayahTo, ayahCount, mistakes, dueAt: review.due_at })) {
@@ -752,6 +742,11 @@ function TasmeeSession({ surahNumber, surahName, from, to }: { surahNumber: numb
                     ? SPEECH_ERRORS[speech.error]
                     : interim || "تظهر كل آية وأنت تقرؤها، ونوقفك عند أي خطأ ونريك الصحيح. لا نحكم على التشكيل والتجويد."}
                 </Text>
+                {speech.error === "not-allowed" && (
+                  <Pressable accessibilityRole="button" onPress={openMicSettings} hitSlop={8} className="mt-1 self-start">
+                    <Text className="font-sans-bold text-sm text-primary">افتح إعدادات الميكروفون</Text>
+                  </Pressable>
+                )}
               </View>
             </View>
           )}

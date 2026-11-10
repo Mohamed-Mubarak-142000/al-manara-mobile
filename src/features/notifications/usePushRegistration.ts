@@ -58,6 +58,7 @@ export function usePushRegistration() {
 /** Called before sign-out, so the next person on this device doesn't get this account's pushes. */
 export async function unregisterPushToken() {
   if (!supabase || !registeredToken) return;
-  await supabase.from("push_tokens").delete().eq("token", registeredToken);
-  registeredToken = null;
+  const { error } = await supabase.from("push_tokens").delete().eq("token", registeredToken);
+  // Kept on failure, so the next sign-out (or the next sign-in's upsert, which re-owns the token) clears it.
+  if (!error) registeredToken = null;
 }

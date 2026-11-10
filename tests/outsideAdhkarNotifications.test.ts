@@ -1,7 +1,10 @@
 ﻿import * as Notifications from "expo-notifications";
 import Storage from "expo-sqlite/kv-store";
 import { Platform } from "react-native";
+import appJson from "../app.json";
+import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
 import { setAdhkarReminder, setOutsideAdhkarNotifications, restoreAdhkarReminders } from "@/features/adhkar/adhkarReminders";
+import { dhikrVoice } from "@/features/adhkar/dhikrVoices";
 import { replaceLocalSchedule } from "@/features/notifications/replaceLocalSchedule";
 
 jest.mock("expo-notifications", () => ({
@@ -37,13 +40,31 @@ describe("outside adhkar system notifications", () => {
     );
     const desired = jest.mocked(replaceLocalSchedule).mock.calls[0][1];
     expect(desired).toHaveLength(15);
-    expect(desired[0].trigger).toEqual({ type: "daily", hour: 7, minute: 0, channelId: "adhkar-outside-v1" });
-    expect(desired[14].trigger).toEqual({ type: "daily", hour: 21, minute: 0, channelId: "adhkar-outside-v1" });
+    // Each hour speaks its dhikr: the voice goes on the content (iOS) and on its own channel (Android).
+    expect(desired[0].trigger).toEqual({ type: "daily", hour: 7, minute: 0, channelId: "dhikr-voice-istighfar-v1" });
+    expect(desired[0].content.sound).toBe("dhikr_istighfar.wav");
+    expect(desired[14].trigger).toEqual({ type: "daily", hour: 21, minute: 0, channelId: "dhikr-voice-hasbuna-v1" });
+    expect(desired[14].content.sound).toBe("dhikr_hasbuna.wav");
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith(
+      "dhikr-voice-istighfar-v1",
+      expect.objectContaining({ sound: "dhikr_istighfar.wav" }),
+    );
     expect(Storage.setItemSync).toHaveBeenCalledWith("al-manara:outside-adhkar:v1", "on");
     await restoreAdhkarReminders();
     expect(jest.mocked(replaceLocalSchedule).mock.calls[1][1]).toHaveLength(15);
     await setOutsideAdhkarNotifications(false);
     expect(replaceLocalSchedule).toHaveBeenLastCalledWith("adhkar", []);
+  });
+
+  it("gives every outside dhikr a bundled recording", () => {
+    const sounds: string[] = (
+      appJson.expo.plugins.find((plugin) => Array.isArray(plugin) && plugin[0] === "expo-notifications") as [string, { sounds: string[] }]
+    )[1].sounds;
+    for (const dhikr of TOAST_ADHKAR) {
+      const voice = dhikrVoice(dhikr.id);
+      expect(voice).toMatch(/^[a-z0-9_]+\.wav$/); // Android raw resource names
+      expect(sounds).toContain(`./assets/audio/${voice}`);
+    }
   });
 
   it("does not schedule or persist enabled reminders when permission is denied", async () => {

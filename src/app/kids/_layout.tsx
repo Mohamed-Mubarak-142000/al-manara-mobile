@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { View } from "react-native";
 
 import { useAccount } from "@/features/account/accountStore";
+import { markKidsSeen } from "@/features/home/kidsSeen";
 import { ChooseChild, KidsSignIn } from "@/features/kids/ChooseChild";
 import { useKidsProgress } from "@/features/kids/progress/progressStore";
 import { KidsShell } from "@/features/kids/ui/KidsShell";
@@ -22,6 +23,9 @@ export default function KidsLayout() {
   useEffect(() => {
     connect(childId);
   }, [childId, connect]);
+
+  // Home stops marking the garden as new once it has been opened.
+  useEffect(markKidsSeen, []);
 
   let content;
   if (account.status === "loading")

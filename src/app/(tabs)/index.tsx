@@ -106,8 +106,8 @@ function SectionsTitle() {
 }
 
 /**
- * Home, top to bottom: the greeting, the scene (edge to edge), the next prayer, the shortcuts strip, the
- * kids' garden, continue reading, the day's hadith (both banners edge to edge), sponsors, supporters, and
+ * Home, top to bottom: the greeting, the scene and the kids' garden (both edge to edge), the next prayer,
+ * the shortcuts strip, continue reading, the day's hadith (both banners edge to edge), sponsors, supporters, and
  * every section of the app.
  */
 export default function HomeScreen() {
@@ -118,16 +118,17 @@ export default function HomeScreen() {
       <Animated.View entering={enterSoft(1)}>
         <WelcomeCard />
       </Animated.View>
-      <Animated.View entering={enterSoft(2)}>
+      {/* Right under the scene, so it is on the first screen a family sees, not below the fold. */}
+      <Animated.View entering={enterSoft(2)} className="mt-3">
+        <KidsBanner />
+      </Animated.View>
+      <Animated.View entering={enterSoft(3)}>
         <Section className="mt-4">
           <NextPrayerCard />
         </Section>
       </Animated.View>
-      <Animated.View entering={enterSoft(3)} className="mt-2">
-        <QuickActions />
-      </Animated.View>
       <Animated.View entering={enterSoft(4)} className="mt-2">
-        <KidsBanner />
+        <QuickActions />
       </Animated.View>
       <Animated.View entering={enterSoft(5)}>
         <Section className="gap-4">

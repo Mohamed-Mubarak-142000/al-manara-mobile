@@ -43,6 +43,37 @@ export function recordActivity(learnerId: string | null) {
   enqueue({ kind: ACTIVITY_OP, owner, payload: { learnerId, day }, dedupeKey: `${ACTIVITY_OP}:${key}` });
 }
 
+export interface TasmeeSessionRow {
+  learner_id: string;
+  surah: number;
+  ayah_from: number;
+  ayah_to: number;
+  correct: number;
+  mistakes: number;
+  /** When it was recited, so a session sent later from the outbox keeps its real time. */
+  created_at: string;
+}
+
+const TASMEE_OP = "tasmee-session";
+
+registerHandler<TasmeeSessionRow>(TASMEE_OP, async (row) => {
+  if (!supabase) return;
+  throwIfError(await supabase.from("tasmee_sessions").insert(row));
+});
+
+/**
+ * Saves a finished tasmee session (adult or kids). Queued in the outbox, so a session recited offline or
+ * during a network hiccup reaches the account later instead of being lost. False when there is no
+ * signed-in learner to save it for.
+ */
+export function saveTasmeeSession(row: Omit<TasmeeSessionRow, "created_at">): boolean {
+  const owner = currentUserIdNow();
+  if (!supabase || !owner || !row.learner_id) return false;
+  enqueue<TasmeeSessionRow>({ kind: TASMEE_OP, owner, payload: { ...row, created_at: new Date().toISOString() } });
+  recordActivity(row.learner_id);
+  return true;
+}
+
 /** Starts the review schedule of any surah these ayahs completed, like the website does on memorizing. */
 export async function scheduleCompletedSurahs(learnerId: string, surahs: number[]) {
   if (!supabase || surahs.length === 0) return;

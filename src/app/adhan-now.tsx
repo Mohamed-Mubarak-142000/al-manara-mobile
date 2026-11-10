@@ -15,6 +15,7 @@ import { isFreshAdhan, parseAdhanScreen } from "@/core/prayer/adhanScreen";
 import { PRAYER_LABELS, formatPrayerClock } from "@/core/prayer/prayerTimesApi";
 import { TASBIH_THEMES } from "@/core/tasbih/tasbihData";
 import { toArabicDigits } from "@/core/text/arabic";
+import { AdhanScene } from "@/features/prayer/AdhanScene";
 import { useAdhanVoice } from "@/features/prayer/adhanSound";
 import { useAdhanSettings } from "@/features/prayer/adhanSettings";
 import { useScaledText } from "@/theme/textScale";
@@ -47,15 +48,15 @@ function clock(at: number): string {
   return toArabicDigits(formatPrayerClock(`${date.getHours()}:${date.getMinutes()}`));
 }
 
-/** A slow breathing ring behind the stop button while the adhan plays. */
+/** A slow breathing glow behind the stop button while the adhan plays. */
 function Pulse({ color, active }: { color: string; active: boolean }) {
   const reduce = useReducedMotion();
   const scale = useSharedValue(1);
   useEffect(() => {
-    scale.set(active && !reduce ? withRepeat(withTiming(1.18, { duration: 1400 }), -1, true) : withTiming(1));
+    scale.set(active && !reduce ? withRepeat(withTiming(1.12, { duration: 1400 }), -1, true) : withTiming(1));
   }, [active, reduce, scale]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }], opacity: active ? 0.35 : 0 }));
-  return <Animated.View pointerEvents="none" className="absolute size-44 rounded-full" style={[{ backgroundColor: color }, style]} />;
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }], opacity: active ? 0.3 : 0 }));
+  return <Animated.View pointerEvents="none" className="absolute h-20 w-64 rounded-full" style={[{ backgroundColor: color }, style]} />;
 }
 
 export default function AdhanNowScreen() {
@@ -130,7 +131,7 @@ export default function AdhanNowScreen() {
           </Pressable>
         </View>
 
-        <View className="mt-4 items-center">
+        <View className="mt-2 items-center">
           <Text className="font-sans text-sm" style={{ color: theme.soft }}>
             {moment ? clock(moment.at) : ""}
           </Text>
@@ -142,20 +143,24 @@ export default function AdhanNowScreen() {
           </Text>
         </View>
 
-        <View className="my-10 items-center justify-center">
+        <View className="mt-6 items-center">
+          <AdhanScene theme={theme} playing={playing} />
+        </View>
+
+        <View className="my-8 items-center justify-center">
           <Pulse color={theme.accent} active={playing} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={playing ? "إيقاف الأذان" : "إغلاق"}
             onPress={playing ? stop : close}
-            className="size-40 items-center justify-center gap-2 rounded-full border-4"
+            className="h-16 min-w-56 flex-row items-center justify-center gap-3 rounded-full border-2 px-8"
             style={({ pressed }) => ({
               backgroundColor: theme.face,
               borderColor: theme.accent,
-              transform: [{ scale: pressed ? 0.95 : 1 }],
+              transform: [{ scale: pressed ? 0.96 : 1 }],
             })}
           >
-            {playing ? <BellOff size={40} color={theme.accent} /> : <X size={40} color={theme.accent} />}
+            {playing ? <BellOff size={26} color={theme.accent} /> : <X size={26} color={theme.accent} />}
             <Text className="font-sans-bold text-lg" style={{ color: theme.ink }}>
               {playing ? "إيقاف الأذان" : "إغلاق"}
             </Text>

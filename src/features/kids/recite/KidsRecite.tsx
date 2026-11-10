@@ -1,5 +1,4 @@
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
-import { Mic, MicOff, SkipForward, Volume2 } from "lucide-react-native";
+import { Mic, MicOff, Settings, SkipForward, Volume2 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, ZoomIn } from "react-native-reanimated";
@@ -8,8 +7,8 @@ import { splitAyahWords } from "@/core/kids/games/arrangeGameLogic";
 import { buildExpected, matchChunk, matchPreview } from "@/core/tasmee/recitation";
 import { toArabicDigits } from "@/core/text/arabic";
 import { activeLearnerIdNow } from "@/features/account/accountStore";
-import { useSpeech } from "@/features/tasmee/useSpeech";
-import { supabase } from "@/lib/supabase";
+import { saveTasmeeSession } from "@/features/journey/progress";
+import { openMicSettings, speechAvailable, useSpeech } from "@/features/tasmee/useSpeech";
 
 import { useCompanion } from "../companion/companionStore";
 import { kidsAudio } from "../kidsAudio";
@@ -41,14 +40,6 @@ const VERDICTS: Record<Verdict, { emoji: string; title: string; stars: number }>
 
 function verdictFor(slips: number): Verdict {
   return slips === 0 ? "excellent" : slips <= 1 ? "good" : "again";
-}
-
-function speechAvailable(): boolean {
-  try {
-    return ExpoSpeechRecognitionModule.isRecognitionAvailable();
-  } catch {
-    return false;
-  }
 }
 
 function Word({ word, heard }: { word: string; heard: boolean }) {
@@ -192,12 +183,12 @@ export function KidsRecite({ surahId }: { surahId: number }) {
     void speech.start();
   }
 
-  async function saveSession(all: Verdict[]) {
+  function saveSession(all: Verdict[]) {
     const good = all.filter((entry) => entry !== "again").length;
     recordGame({ game: "kids_recite", surah: good / all.length >= PASS_SHARE ? surah.id : null, score: good, total: all.length });
     const learnerId = activeLearnerIdNow();
-    if (!supabase || !learnerId) return;
-    await supabase.from("tasmee_sessions").insert({
+    if (!learnerId) return;
+    saveTasmeeSession({
       learner_id: learnerId,
       surah: surah.id,
       ayah_from: 1,
@@ -213,7 +204,7 @@ export function KidsRecite({ surahId }: { surahId: number }) {
     setMood("idle");
     sfx.win();
     setFinished(true);
-    void saveSession(all).catch(() => {});
+    saveSession(all);
   }
 
   function next() {
@@ -378,13 +369,23 @@ export function KidsRecite({ surahId }: { surahId: number }) {
                 {speech.listening ? "أنا أسمعك… اقرأ الآية" : "اضغط على الميكروفون واقرأ الآية"}
               </KidsText>
               {speech.error === "not-allowed" && (
-                <KidsText size={15} center style={{ color: KIDS.honey }}>
-                  نحتاج إذنًا لاستخدام الميكروفون. اطلب من أبيك أو أمك السماح بذلك من إعدادات الجهاز.
-                </KidsText>
+                <>
+                  <KidsText size={15} center style={{ color: KIDS.honey }}>
+                    نحتاج إذنًا لاستخدام الميكروفون. اطلب من أبيك أو أمك السماح بذلك من إعدادات الجهاز.
+                  </KidsText>
+                  <KidsButton tone="white" size="sm" icon={Settings} onPress={openMicSettings}>
+                    افتح الإعدادات
+                  </KidsButton>
+                </>
               )}
               {speech.error === "network" && (
                 <KidsText size={15} center style={{ color: KIDS.honey }}>
                   يحتاج التسميع إلى الإنترنت. تأكد من الاتصال وحاول مرة أخرى.
+                </KidsText>
+              )}
+              {speech.error === "other" && (
+                <KidsText size={15} center style={{ color: KIDS.honey }}>
+                  الميكروفون توقف لحظة. اضغط عليه مرة أخرى ونكمل.
                 </KidsText>
               )}
               <View className="flex-row flex-wrap justify-center gap-3">

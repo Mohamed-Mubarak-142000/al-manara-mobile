@@ -3,11 +3,26 @@ import { useEffect, useRef } from "react";
 import { recordActivity } from "@/features/journey/progress";
 import { getSurah } from "@/features/mushaf/mushaf";
 import { reader, useReaderState } from "@/features/mushaf/readerPrefs";
+import { enqueue, registerHandler, throwIfError } from "@/lib/outbox";
 import { supabase } from "@/lib/supabase";
 
-import { activeLearnerId, useAccount } from "./accountStore";
+import { activeLearnerId, currentUserIdNow, useAccount } from "./accountStore";
 
 const PUSH_DELAY_MS = 1500;
+const READING_POSITION_OP = "reading-position";
+
+interface ReadingPositionRow {
+  learner_id: string;
+  surah: number;
+  surah_name: string;
+  page: number;
+  updated_at: string;
+}
+
+registerHandler<ReadingPositionRow>(READING_POSITION_OP, async (row) => {
+  if (!supabase) return;
+  throwIfError(await supabase.from("reading_position").upsert(row, { onConflict: "learner_id" }));
+});
 
 /**
  * The website's LastReadSync: "continue reading" follows the signed-in learner between the app and
@@ -40,23 +55,25 @@ export function useLastReadSync() {
 
   useEffect(() => {
     if (!supabase || !learnerId || !lastRead || lastRead.at === lastPushed.current) return;
-    const client = supabase;
     const timer = setTimeout(() => {
+      const owner = currentUserIdNow();
+      if (!owner) return;
       lastPushed.current = lastRead.at;
       recordActivity(learnerId);
-      client
-        .from("reading_position")
-        .upsert(
-          {
-            learner_id: learnerId,
-            surah: lastRead.surah,
-            surah_name: getSurah(lastRead.surah)?.name ?? "",
-            page: lastRead.page,
-            updated_at: new Date(lastRead.at).toISOString(),
-          },
-          { onConflict: "learner_id" },
-        )
-        .then(() => {});
+      // Through the outbox, keyed per learner: offline page turns collapse into the newest one, which is
+      // sent (and retried) once there is a connection instead of being dropped.
+      enqueue<ReadingPositionRow>({
+        kind: READING_POSITION_OP,
+        owner,
+        dedupeKey: `${READING_POSITION_OP}:${learnerId}`,
+        payload: {
+          learner_id: learnerId,
+          surah: lastRead.surah,
+          surah_name: getSurah(lastRead.surah)?.name ?? "",
+          page: lastRead.page,
+          updated_at: new Date(lastRead.at).toISOString(),
+        },
+      });
     }, PUSH_DELAY_MS);
     return () => clearTimeout(timer);
   }, [learnerId, lastRead]);

@@ -143,6 +143,19 @@ export function AdhanSettingsCard() {
               </Text>
             </Pressable>
           )}
+          {/* While the phone is in use Android shows only a heads-up; opening the screen then needs this permission. */}
+          {settings.screen && Platform.OS === "android" && status?.overlayAllowed === false && (
+            <Pressable
+              onPress={() => {
+                void background?.openOverlaySettings().catch(reportReminderError);
+              }}
+              className="mt-3 rounded-2xl bg-accent-soft p-3"
+            >
+              <Text className="font-sans text-sm text-accent-strong">
+                لتفتح شاشة الأذان وحدها وأنت تستخدم الهاتف، اسمح للمنارة بـ«الظهور فوق التطبيقات». اضغط لتفعيله.
+              </Text>
+            </Pressable>
+          )}
           {settings.screen && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 10 }}>
               {TASBIH_THEMES.map((theme) => {

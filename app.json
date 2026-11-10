@@ -189,6 +189,7 @@
     "plugins": [
       "./plugins/withAlmanaraBackground",
       "./plugins/withAppShortcuts",
+      "./plugins/withGwpAsanOff",
       "expo-router",
       [
         "expo-splash-screen",
@@ -220,7 +221,19 @@
         "expo-notifications",
         {
           "color": "#003e32",
-          "sounds": ["./assets/audio/adhan_short.wav"]
+          "sounds": [
+            "./assets/audio/adhan_short.wav",
+            "./assets/audio/dhikr_istighfar.wav",
+            "./assets/audio/dhikr_salat_nabi.wav",
+            "./assets/audio/dhikr_subhan_bihamdih.wav",
+            "./assets/audio/dhikr_tahlil.wav",
+            "./assets/audio/dhikr_hasbuna.wav",
+            "./assets/audio/dhikr_radeetu.wav",
+            "./assets/audio/dhikr_yunus.wav",
+            "./assets/audio/dhikr_subhanaka.wav",
+            "./assets/audio/dhikr_aeni.wav",
+            "./assets/audio/dhikr_jannah.wav"
+          ]
         }
       ],
       "expo-sharing",

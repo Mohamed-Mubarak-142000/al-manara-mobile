@@ -1,5 +1,5 @@
 import { Volume2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 
@@ -105,8 +105,12 @@ export function ListenPickGame({ surahId }: { surahId: number }) {
   const [slips, setSlips] = useState(0);
   const [won, setWon] = useState(false);
 
+  // The pause before the next round; cleared on leaving, so it can't start an ayah on another screen.
+  const nextRound = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(
     () => () => {
+      if (nextRound.current) clearTimeout(nextRound.current);
       if (kidsAudio.getState().id?.startsWith("kids-")) kidsAudio.stop();
     },
     [],
@@ -137,7 +141,8 @@ export function ListenPickGame({ surahId }: { surahId: number }) {
       sfx.correct();
       react("correct");
       setSolved(true);
-      setTimeout(() => {
+      nextRound.current = setTimeout(() => {
+        nextRound.current = null;
         const nextIndex = index + 1;
         if (nextIndex >= rounds.length) {
           recordGame({

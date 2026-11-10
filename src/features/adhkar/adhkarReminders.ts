@@ -8,6 +8,8 @@ import { requestBackgroundAccess } from "@/features/notifications/backgroundAcce
 import { replaceLocalSchedule } from "@/features/notifications/replaceLocalSchedule";
 import { TOAST_ADHKAR } from "@/core/adhkar/toastAdhkar";
 
+import { dhikrVoice, dhikrVoiceChannel, ensureDhikrVoiceChannels } from "./dhikrVoices";
+
 export interface AdhkarReminder {
   enabled: boolean;
   hour: number;
@@ -92,15 +94,22 @@ async function apply(reminders: Reminders) {
   if (Platform.OS !== "web" && readOutside()) {
     for (let hour = 7; hour < 22; hour++) {
       const dhikr = TOAST_ADHKAR[(hour - 7) % TOAST_ADHKAR.length];
+      // A reciter says the dhikr so the user can repeat it; Android plays it through the voice's own channel.
+      const voice = dhikrVoice(dhikr.id);
       desired.push({
         identifier: `adhkar-hour-${hour}`,
         content: {
           title: "ذكّر قلبك",
           body: `${dhikr.text}\n${dhikr.source}`,
-          sound: Platform.OS === "android" ? "default" : false,
+          sound: voice ?? (Platform.OS === "android" ? "default" : false),
           data: { kind: "adhkar", url: `/adhkar?toast=${dhikr.id}` },
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute: 0, channelId: OUTSIDE_CHANNEL_ID },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute: 0,
+          channelId: dhikrVoiceChannel(dhikr.id) ?? OUTSIDE_CHANNEL_ID,
+        },
       });
     }
   }
@@ -119,6 +128,7 @@ async function channel() {
       importance: Notifications.AndroidImportance.HIGH,
       sound: "default",
     });
+    await ensureDhikrVoiceChannels();
   }
 }
 
