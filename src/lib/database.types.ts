@@ -196,6 +196,30 @@ export type UserPreferencesRow = {
   completed_at: Timestamp | null;
   updated_at: Timestamp;
 };
+/** "نفحات المنارة" (supabase/migrations/20261114000001_nafahat.sql on the website). */
+export type NafhaMediaType = "image" | "video";
+export type NafhaRow = {
+  id: string;
+  title: string;
+  body: string | null;
+  media_type: NafhaMediaType | null;
+  media_url: string | null;
+  media_path: string | null;
+  created_by: string | null;
+  created_at: Timestamp;
+};
+export type NafhaEmoji = "heart" | "dua" | "star" | "like";
+export type NafhaReactionRow = {
+  nafha_id: string;
+  user_id: string;
+  emoji: NafhaEmoji;
+  created_at: Timestamp;
+};
+export type NafhaReactionCountRow = {
+  nafha_id: string;
+  emoji: NafhaEmoji;
+  count: number;
+};
 export type PushPlatform = "ios" | "android";
 export type PushTokenRow = {
   token: string;
@@ -404,6 +428,11 @@ export type Database = {
       >;
       reminder_deliveries: TableDef<ReminderDeliveryRow, Optional<ReminderDeliveryRow, "sent_at">>;
       push_tokens: TableDef<PushTokenRow, Optional<PushTokenRow, "created_at" | "updated_at">>;
+      nafahat: TableDef<
+        NafhaRow,
+        Optional<NafhaRow, "id" | "body" | "media_type" | "media_url" | "media_path" | "created_by" | "created_at">
+      >;
+      nafahat_reactions: TableDef<NafhaReactionRow, Optional<NafhaReactionRow, "user_id" | "created_at">>;
       sponsors: TableDef<SponsorRow, Optional<SponsorRow, "id" | "link_url" | "logo_url" | "active" | "created_at">>;
       supporters: TableDef<
         SupporterRow,
@@ -452,6 +481,7 @@ export type Database = {
     };
     Views: {
       public_supporters: { Row: PublicSupporterRow; Relationships: [] };
+      nafahat_reaction_counts: { Row: NafhaReactionCountRow; Relationships: [] };
     };
     Functions: {
       is_admin: { Args: Record<string, never>; Returns: boolean };

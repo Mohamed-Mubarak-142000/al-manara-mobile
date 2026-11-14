@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   Sparkles,
   Trees,
+  Wind,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -142,6 +143,14 @@ export const APP_SECTIONS: readonly AppSection[] = [
     href: "/downloads",
   },
   { label: "الأطفال", icon: Trees, tone: "green", art: "kids", description: "حديقة القرآن للأطفال", href: "/kids" },
+  {
+    label: "نفحات المنارة",
+    icon: Wind,
+    tone: "purple",
+    art: "nafahat",
+    description: "خواطر ونفحات إيمانية من فريق المنارة",
+    href: "/nafahat",
+  },
 ];
 
 export interface SectionGroup {
@@ -153,7 +162,7 @@ export interface SectionGroup {
 /** The "كل الأقسام" screen, one titled grid per group. Every built section appears exactly once. */
 export const SECTION_GROUPS: readonly SectionGroup[] = [
   { title: "القرآن", labels: ["المصحف", "الاستماع", "الإذاعة", "التسميع"] },
-  { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "العمرة والسفر", "الأحاديث", "الأربعون النووية", "التقويم"] },
+  { title: "يومك", labels: ["المواقيت", "الأذكار", "السبحة", "العمرة والسفر", "الأحاديث", "الأربعون النووية", "التقويم", "نفحات المنارة"] },
   { title: "رحلتك", labels: ["رحلتي", "خطة الحفظ", "الختمة", "الاختبارات"] },
   { title: "أدعية وابتهالات", labels: ["ابتهالات", "تواشيح", "أدعية", "دعاء ختم القرآن", "الرقية الشرعية", "أذان"] },
   { title: "للعائلة", labels: ["السيرة النبوية", "القصص", "الأطفال"] },

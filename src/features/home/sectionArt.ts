@@ -32,6 +32,8 @@ export const SECTION_ART = {
   kids: require("@/assets/images/sections/kids.png"),
   qibla: require("@/assets/images/sections/qibla.png"),
   home: require("@/assets/images/sections/home.png"),
+  // The channel's art is the brand logo itself (its posts come from the Al-Manara team).
+  nafahat: require("@/assets/images/brand/logo.png"),
   // The app's own pages: More, settings, search, the legal pages…
   sections: require("@/assets/images/sections/sections.png"),
   settings: require("@/assets/images/sections/settings.png"),

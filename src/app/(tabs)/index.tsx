@@ -13,6 +13,7 @@ import { IconButton, enterSoft } from "@/components/ui/PageHeader";
 import { Screen, Section } from "@/components/ui/Screen";
 import { DailyHadithBanner } from "@/features/home/DailyHadithBanner";
 import { KidsBanner } from "@/features/home/KidsBanner";
+import { NafhaPrompt } from "@/features/nafahat/NafhaPrompt";
 import { NextPrayerCard } from "@/features/home/NextPrayerCard";
 import { OfflineNotice } from "@/features/home/OfflineNotice";
 import { SetupPrompt } from "@/features/settings/SetupPrompt";
@@ -151,6 +152,7 @@ export default function HomeScreen() {
 
       <OfflineNotice />
       <AppUpdatePrompt />
+      <NafhaPrompt />
       <SetupPrompt />
     </Screen>
   );

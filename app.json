@@ -324,6 +324,15 @@
             "extraProguardRules": "-keep class com.almanara.background.** { *; }\n-keepattributes SourceFile,LineNumberTable\n-renamesourcefileattribute SourceFile"
           }
         }
+      ],
+      "expo-video",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "يحتاج المنارة الوصول إلى الصور لحفظ صور ومقاطع نفحات المنارة.",
+          "savePhotosPermission": "يحفظ المنارة صور ومقاطع نفحات المنارة في معرض الصور.",
+          "granularPermissions": ["photo", "video"]
+        }
       ]
     ],
     "experiments": {
