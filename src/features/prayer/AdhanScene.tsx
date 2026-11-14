@@ -35,7 +35,19 @@ const WAVE_MS = 2400;
 const WAVE_R = 56;
 
 /** One rising wave: an upward arc that grows from the crescent and fades out. */
-function Wave({ progress, size, color, still, index }: { progress: SharedValue<number>; size: number; color: string; still: boolean; index: number }) {
+function Wave({
+  progress,
+  size,
+  color,
+  still,
+  index,
+}: {
+  progress: SharedValue<number>;
+  size: number;
+  color: string;
+  still: boolean;
+  index: number;
+}) {
   const style = useAnimatedStyle(() => {
     if (still) return { opacity: 0.75 - index * 0.2, transform: [{ scale: 0.45 + index * 0.27 }] };
     const p = progress.get();
@@ -75,7 +87,14 @@ function Minaret({ x, color }: { x: number; color: string }) {
       <Rect x={x - 11} y={92} width={22} height={168} fill={color} fillOpacity={0.18} stroke={color} strokeWidth={2} />
       <Rect x={x - 17} y={130} width={34} height={8} rx={2} fill={color} fillOpacity={0.55} />
       <Rect x={x - 15} y={186} width={30} height={7} rx={2} fill={color} fillOpacity={0.4} />
-      <Path d={`M ${x - 11} 92 L ${x} 66 L ${x + 11} 92 Z`} fill={color} fillOpacity={0.55} stroke={color} strokeWidth={2} strokeLinejoin="round" />
+      <Path
+        d={`M ${x - 11} 92 L ${x} 66 L ${x + 11} 92 Z`}
+        fill={color}
+        fillOpacity={0.55}
+        stroke={color}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
       <Path d={`M ${x} 50 A 8 8 0 0 0 ${x} 66 A 10 10 0 0 1 ${x} 50 Z`} fill={color} />
       <Path d={`M ${x - 4} 152 V 145 A 4 4 0 0 1 ${x + 4} 145 V 152 Z`} fill={color} fillOpacity={0.6} />
     </G>
@@ -138,7 +157,13 @@ export function AdhanScene({ theme, playing }: { theme: TasbihTheme; playing: bo
           <View
             key={source.x}
             pointerEvents="none"
-            style={{ position: "absolute", left: source.x * unit - waveSize / 2, top: source.y * unit - waveSize / 2, width: waveSize, height: waveSize }}
+            style={{
+              position: "absolute",
+              left: source.x * unit - waveSize / 2,
+              top: source.y * unit - waveSize / 2,
+              width: waveSize,
+              height: waveSize,
+            }}
           >
             {progress.map((value, index) => (
               <Wave key={index} progress={value} size={waveSize} color={accent} still={reduce} index={index} />
