@@ -57,6 +57,26 @@ export function markNafhaSeen(id: string) {
   }
 }
 
+const DAY = new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "long", year: "numeric" });
+const WEEKDAY = new Intl.DateTimeFormat("ar-EG", { weekday: "long" });
+
+/** The local calendar day, to group the chat. */
+export function nafhaDayKey(iso: string): string {
+  const date = new Date(iso);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+/** The chat's day separator: "اليوم", "أمس", the weekday within the week, else the date. */
+export function nafhaDayLabel(iso: string, now = new Date()): string {
+  const date = new Date(iso);
+  const midnight = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const days = Math.round((midnight(now) - midnight(date)) / 86_400_000);
+  if (days === 0) return "اليوم";
+  if (days === 1) return "أمس";
+  if (days > 1 && days < 7) return WEEKDAY.format(date);
+  return DAY.format(date);
+}
+
 /** The newest post, for the prompt on Home (null when there is none, or offline). */
 export async function fetchLatestNafha(): Promise<Nafha | null> {
   if (!supabase) return null;
@@ -126,6 +146,40 @@ export function useNafahat(userId: string | null) {
       alive.current = false;
     };
   }, [load]);
+
+  // Live while the screen is open: a post the admin publishes appears at the bottom, a deleted one goes.
+  useEffect(() => {
+    const client = supabase;
+    if (!client) return;
+    const channel = client
+      .channel(`nafahat:${Date.now()}:${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "nafahat" }, (payload) => {
+        const row = payload.new as Partial<Nafha>;
+        if (typeof row.id !== "string" || typeof row.title !== "string" || typeof row.created_at !== "string") return;
+        const fresh: Nafha = {
+          id: row.id,
+          title: row.title,
+          body: row.body ?? null,
+          media_type: row.media_type ?? null,
+          media_url: row.media_url ?? null,
+          created_at: row.created_at,
+        };
+        setItems((current) => {
+          if (current.some((item) => item.id === fresh.id)) return current;
+          const next = [...current, fresh];
+          writeCache(next);
+          return next;
+        });
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "nafahat" }, (payload) => {
+        const id = (payload.old as { id?: unknown }).id;
+        if (typeof id === "string") setItems((current) => current.filter((item) => item.id !== id));
+      })
+      .subscribe();
+    return () => {
+      void client.removeChannel(channel);
+    };
+  }, []);
 
   /** Optimistic; the same emoji again removes it. Rolls back when the write fails. */
   const react = useCallback(
