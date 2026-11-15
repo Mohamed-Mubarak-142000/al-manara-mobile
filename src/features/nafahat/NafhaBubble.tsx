@@ -3,9 +3,9 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView, type VideoPlayer } from "expo-video";
 import { Download, Share2, SmilePlus, type LucideIcon } from "lucide-react-native";
-import { memo, useEffect, useState, type ReactNode } from "react";
+import { memo, useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, FadeOut, ZoomIn, ZoomOut } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
 import { toArabicDigits } from "@/core/text/arabic";
@@ -13,6 +13,7 @@ import type { NafhaEmoji } from "@/lib/database.types";
 import { useThemeColor } from "@/theme/useThemeColor";
 
 import { NAFAHAT_EMOJIS, NAFAHAT_TITLE, type Nafha, type ReactionCounts } from "./nafahatApi";
+import { NafhaMenu, type BubbleAnchor } from "./NafhaMenu";
 import { saveNafhaMedia, shareNafha } from "./nafhaMedia";
 
 const MEDIA_HEIGHT = 240;
@@ -109,7 +110,8 @@ interface NafhaBubbleProps {
  */
 export const NafhaBubble = memo(function NafhaBubble({ nafha, counts, mine, signedIn, onReact, onNeedSignIn }: NafhaBubbleProps) {
   const surface = useThemeColor("surface");
-  const [picking, setPicking] = useState(false);
+  const bubble = useRef<View>(null);
+  const [anchor, setAnchor] = useState<BubbleAnchor | null>(null);
   const [busy, setBusy] = useState<"share" | "save" | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const used = NAFAHAT_EMOJIS.filter((emoji) => (counts[emoji.id] ?? 0) > 0);
@@ -121,10 +123,11 @@ export const NafhaBubble = memo(function NafhaBubble({ nafha, counts, mine, sign
     return () => clearTimeout(id);
   }, [note]);
 
+  /** Long press, the smiley or the reactions pill: the WhatsApp menu over a dimmed screen. */
   function openPicker() {
     if (!signedIn) return onNeedSignIn();
-    Haptics.selectionAsync().catch(() => {});
-    setPicking((value) => !value);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    bubble.current?.measureInWindow((x, y, width, height) => setAnchor({ x, y, width, height }));
   }
 
   async function share() {
@@ -155,34 +158,8 @@ export const NafhaBubble = memo(function NafhaBubble({ nafha, counts, mine, sign
     <View className="items-start">
       <View className="max-w-[88%] flex-row items-center gap-2">
         <View className="shrink">
-          {picking ? (
-            <Animated.View
-              entering={ZoomIn.springify().damping(16)}
-              exiting={ZoomOut.duration(120)}
-              className="absolute -top-14 start-0 z-10 flex-row gap-0.5 rounded-full bg-surface p-1.5 shadow-card"
-              style={{ elevation: 6 }}
-            >
-              {NAFAHAT_EMOJIS.map((emoji) => (
-                <Pressable
-                  key={emoji.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={emoji.label}
-                  accessibilityState={{ selected: mine === emoji.id }}
-                  onPress={() => {
-                    setPicking(false);
-                    onReact(nafha.id, emoji.id);
-                  }}
-                  className={`size-10 items-center justify-center rounded-full ${mine === emoji.id ? "bg-primary-soft" : ""}`}
-                  style={({ pressed }) => ({ transform: [{ scale: pressed ? 1.25 : 1 }] })}
-                >
-                  <Text className="text-2xl">{emoji.char}</Text>
-                </Pressable>
-              ))}
-            </Animated.View>
-          ) : null}
-
-          <Pressable onLongPress={openPicker} delayLongPress={300} accessibilityHint="اضغط مطولًا للتفاعل">
-            <View className="rounded-2xl bg-surface p-1 shadow-card" style={{ borderTopStartRadius: 0 }}>
+          <Pressable onLongPress={openPicker} delayLongPress={350} accessibilityHint="اضغط مطولًا للتفاعل">
+            <View ref={bubble} collapsable={false} className="rounded-2xl bg-surface p-1 shadow-card" style={{ borderTopStartRadius: 0 }}>
               <Tail color={surface} />
               {nafha.media_url && nafha.media_type === "image" ? (
                 <Image
@@ -250,6 +227,29 @@ export const NafhaBubble = memo(function NafhaBubble({ nafha, counts, mine, sign
           ) : null}
         </View>
       </View>
+
+      <NafhaMenu
+        nafha={nafha}
+        anchor={anchor}
+        mine={mine}
+        onClose={() => setAnchor(null)}
+        onPick={(emoji) => {
+          setAnchor(null);
+          onReact(nafha.id, emoji);
+        }}
+        onShare={() => {
+          setAnchor(null);
+          void share();
+        }}
+        onSave={
+          nafha.media_url
+            ? () => {
+                setAnchor(null);
+                void save();
+              }
+            : null
+        }
+      />
 
       {note ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} className="mt-1.5 rounded-full bg-surface px-3 py-1">

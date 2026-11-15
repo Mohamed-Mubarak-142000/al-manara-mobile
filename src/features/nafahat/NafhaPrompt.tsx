@@ -12,7 +12,16 @@ import { useUpdatePromptOpen } from "@/features/appUpdate/AppUpdatePrompt";
 import { useAppActive } from "@/lib/screenState";
 import { useThemeColor } from "@/theme/useThemeColor";
 
-import { NAFAHAT_TITLE, fetchLatestNafha, lastSeenNafha, markNafhaSeen, type Nafha } from "./nafahatApi";
+import {
+  NAFAHAT_TITLE,
+  fetchLatestNafha,
+  lastSeenNafha,
+  markNafhaSeen,
+  recordNafhaViews,
+  setNafhaViewsEnabled,
+  type Nafha,
+} from "./nafahatApi";
+import { useAccount } from "@/features/account/accountStore";
 
 const logo = require("@/assets/images/brand/logo.png");
 /** A moment after Home appears, so the sheet doesn't land on top of the first frame. */
@@ -71,6 +80,13 @@ export function NafhaPrompt() {
   }, [nafha]);
 
   const visible = !!nafha && due && focused && !updateOpen;
+  const account = useAccount();
+  const reader = account.status === "signed-in" && account.profile?.role !== "admin";
+  // Seen in the prompt counts as seen (who saw it, for the admin).
+  useEffect(() => {
+    setNafhaViewsEnabled(reader);
+    if (visible && reader && nafha) recordNafhaViews([nafha.id]);
+  }, [visible, reader, nafha]);
   useEffect(() => {
     setOpen(visible);
     return () => setOpen(false);

@@ -213,3 +213,38 @@ export function useNafahat(userId: string | null) {
 
   return { items, counts, mine, refreshing, loaded, refresh, react };
 }
+
+// "Who saw it": a signed-in reader is recorded once per post (table nafahat_views, insert-own RLS) the
+// first time it shows on screen, in the channel or the Home prompt. Batched, each id sent once per launch.
+const sentViews = new Set<string>();
+let pendingViews = new Set<string>();
+let viewTimer: ReturnType<typeof setTimeout> | null = null;
+
+let viewsEnabled = false;
+/** Only a signed-in reader's sightings count (not a guest's, not the admin's own). */
+export function setNafhaViewsEnabled(on: boolean) {
+  viewsEnabled = on;
+}
+
+export function recordNafhaViews(ids: string[]) {
+  if (!viewsEnabled) return;
+  for (const id of ids) if (!sentViews.has(id)) pendingViews.add(id);
+  if (!pendingViews.size || viewTimer) return;
+  viewTimer = setTimeout(() => {
+    viewTimer = null;
+    const batch = [...pendingViews];
+    pendingViews = new Set();
+    batch.forEach((id) => sentViews.add(id));
+    if (!supabase) return;
+    void supabase
+      .from("nafahat_views")
+      .upsert(
+        batch.map((nafha_id) => ({ nafha_id })),
+        { onConflict: "nafha_id,user_id", ignoreDuplicates: true },
+      )
+      .then(({ error }) => {
+        // Signed out or offline: a later sighting tries again.
+        if (error) batch.forEach((id) => sentViews.delete(id));
+      });
+  }, 800);
+}

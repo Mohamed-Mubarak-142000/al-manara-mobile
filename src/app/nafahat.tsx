@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { ChevronRight, Lock, Send } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, G, Path, Pattern, Rect } from "react-native-svg";
@@ -9,7 +9,16 @@ import Svg, { Circle, Defs, G, Path, Pattern, Rect } from "react-native-svg";
 import { toArabicDigits } from "@/core/text/arabic";
 import { useAccount } from "@/features/account/accountStore";
 import { NafhaBubble } from "@/features/nafahat/NafhaBubble";
-import { NAFAHAT_TITLE, markNafhaSeen, nafhaDayKey, nafhaDayLabel, useNafahat, type Nafha } from "@/features/nafahat/nafahatApi";
+import {
+  NAFAHAT_TITLE,
+  markNafhaSeen,
+  nafhaDayKey,
+  nafhaDayLabel,
+  recordNafhaViews,
+  setNafhaViewsEnabled,
+  useNafahat,
+  type Nafha,
+} from "@/features/nafahat/nafahatApi";
 import type { NafhaEmoji } from "@/lib/database.types";
 import { useThemeColor } from "@/theme/useThemeColor";
 
@@ -48,6 +57,14 @@ export default function NafahatScreen() {
   const muted = useThemeColor("fg-muted");
   const tint = useThemeColor("accent");
   const list = useRef<FlatList<Row>>(null);
+  // Who saw it: a reader's sighting is recorded once a post is half on screen (the admin's own are not).
+  const records = !!userId && !(account.status === "signed-in" && account.profile?.role === "admin");
+  useEffect(() => setNafhaViewsEnabled(records), [records]);
+  const [viewability] = useState(() => ({
+    config: { itemVisiblePercentThreshold: 50, minimumViewTime: 600 },
+    onChange: ({ viewableItems }: { viewableItems: { item: Row }[] }) =>
+      recordNafhaViews(viewableItems.flatMap(({ item }) => (item.kind === "post" ? [item.nafha.id] : []))),
+  }));
   const atBottom = useRef(true);
   const count = useRef(0);
 
@@ -101,6 +118,8 @@ export default function NafahatScreen() {
         <Wallpaper />
         <FlatList
           ref={list}
+          viewabilityConfig={viewability.config}
+          onViewableItemsChanged={viewability.onChange}
           data={rows}
           keyExtractor={(row) => row.key}
           contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 14, gap: 12, flexGrow: 1 }}
