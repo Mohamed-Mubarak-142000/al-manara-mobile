@@ -19,3 +19,6 @@ In the app:
 - **Drawings:** `src/features/seerah/parts.tsx` draws the panoramas' parts.
 - **Sounds:** `scripts/build-seerah-sfx.mjs` renders the sounds into `assets/audio/seerah-*.wav`. They are
   synthesized, with no recordings and no music, the same sounds the website makes live.
+
+`seerahDetails.ts`, `seerahDetails.types.ts` and `details/part*.ts` (each chapter's written «تفاصيل الحدث») are
+byte-for-byte copies too, from the same folder on the website, under the same rules.

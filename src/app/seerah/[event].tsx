@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronRight, Lightbulb, Map as MapIcon, Volume2, VolumeX, X } from "lucide-react-native";
+import { BookOpenText, ChevronRight, Lightbulb, Map as MapIcon, Volume2, VolumeX, X } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -54,6 +54,15 @@ function BeatPage({ beat, index, count, event }: { beat: Beat; index: number; co
             </Text>
           </View>
         </View>
+      ) : null}
+      {event ? (
+        <Button
+          variant="secondary"
+          icon={BookOpenText}
+          onPress={() => router.push({ pathname: "/seerah/details/[event]", params: { event: event.id } })}
+        >
+          اقرأ تفاصيل الحدث كاملة
+        </Button>
       ) : null}
       {event?.quiz && <SeerahQuiz chapter={event.id} title={event.title} quiz={event.quiz} />}
     </ScrollView>
@@ -129,12 +138,19 @@ export default function SeerahChapterScreen() {
         subtitle={event.date}
         art={SECTION_ART.seerah}
         actions={
-          <IconButton
-            icon={sounds ? Volume2 : VolumeX}
-            label={sounds ? "إيقاف الأصوات" : "تشغيل الأصوات"}
-            active={sounds}
-            onPress={() => updateSeerah((current) => ({ ...current, sounds: !current.sounds }))}
-          />
+          <>
+            <IconButton
+              icon={BookOpenText}
+              label="تفاصيل الحدث"
+              onPress={() => router.push({ pathname: "/seerah/details/[event]", params: { event: event.id } })}
+            />
+            <IconButton
+              icon={sounds ? Volume2 : VolumeX}
+              label={sounds ? "إيقاف الأصوات" : "تشغيل الأصوات"}
+              active={sounds}
+              onPress={() => updateSeerah((current) => ({ ...current, sounds: !current.sounds }))}
+            />
+          </>
         }
       />
 

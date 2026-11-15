@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useIsFocused } from "expo-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -6,8 +7,9 @@ import Animated, {
   FadeIn,
   FadeOut,
   runOnJS,
-  useAnimatedProps,
+  useAnimatedStyle,
   useDerivedValue,
+  useFrameCallback,
   useReducedMotion,
   useSharedValue,
   withRepeat,
@@ -17,131 +19,201 @@ import Animated, {
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import type { Interaction, Panorama, SceneItem, ScenePart } from "@/core/seerah/seerahContent";
+import { useAppActive } from "@/lib/screenState";
 
-import { AnimatedG, ClockContext, NightContext, PARTS } from "./parts";
+import { ClockContext, NightContext, PARTS } from "./parts";
 import { seerahSound } from "./sound";
 
 /*
  * The website's SeerahPanorama: a chapter told across one long landscape. The camera travels to
  * where each beat looks; near things slide past faster than far ones; the reader can drag to look
  * around; the travellers walk on as the story goes; the parts with a note pulse and can be tapped.
- * Everything that moves is computed on the UI thread from two values: the camera and a clock.
+ *
+ * Built for low-end phones. Each depth of the landscape is its own still picture that the native side
+ * slides with the camera (a transform: no SVG is redrawn while the camera moves). Things that live on
+ * their own (birds, flocks, flames) read a clock that ticks 12 times a second and stops when the screen
+ * is hidden, so only the strip that holds them redraws, and only then. Wide strips are cut in tiles so
+ * no picture is larger than a phone's GPU accepts.
  */
 
 const HEIGHT = 300;
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
+/** Widest single picture, in pixels (Android's texture limit is 4096 on many phones). */
+const TILE_PX = 2048;
+/** The ambient clock's step: 12 frames a second is plenty for swaying palms and flapping birds. */
+const TICK = 1 / 12;
+/** Depths the items are grouped into; each is one sliding strip. */
+const BANDS = 6;
 
 const depthOf = (y: number) => Math.min(1, Math.max(0, (y - 200) / 90));
-const parallaxOf = (y: number) => 0.55 + depthOf(y) * 0.45;
 const sizeAt = (y: number) => 0.55 + depthOf(y) * 0.8;
+const bandOf = (y: number) => Math.round(depthOf(y) * (BANDS - 1));
+const parallaxOfBand = (band: number) => 0.55 + (band / (BANDS - 1)) * 0.45;
+const PARTY_Y = 262;
 
-/** Where something at map x stands on screen, given the camera: the parallax that gives depth. */
-function useAt(
-  x: SharedValue<number> | number,
-  p: number,
-  camera: SharedValue<number>,
-  half: number,
-  y: number,
-  scale: number,
-  flip = false,
-) {
-  return useAnimatedProps(() => {
-    const at = typeof x === "number" ? x : x.get();
-    return { matrix: [flip ? -scale : scale, 0, 0, scale, half + (at - camera.get()) * p, y] };
-  });
-}
-
-function Item({ item, camera, half }: { item: SceneItem; camera: SharedValue<number>; half: number }) {
-  const y = item.y ?? 250;
-  const scale = sizeAt(y) * (item.size ?? 1);
-  const animatedProps = useAt(item.x, parallaxOf(y), camera, half, y, scale, item.flip);
-  const shadow = PARTS[item.part].shadow;
+function LightGradient() {
   return (
-    <AnimatedG animatedProps={animatedProps}>
-      {shadow ? <Ellipse cx={0} cy={1} rx={shadow} ry={3.2} fill="#000" opacity={0.13} /> : null}
-      {PARTS[item.part].draw(item)}
-    </AnimatedG>
+    <Defs>
+      <RadialGradient id="seerah-light">
+        <Stop offset="0" stopColor="#fff6d8" stopOpacity={0.95} />
+        <Stop offset="1" stopColor="#cda23e" stopOpacity={0} />
+      </RadialGradient>
+    </Defs>
   );
 }
 
-/** A note's pulsing dot above its part, unscaled so it stays easy to tap. */
-function Marker({
-  item,
+/**
+ * A strip of the landscape spanning [from, to] in its own units, moving at `factor` of the camera's speed.
+ * `children` is SVG (drawn in tiles); `overlay` is native views placed in pixels from the strip's start.
+ */
+function Strip({
+  factor,
+  from,
+  to,
   camera,
-  clock,
   half,
+  k,
+  children,
+  overlay,
+}: {
+  factor: number;
+  from: number;
+  to: number;
+  camera: SharedValue<number>;
+  half: number;
+  k: number;
+  children?: ReactNode;
+  overlay?: ReactNode;
+}) {
+  const style = useAnimatedStyle(() => ({ transform: [{ translateX: (half - camera.get() * factor + from) * k }] }));
+  const tileUnits = TILE_PX / k;
+  const tiles: [number, number][] = [];
+  if (children) for (let start = from; start < to; start += tileUnits) tiles.push([start, Math.min(to, start + tileUnits)]);
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[{ position: "absolute", left: 0, top: 0, width: (to - from) * k, height: HEIGHT * k }, style]}
+    >
+      {tiles.map(([a, b]) => (
+        <Svg
+          key={a}
+          width={(b - a) * k}
+          height={HEIGHT * k}
+          viewBox={`${a} 0 ${b - a} ${HEIGHT}`}
+          style={{ position: "absolute", left: (a - from) * k, top: 0 }}
+          pointerEvents="none"
+        >
+          <LightGradient />
+          {children}
+        </Svg>
+      ))}
+      {overlay}
+    </Animated.View>
+  );
+}
+
+/** One part, standing at (x, y) in its strip's units. Static: the strip moves, not the part. */
+function Item({ item, x }: { item: SceneItem; x: number }) {
+  const y = item.y ?? 250;
+  const scale = sizeAt(y) * (item.size ?? 1);
+  const shadow = PARTS[item.part].shadow;
+  return (
+    <G transform={`translate(${x} ${y}) scale(${item.flip ? -scale : scale} ${scale})`}>
+      {shadow ? <Ellipse cx={0} cy={1} rx={shadow} ry={3.2} fill="#000" opacity={0.13} /> : null}
+      {PARTS[item.part].draw(item)}
+    </G>
+  );
+}
+
+/** A note's pulsing dot above its part: a native view, so its pulse never redraws the landscape. */
+function Marker({
+  left,
+  top,
+  pulse,
   active,
   onPress,
 }: {
-  item: SceneItem;
-  camera: SharedValue<number>;
-  clock: SharedValue<number>;
-  half: number;
+  left: number;
+  top: number;
+  pulse: SharedValue<number>;
   active: boolean;
   onPress: () => void;
 }) {
-  const y = item.y ?? 250;
-  const top = y + (-PARTS[item.part].height - 8) * sizeAt(y) * (item.size ?? 1);
-  const animatedProps = useAt(item.x, parallaxOf(y), camera, half, top, 1);
-  const ring = useAnimatedProps(() => {
-    const t = (clock.get() % 1.6) / 1.6;
-    return { r: 5 + t * 7, opacity: 0.9 * (1 - t) };
-  });
+  const ring = useAnimatedStyle(() => ({ opacity: 0.9 * (1 - pulse.get()), transform: [{ scale: 1 + pulse.get() * 1.4 }] }));
   return (
-    <AnimatedG animatedProps={animatedProps} onPress={onPress}>
-      <Circle cx={0} cy={0} r={18} fill="#000" fillOpacity={0.001} />
-      <AnimatedCircleRing animatedProps={ring} />
-      <Circle cx={0} cy={0} r={4.5} fill={active ? "#ffffff" : "#cda23e"} stroke="#ffffff" strokeWidth={1.5} />
-    </AnimatedG>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="معلومة"
+      onPress={onPress}
+      hitSlop={6}
+      style={{
+        position: "absolute",
+        left: left - 18,
+        top: top - 18,
+        width: 36,
+        height: 36,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Animated.View
+        style={[{ position: "absolute", width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: "#cda23e" }, ring]}
+      />
+      <View
+        style={{
+          width: 11,
+          height: 11,
+          borderRadius: 6,
+          backgroundColor: active ? "#ffffff" : "#cda23e",
+          borderWidth: 1.5,
+          borderColor: "#ffffff",
+        }}
+      />
+    </Pressable>
   );
 }
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-function AnimatedCircleRing({ animatedProps }: { animatedProps: ReturnType<typeof useAnimatedProps> }) {
-  return <AnimatedCircle cx={0} cy={0} fill="none" stroke="#cda23e" strokeWidth={2} animatedProps={animatedProps} />;
-}
-
-/** The travellers, walking to where the beat puts them. */
-function Party({ part, at, camera, half }: { part: ScenePart; at: number | undefined; camera: SharedValue<number>; half: number }) {
+/** The travellers, walking to where the beat puts them: one small picture slid by the native side. */
+function Party({
+  part,
+  at,
+  camera,
+  half,
+  k,
+}: {
+  part: ScenePart;
+  at: number | undefined;
+  camera: SharedValue<number>;
+  half: number;
+  k: number;
+}) {
   const reduce = useReducedMotion();
   const position = useSharedValue(at ?? 0);
   const shown = useSharedValue(at === undefined ? 0 : 1);
-  const y = 262;
-  const scale = sizeAt(y);
-  const p = parallaxOf(y);
+  const scale = sizeAt(PARTY_Y);
+  const p = parallaxOfBand(bandOf(PARTY_Y));
+  const box = 120;
 
   useEffect(() => {
     shown.set(withTiming(at === undefined ? 0 : 1, { duration: 600 }));
     if (at !== undefined) position.set(reduce ? at : withTiming(at, { duration: 2400, easing: Easing.inOut(Easing.quad) }));
   }, [at, position, shown, reduce]);
 
-  const animatedProps = useAnimatedProps(() => ({
-    matrix: [scale, 0, 0, scale, half + (position.get() - camera.get()) * p, y],
+  const style = useAnimatedStyle(() => ({
     opacity: shown.get(),
+    transform: [{ translateX: (half + (position.get() - camera.get()) * p - box) * k }],
   }));
   const shadow = PARTS[part].shadow;
   return (
-    <AnimatedG animatedProps={animatedProps}>
-      {shadow ? <Ellipse cx={0} cy={1} rx={shadow} ry={3.2} fill="#000" opacity={0.13} /> : null}
-      {PARTS[part].draw({ part, x: 0 })}
-    </AnimatedG>
+    <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: box * 2 * k, height: HEIGHT * k }, style]}>
+      <Svg width={box * 2 * k} height={HEIGHT * k} viewBox={`${-box} 0 ${box * 2} ${HEIGHT}`}>
+        <LightGradient />
+        <G transform={`translate(0 ${PARTY_Y}) scale(${scale})`}>
+          {shadow ? <Ellipse cx={0} cy={1} rx={shadow} ry={3.2} fill="#000" opacity={0.13} /> : null}
+          {PARTS[part].draw({ part, x: 0 })}
+        </G>
+      </Svg>
+    </Animated.View>
   );
-}
-
-/** A layer that drifts at its own share of the camera's speed: far hills slowly, the stones at our feet fast. */
-function Layer({
-  factor,
-  camera,
-  half,
-  children,
-}: {
-  factor: number;
-  camera: SharedValue<number>;
-  half: number;
-  children: React.ReactNode;
-}) {
-  const animatedProps = useAnimatedProps(() => ({ matrix: [1, 0, 0, 1, half - camera.get() * factor, 0] }));
-  return <AnimatedG animatedProps={animatedProps}>{children}</AnimatedG>;
 }
 
 const MOODS = {
@@ -150,15 +222,17 @@ const MOODS = {
   dusk: { color: "#7a3b2a", level: 0.28, stars: false },
 } as const;
 
-/** A stretch under another sky than day, full within it and fading 150 units either side. */
+/** A stretch under another sky than day, full within it and fading 150 units either side: native fades. */
 function Mood({
   mood,
   camera,
-  viewWidth,
+  width,
+  height,
 }: {
   mood: NonNullable<Panorama["moods"]>[number];
   camera: SharedValue<number>;
-  viewWidth: number;
+  width: number;
+  height: number;
 }) {
   const { color, level, stars } = MOODS[mood.sky];
   const amount = useDerivedValue(() => {
@@ -168,27 +242,33 @@ function Mood({
     if (c > mood.to) return (level * (mood.to + 150 - c)) / 150;
     return level;
   });
-  const shade = useAnimatedProps(() => ({ opacity: amount.get() }));
-  const sky = useAnimatedProps(() => ({ opacity: amount.get() / level }));
+  const shade = useAnimatedStyle(() => ({ opacity: amount.get() }));
+  const sky = useAnimatedStyle(() => ({ opacity: amount.get() / level }));
+  const viewWidth = (HEIGHT * width) / height;
   return (
-    <G>
-      <AnimatedRect width={viewWidth} height={HEIGHT} fill={color} animatedProps={shade} />
+    <>
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: "absolute", left: 0, top: 0, width, height, backgroundColor: color }, shade]}
+      />
       {stars && (
-        <AnimatedG animatedProps={sky}>
-          {Array.from({ length: Math.round(viewWidth / 8) }, (_, index) => (
-            <Circle
-              key={index}
-              cx={(index * 97) % viewWidth}
-              cy={(index * 53) % 170}
-              r={0.5 + (index % 3) * 0.4}
-              fill="#ffffff"
-              opacity={0.5 + (index % 2) * 0.4}
-            />
-          ))}
-          <Path d={`M${viewWidth - 60} 48a20 20 0 1 0 17 31 16 16 0 1 1-17-31Z`} fill="#e8d7a6" />
-        </AnimatedG>
+        <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width, height }, sky]}>
+          <Svg width={width} height={height} viewBox={`0 0 ${viewWidth} ${HEIGHT}`}>
+            {Array.from({ length: Math.round(viewWidth / 8) }, (_, index) => (
+              <Circle
+                key={index}
+                cx={(index * 97) % viewWidth}
+                cy={(index * 53) % 170}
+                r={0.5 + (index % 3) * 0.4}
+                fill="#ffffff"
+                opacity={0.5 + (index % 2) * 0.4}
+              />
+            ))}
+            <Path d={`M${viewWidth - 60} 48a20 20 0 1 0 17 31 16 16 0 1 1-17-31Z`} fill="#e8d7a6" />
+          </Svg>
+        </Animated.View>
       )}
-    </G>
+    </>
   );
 }
 
@@ -264,6 +344,31 @@ function Choice({ interaction }: { interaction: Extract<Interaction, { kind: "ch
   );
 }
 
+interface Band {
+  band: number;
+  p: number;
+  from: number;
+  to: number;
+  items: SceneItem[];
+}
+
+/** The items grouped by depth, far to near, each group drawn in the order of its feet. */
+function groupBands(items: SceneItem[]): Band[] {
+  const groups = new Map<number, SceneItem[]>();
+  for (const item of items) {
+    const band = bandOf(item.y ?? 250);
+    groups.set(band, [...(groups.get(band) ?? []), item]);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([band, list]) => {
+      const p = parallaxOfBand(band);
+      const sorted = [...list].sort((a, b) => (a.y ?? 250) - (b.y ?? 250));
+      const xs = sorted.map((item) => item.x * p);
+      return { band, p, from: Math.min(...xs) - 160, to: Math.max(...xs) + 160, items: sorted };
+    });
+}
+
 export function SeerahPanorama({
   panorama,
   pan,
@@ -276,7 +381,10 @@ export function SeerahPanorama({
   interaction: Interaction | undefined;
 }) {
   const reduce = useReducedMotion();
+  const focused = useIsFocused();
+  const active = useAppActive();
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const k = size.height ? size.height / HEIGHT : 1;
   const viewWidth = size.height ? (HEIGHT * size.width) / size.height : 400;
   const half = viewWidth / 2;
   const target = useSharedValue(pan);
@@ -284,14 +392,22 @@ export function SeerahPanorama({
   const dragFrom = useSharedValue(0);
   const camera = useDerivedValue(() => target.get() + drag.get());
   const clock = useSharedValue(0);
+  const pulse = useSharedValue(0);
   // A note belongs to the beat it was opened on; moving on closes it.
   const [opened, setOpened] = useState<{ pan: number; text: string } | null>(null);
   const note = opened?.pan === pan ? opened.text : null;
 
+  // The ambient clock, in steps of TICK seconds: a part redraws only when its step changes.
+  const ticker = useFrameCallback((frame) => {
+    const t = Math.floor(frame.timeSinceFirstFrame / 1000 / TICK) * TICK;
+    if (t !== clock.get()) clock.set(t);
+  }, false);
+  const running = !reduce && focused && active;
   useEffect(() => {
-    if (reduce) return;
-    clock.set(withRepeat(withTiming(600, { duration: 600_000, easing: Easing.linear }), -1, false));
-  }, [clock, reduce]);
+    ticker.setActive(running);
+    pulse.set(running ? withRepeat(withTiming(1, { duration: 1600, easing: Easing.out(Easing.quad) }), -1, false) : 0);
+    return () => ticker.setActive(false);
+  }, [running, ticker, pulse]);
 
   useEffect(() => {
     target.set(reduce ? pan : withTiming(pan, { duration: 1800, easing: Easing.bezier(0.65, 0, 0.35, 1) }));
@@ -306,12 +422,11 @@ export function SeerahPanorama({
     .onStart(() => dragFrom.set(drag.get()))
     .onUpdate((event) => {
       const scale = HEIGHT / Math.max(1, size.height);
-      // Dragging right looks left, as with a photo.
+      // Dragging right looks left, as with a photo. The stage is laid out left to right (below).
       drag.set(Math.max(limit.min, Math.min(limit.max, dragFrom.get() - event.translationX * scale)));
     });
 
-  const sorted = useMemo(() => [...panorama.items].sort((a, b) => (a.y ?? 250) - (b.y ?? 250)), [panorama.items]);
-  const noted = sorted.filter((item) => item.note);
+  const bands = useMemo(() => groupBands(panorama.items), [panorama.items]);
   const hills = useMemo(() => {
     const far = [];
     const mid = [];
@@ -322,83 +437,129 @@ export function SeerahPanorama({
       mid: `M-200 218L${mid.join("L")}L${panorama.width + 400} 218Z`,
     };
   }, [panorama.width]);
+  const clouds = Math.ceil(panorama.width / 500);
+  const stones = useMemo(
+    () =>
+      Array.from({ length: Math.ceil((panorama.width * 1.25) / 70) }, (_, index) => {
+        const at = index * 70 + ((index * 37) % 30);
+        return index % 3 === 0 ? (
+          <Path key={index} d={`M${at - 8} 300q2-12 6-4q2-14 5-1q3-10 5 5Z`} fill="#7d8f4a" />
+        ) : (
+          <Ellipse
+            key={index}
+            cx={at}
+            cy={296 - (index % 2) * 3}
+            rx={6 + (index % 4) * 2}
+            ry={3 + (index % 3)}
+            fill={index % 2 ? "#a08a66" : "#8c7a5c"}
+          />
+        );
+      }),
+    [panorama.width],
+  );
+
+  const toggle = (text: string) => {
+    if (note !== text) seerahSound.effect("chime");
+    setOpened(note === text ? null : { pan, text });
+  };
 
   return (
     <View className="flex-1" onLayout={(event) => setSize(event.nativeEvent.layout)}>
       {size.width > 0 && (
         <GestureDetector gesture={gesture}>
-          <View className="flex-1" accessible accessibilityRole="image" accessibilityLabel="مشهد الرحلة">
+          <View
+            // Physical left-to-right: the strips are placed and slid in pixels, which RTL would mirror.
+            style={{ flex: 1, overflow: "hidden", direction: "ltr" }}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel="مشهد الرحلة"
+          >
             <ClockContext.Provider value={clock}>
               <NightContext.Provider value={false}>
-                <Svg width={size.width} height={size.height} viewBox={`0 0 ${viewWidth} ${HEIGHT}`}>
+                <Svg width={size.width} height={size.height} viewBox={`0 0 ${viewWidth} ${HEIGHT}`} style={{ position: "absolute" }}>
                   <Defs>
                     <LinearGradient id="panorama-sky" x1="0" y1="0" x2="0" y2="1">
                       <Stop offset="0" stopColor="#bfdcea" />
                       <Stop offset="1" stopColor="#f6e7c4" />
                     </LinearGradient>
-                    <RadialGradient id="seerah-light">
-                      <Stop offset="0" stopColor="#fff6d8" stopOpacity={0.95} />
-                      <Stop offset="1" stopColor="#cda23e" stopOpacity={0} />
-                    </RadialGradient>
                   </Defs>
                   <Rect width={viewWidth} height={HEIGHT} fill="url(#panorama-sky)" />
                   <Circle cx={viewWidth - 70} cy={62} r={22} fill="#fbe7a8" />
-                  <Layer factor={0.12} camera={camera} half={half}>
-                    {Array.from({ length: Math.ceil(panorama.width / 500) }, (_, index) => (
-                      <G
-                        key={index}
-                        transform={`translate(${index * 420 + 120} ${50 + (index % 3) * 22}) scale(${0.8 + (index % 2) * 0.4})`}
-                      >
-                        {PARTS.cloud.draw({ part: "cloud", x: 0 })}
-                      </G>
-                    ))}
-                  </Layer>
-                  <Layer factor={0.35} camera={camera} half={half}>
-                    <Path d={hills.far} fill="#8c7258" opacity={0.7} />
-                  </Layer>
-                  <Layer factor={0.5} camera={camera} half={half}>
-                    <Path d={hills.mid} fill="#b39672" opacity={0.75} />
-                  </Layer>
-                  <Rect x={0} y={216} width={viewWidth} height={HEIGHT - 216} fill="#d9c08f" />
-                  {sorted.map((item, index) => (
-                    <Item key={`${item.part}-${index}`} item={item} camera={camera} half={half} />
-                  ))}
-                  <Party part={panorama.traveller ?? "party"} at={party} camera={camera} half={half} />
-                  <Layer factor={1.25} camera={camera} half={half}>
-                    {Array.from({ length: Math.ceil((panorama.width * 1.25) / 70) }, (_, index) => {
-                      const at = index * 70 + ((index * 37) % 30);
-                      return index % 3 === 0 ? (
-                        <Path key={index} d={`M${at - 8} 300q2-12 6-4q2-14 5-1q3-10 5 5Z`} fill="#7d8f4a" />
-                      ) : (
-                        <Ellipse
-                          key={index}
-                          cx={at}
-                          cy={296 - (index % 2) * 3}
-                          rx={6 + (index % 4) * 2}
-                          ry={3 + (index % 3)}
-                          fill={index % 2 ? "#a08a66" : "#8c7a5c"}
-                        />
-                      );
-                    })}
-                  </Layer>
-                  {panorama.moods?.map((mood) => (
-                    <Mood key={mood.from} mood={mood} camera={camera} viewWidth={viewWidth} />
-                  ))}
-                  {noted.map((item, index) => (
-                    <Marker
-                      key={`note-${index}`}
-                      item={item}
-                      camera={camera}
-                      clock={clock}
-                      half={half}
-                      active={note === item.note}
-                      onPress={() => {
-                        if (note !== item.note) seerahSound.effect("chime");
-                        setOpened(note === item.note ? null : { pan, text: item.note! });
-                      }}
-                    />
-                  ))}
                 </Svg>
+
+                <Strip factor={0.12} from={0} to={clouds * 420 + 260} camera={camera} half={half} k={k}>
+                  {Array.from({ length: clouds }, (_, index) => (
+                    <G key={index} transform={`translate(${index * 420 + 120} ${50 + (index % 3) * 22}) scale(${0.8 + (index % 2) * 0.4})`}>
+                      {PARTS.cloud.draw({ part: "cloud", x: 0 })}
+                    </G>
+                  ))}
+                </Strip>
+                <Strip factor={0.35} from={-200} to={panorama.width + 400} camera={camera} half={half} k={k}>
+                  <Path d={hills.far} fill="#8c7258" opacity={0.7} />
+                </Strip>
+                <Strip factor={0.5} from={-200} to={panorama.width + 400} camera={camera} half={half} k={k}>
+                  <Path d={hills.mid} fill="#b39672" opacity={0.75} />
+                </Strip>
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 216 * k,
+                    width: size.width,
+                    height: (HEIGHT - 216) * k,
+                    backgroundColor: "#d9c08f",
+                  }}
+                />
+
+                {bands.map((band) => (
+                  <Strip key={band.band} factor={band.p} from={band.from} to={band.to} camera={camera} half={half} k={k}>
+                    {band.items.map((item, index) => (
+                      <Item key={`${item.part}-${index}`} item={item} x={item.x * band.p} />
+                    ))}
+                  </Strip>
+                ))}
+
+                <Party part={panorama.traveller ?? "party"} at={party} camera={camera} half={half} k={k} />
+
+                <Strip factor={1.25} from={-40} to={panorama.width * 1.25 + 60} camera={camera} half={half} k={k}>
+                  {stones}
+                </Strip>
+
+                {panorama.moods?.map((mood) => (
+                  <Mood key={mood.from} mood={mood} camera={camera} width={size.width} height={size.height} />
+                ))}
+
+                {/* The notes' dots ride above everything, each with the strip of its part. */}
+                {bands.map((band) => {
+                  const noted = band.items.filter((item) => item.note);
+                  if (!noted.length) return null;
+                  return (
+                    <Strip
+                      key={`notes-${band.band}`}
+                      factor={band.p}
+                      from={band.from}
+                      to={band.to}
+                      camera={camera}
+                      half={half}
+                      k={k}
+                      overlay={noted.map((item, index) => {
+                        const y = item.y ?? 250;
+                        const top = y + (-PARTS[item.part].height - 8) * sizeAt(y) * (item.size ?? 1);
+                        return (
+                          <Marker
+                            key={index}
+                            left={(item.x * band.p - band.from) * k}
+                            top={top * k}
+                            pulse={pulse}
+                            active={note === item.note}
+                            onPress={() => toggle(item.note!)}
+                          />
+                        );
+                      })}
+                    />
+                  );
+                })}
               </NightContext.Provider>
             </ClockContext.Provider>
           </View>
@@ -414,7 +575,7 @@ export function SeerahPanorama({
             <Text className="font-sans text-sm leading-7 text-emerald-night">{note}</Text>
           </Pressable>
         </Animated.View>
-      ) : !interaction && noted.length > 0 ? (
+      ) : !interaction && bands.some((band) => band.items.some((item) => item.note)) ? (
         <View className="absolute bottom-3 start-3 rounded-full bg-black/35 px-3 py-1" pointerEvents="none">
           <Text className="font-sans text-xs text-white">اسحب لتتجوّل، والمس النقاط المضيئة</Text>
         </View>
