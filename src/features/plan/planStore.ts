@@ -26,6 +26,7 @@ import { resolveSegments, spansToAyahs } from "./portion";
 import { rebasePlan, reducePlan, type PlanOp, type PlanSnapshot } from "./reducer";
 import { PLAN_OP, knownAyahs, type PlanSyncPayload } from "./sync";
 import { loggedOn, type PlanWithLog } from "./types";
+import { missedPlanDay } from "./view";
 
 /**
  * The memorization plan with the website's rules (features/plan/actions.ts), on the learner's own
@@ -236,6 +237,56 @@ function activePlan(who: Actor): PlanWithLog | null {
 
 const sorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b);
 
+const NO_MISSED = "لا يوجد يوم فائت في الأسبوع الماضي لتسجيله.";
+
+/** Today's new portion, or that of the latest unrecorded memorizing day of the last week. */
+function logNew(which: "today" | "missed"): PlanResult {
+  const who = actor();
+  const current = who ? activePlan(who) : null;
+  if (!who || !current) return { ok: false, error: NO_PLAN };
+  const { plan, log } = current;
+  const today = planDay();
+  const day = which === "today" ? today : missedPlanDay(plan, log, "new", today);
+  if (!day) return { ok: false, error: NO_MISSED };
+  if (loggedOn(log, day, "new")) return { ok: true };
+  const range = plan.kind === "memorize" ? todayNewRange(plan, null) : null;
+  if (!range || plan.start_juz === null || plan.end_juz === null) return { ok: true };
+  const segments = resolveSegments(unitsToSegments(plan, range), { start: plan.start_juz, end: plan.end_juz });
+  // Only today's session counts as today's activity; a late record keeps the journey honest.
+  if (which === "today") recordActivity(who.learnerId);
+  apply(
+    {
+      type: "completeNew",
+      planId: plan.id,
+      day,
+      from: range.from,
+      to: range.to,
+      finished: range.to >= totalUnits(plan),
+      at: new Date().toISOString(),
+      ayahs: spansToAyahs(segments),
+    },
+    who,
+  );
+  return { ok: true };
+}
+
+/** Today's review, or that of the latest unrecorded review day of the last week. */
+function logReview(which: "today" | "missed"): PlanResult {
+  const who = actor();
+  const current = who ? activePlan(who) : null;
+  if (!who || !current) return { ok: false, error: NO_PLAN };
+  const { plan, log } = current;
+  const today = planDay();
+  const day = which === "today" ? today : missedPlanDay(plan, log, "review", today);
+  if (!day) return { ok: false, error: NO_MISSED };
+  if (loggedOn(log, day, "review")) return { ok: true };
+  const anchor = loggedOn(log, day, "new")?.from ?? plan.progress_units;
+  const cursor = nextCursor(plan, recentRange(plan, anchor).from, plan.review_cursor);
+  // For review rows: from_unit = the older-pages cursor and to_unit = the recent window's anchor.
+  apply({ type: "completeReview", planId: plan.id, day, from: plan.review_cursor, to: anchor, cursor }, who);
+  return { ok: true };
+}
+
 export const planActions = {
   async create(input: NewPlan): Promise<PlanResult> {
     const who = actor();
@@ -291,45 +342,25 @@ export const planActions = {
 
   /** Marks today's new portion memorized and moves the plan forward. Safe to press twice. */
   async completeNew(): Promise<PlanResult> {
-    const who = actor();
-    const current = who ? activePlan(who) : null;
-    if (!who || !current) return { ok: false, error: NO_PLAN };
-    const { plan, log } = current;
-    const today = planDay();
-    if (loggedOn(log, today, "new")) return { ok: true };
-    const range = plan.kind === "memorize" ? todayNewRange(plan, null) : null;
-    if (!range || plan.start_juz === null || plan.end_juz === null) return { ok: true };
-    const segments = resolveSegments(unitsToSegments(plan, range), { start: plan.start_juz, end: plan.end_juz });
-    recordActivity(who.learnerId);
-    apply(
-      {
-        type: "completeNew",
-        planId: plan.id,
-        day: today,
-        from: range.from,
-        to: range.to,
-        finished: range.to >= totalUnits(plan),
-        at: new Date().toISOString(),
-        ayahs: spansToAyahs(segments),
-      },
-      who,
-    );
-    return { ok: true };
+    return logNew("today");
+  },
+
+  /**
+   * Records the new portion of a day of the last week the learner memorized but forgot to record (as the
+   * khatma's missed day): the next portion counts for that day, and today's portion is the one after it.
+   */
+  async completeMissedNew(): Promise<PlanResult> {
+    return logNew("missed");
   },
 
   /** Marks today's review done and rotates the older-pages slice. */
   async completeReview(): Promise<PlanResult> {
-    const who = actor();
-    const current = who ? activePlan(who) : null;
-    if (!who || !current) return { ok: false, error: NO_PLAN };
-    const { plan, log } = current;
-    const today = planDay();
-    if (loggedOn(log, today, "review")) return { ok: true };
-    const anchor = loggedOn(log, today, "new")?.from ?? plan.progress_units;
-    const cursor = nextCursor(plan, recentRange(plan, anchor).from, plan.review_cursor);
-    // For review rows: from_unit = the older-pages cursor and to_unit = the recent window's anchor.
-    apply({ type: "completeReview", planId: plan.id, day: today, from: plan.review_cursor, to: anchor, cursor }, who);
-    return { ok: true };
+    return logReview("today");
+  },
+
+  /** Records the review of a day of the last week done but not recorded. */
+  async completeMissedReview(): Promise<PlanResult> {
+    return logReview("missed");
   },
 
   /**

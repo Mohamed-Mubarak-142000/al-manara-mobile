@@ -9,6 +9,7 @@ import {
   farPool,
   finishDay,
   juzLabel,
+  missedDay,
   nextScheduledDay,
   pagesLabel,
   planDay,
@@ -90,6 +91,10 @@ export interface TodayView {
   /** The recent review opened on its pages only (they follow each other). */
   recentRead: PageRange | null;
   reviewDone: boolean;
+  /** The latest of the last week's memorizing days left unrecorded ("أمس" or "يوم الأحد"), if any. */
+  missedNew: string | null;
+  /** The same for the review days. */
+  missedReview: string | null;
   /** The plan's current settings, for the edit form. */
   settings: {
     unitsPerDay: number;
@@ -194,6 +199,8 @@ export function buildTodayView({ plan, log }: PlanWithLog, pageStarts: AyahRef[]
     ),
     recentRead: recentPages.length > 0 ? { from: recentPages[0]!.page, to: recentPages.at(-1)!.page } : null,
     reviewDone: reviewToday !== null,
+    missedNew: memorize && plan.status === "active" ? dayLabel(missedPlanDay(plan, log, "new", today), today) : null,
+    missedReview: plan.status === "active" ? dayLabel(missedPlanDay(plan, log, "review", today), today) : null,
     settings: {
       unitsPerDay: plan.units_per_day,
       farPages: plan.far_review_pages,
@@ -203,4 +210,22 @@ export function buildTodayView({ plan, log }: PlanWithLog, pageStarts: AyahRef[]
       priorJuz: plan.prior_juz,
     },
   };
+}
+
+/**
+ * The latest of the last week's memorizing (or review) days that has no session recorded, never before the
+ * plan began: a session done but not recorded, which the learner can still record (as in the khatma).
+ */
+export function missedPlanDay(plan: PlanWithLog["plan"], log: PlanWithLog["log"], kind: "new" | "review", today: string): string | null {
+  return missedDay(
+    log.filter((row) => row.kind === kind).map((row) => row.day),
+    today,
+    kind === "new" ? plan.new_days : plan.review_days,
+    planDay(new Date(plan.created_at)),
+  );
+}
+
+function dayLabel(day: string | null, today: string): string | null {
+  if (day === null) return null;
+  return day === shiftDay(today, -1) ? "أمس" : `يوم ${WEEKDAY_NAMES[weekday(day)]}`;
 }

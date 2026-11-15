@@ -118,3 +118,37 @@ describe("reading just today's portion", () => {
     expect(portionPosition(portion, 21)).toEqual({ position: 2, total: 3 });
   });
 });
+
+describe("plan missed days", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { missedPlanDay } = require("@/features/plan/view") as typeof import("@/features/plan/view");
+  const plan = {
+    new_days: [0, 1, 2, 3, 4, 5, 6],
+    review_days: [0, 1, 2, 3, 4, 5, 6],
+    created_at: "2026-11-01T08:00:00Z",
+  } as MemorizationPlanRow;
+  const today = "2026-11-15";
+  const row = (day: string, kind: "new" | "review") => ({
+    plan_id: "p",
+    learner_id: "l",
+    day,
+    kind,
+    from_unit: 0,
+    to_unit: 1,
+    done_at: "",
+  });
+
+  it("finds yesterday when it has no new session", () => {
+    expect(missedPlanDay(plan, [row("2026-11-13", "new")], "new", today)).toBe("2026-11-14");
+  });
+
+  it("looks at each kind on its own", () => {
+    const log = [row("2026-11-14", "new")];
+    expect(missedPlanDay(plan, log, "new", today)).toBe("2026-11-13");
+    expect(missedPlanDay(plan, log, "review", today)).toBe("2026-11-14");
+  });
+
+  it("never goes before the plan began", () => {
+    expect(missedPlanDay({ ...plan, created_at: "2026-11-15T08:00:00Z" }, [], "new", today)).toBeNull();
+  });
+});

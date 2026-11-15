@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { BookOpen, CalendarRange, Check, ChevronLeft, Flame, Lock, Mic, Pencil, Trophy } from "lucide-react-native";
+import { BookOpen, CalendarRange, Check, ChevronLeft, Flame, History, Lock, Mic, Pencil, Trophy } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -180,6 +180,34 @@ export default function PlanScreen() {
                 <Button className="mt-4" onPress={() => router.push("/exams")}>
                   اختبارات الأجزاء
                 </Button>
+              </View>
+            )}
+
+            {view.status === "active" && (view.missedNew || view.missedReview) && (
+              <View className="gap-3 rounded-3xl border border-accent/40 bg-accent-soft p-4">
+                <View className="flex-row items-start gap-2">
+                  <History size={16} color={gold} style={{ marginTop: 6 }} />
+                  <Text className="flex-1 font-sans text-sm leading-7 text-fg">
+                    {view.missedNew && view.missedReview && view.missedNew === view.missedReview
+                      ? `نسيت تسجيل حفظ ومراجعة ${view.missedNew}؟`
+                      : view.missedNew
+                        ? `نسيت تسجيل حفظ ${view.missedNew}؟`
+                        : `نسيت تسجيل مراجعة ${view.missedReview}؟`}{" "}
+                    إن كنت أتممته فسجّله، ويُحسب لك الورد الذي يليه دون أن يأخذ مكان ورد اليوم.
+                  </Text>
+                </View>
+                <View className="flex-row flex-wrap gap-2">
+                  {view.missedNew && (
+                    <Button variant="outline" size="sm" icon={Check} onPress={() => run(planActions.completeMissedNew)} disabled={busy}>
+                      {`حفظت ورد ${view.missedNew}`}
+                    </Button>
+                  )}
+                  {view.missedReview && (
+                    <Button variant="outline" size="sm" icon={Check} onPress={() => run(planActions.completeMissedReview)} disabled={busy}>
+                      {`راجعت ${view.missedReview}`}
+                    </Button>
+                  )}
+                </View>
               </View>
             )}
 
