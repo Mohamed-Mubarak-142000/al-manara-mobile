@@ -1,5 +1,5 @@
 import { router, useSegments } from "expo-router";
-import { Pause, Play, RotateCcw, SkipBack, X } from "lucide-react-native";
+import { Pause, Play, RotateCcw, SkipBack, Volume2, VolumeX, X } from "lucide-react-native";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,6 +35,7 @@ function MiniPlayerBar({ state }: { state: PlayerState }) {
   const track = currentTrack(state);
   const fg = useThemeColor("fg");
   const primary = useThemeColor("primary");
+  const danger = useThemeColor("danger");
   if (!track) return null;
 
   const progress = state.duration > 0 ? Math.min(1, state.currentTime / state.duration) : 0;
@@ -63,6 +64,17 @@ function MiniPlayerBar({ state }: { state: PlayerState }) {
             )}
           </View>
           <TrackDownloadButton track={track} />
+          {/* The recitation's own sound, on or off, whatever the phone's volume. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={state.muted ? "تشغيل صوت التلاوة" : "كتم صوت التلاوة"}
+            accessibilityState={{ selected: state.muted }}
+            hitSlop={8}
+            onPress={audio.toggleMute}
+            className="p-1.5"
+          >
+            {state.muted ? <VolumeX size={20} color={danger} /> : <Volume2 size={20} color={fg} />}
+          </Pressable>
           {!track.live && (
             <Pressable accessibilityRole="button" accessibilityLabel="السابق" hitSlop={8} onPress={audio.previous} className="p-1.5">
               <SkipBack size={20} color={fg} />

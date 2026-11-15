@@ -1,4 +1,4 @@
-import { Play, Repeat, Trash2 } from "lucide-react-native";
+import { Play, Repeat, Shuffle, Trash2 } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SECTION_ART } from "@/features/home/sectionArt";
 import { AYAH_VOICES } from "@/core/quran/ayahAudio";
 import { toArabicDigits } from "@/core/text/arabic";
+import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { useMiniPlayerInset } from "@/features/audio/MiniPlayer";
@@ -125,17 +126,30 @@ export default function DownloadsScreen() {
         keyExtractor={(meta) => meta.id}
         contentContainerStyle={{ paddingBottom: insets.bottom + miniPlayer + (undoable.pending ? 96 : 32) }}
         ListHeaderComponent={
-          <PageHeader
-            back
-            kicker="دون إنترنت"
-            art={SECTION_ART.downloads}
-            title="المحفوظات"
-            description={
-              empty
-                ? "تلاوات للاستماع دون إنترنت"
-                : `${saved.length ? `${toArabicDigits(saved.length)} تلاوة · ` : ""}${packs.length ? `${toArabicDigits(packs.length)} حزمة آيات · ` : ""}${megabytes(total + packBytes)} على الجهاز`
-            }
-          />
+          <>
+            <PageHeader
+              back
+              kicker="دون إنترنت"
+              art={SECTION_ART.downloads}
+              title="المحفوظات"
+              description={
+                empty
+                  ? "تلاوات للاستماع دون إنترنت"
+                  : `${saved.length ? `${toArabicDigits(saved.length)} تلاوة · ` : ""}${packs.length ? `${toArabicDigits(packs.length)} حزمة آيات · ` : ""}${megabytes(total + packBytes)} على الجهاز`
+              }
+            />
+            {/* Every saved recitation, in order or mixed (the player keeps shuffling until it is turned off there). */}
+            {saved.length > 1 && (
+              <View className="mx-4 mb-4 flex-row gap-3">
+                <Button className="flex-1" icon={Play} onPress={() => audio.playInOrder(queue)}>
+                  تشغيل الكل
+                </Button>
+                <Button className="flex-1" variant="secondary" icon={Shuffle} onPress={() => audio.playShuffled(queue)}>
+                  عشوائي
+                </Button>
+              </View>
+            )}
+          </>
         }
         ListEmptyComponent={empty ? <StateMessage message="لم تحفظ أي تلاوة بعد. اضغط زر التنزيل بجوار أي سورة." /> : null}
         ListFooterComponent={

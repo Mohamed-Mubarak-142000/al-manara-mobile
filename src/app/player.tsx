@@ -11,8 +11,12 @@ import {
   Repeat1,
   RotateCcw,
   RotateCw,
+  Shuffle,
   SkipBack,
   SkipForward,
+  Volume1,
+  Volume2,
+  VolumeX,
   type LucideIcon,
 } from "lucide-react-native";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
@@ -84,6 +88,8 @@ export default function PlayerScreen() {
   const now = useNow(1000);
   const track = currentTrack(state);
   const onPrimary = useThemeColor("on-primary");
+  const fg = useThemeColor("fg");
+  const danger = useThemeColor("danger");
 
   if (!track) {
     return (
@@ -208,6 +214,32 @@ export default function PlayerScreen() {
           <Control icon={RotateCcw} label="رجوع ١٥ ثانية" size={24} disabled={track.live} onPress={() => audio.skip(-15)} />
         </View>
 
+        {/* The recitation's own volume and mute, apart from the phone's. */}
+        <View className="mt-5 flex-row items-center gap-3">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={state.muted ? "تشغيل صوت التلاوة" : "كتم صوت التلاوة"}
+            accessibilityState={{ selected: state.muted }}
+            hitSlop={8}
+            onPress={audio.toggleMute}
+            className={`size-10 items-center justify-center rounded-full border ${state.muted ? "border-danger bg-danger/10" : "border-border bg-surface"}`}
+          >
+            {state.muted ? (
+              <VolumeX size={20} color={danger} />
+            ) : state.volume < 0.5 ? (
+              <Volume1 size={20} color={fg} />
+            ) : (
+              <Volume2 size={20} color={fg} />
+            )}
+          </Pressable>
+          <View className="flex-1" accessible accessibilityLabel={`مستوى صوت التلاوة ${toArabicDigits(Math.round(state.volume * 100))}٪`}>
+            <ProgressBar value={state.muted ? 0 : state.volume} onSeek={(fraction) => audio.setVolume(fraction)} />
+          </View>
+          <Text className="w-10 text-center font-sans-bold text-xs text-fg-muted">
+            {state.muted ? "مكتوم" : `${toArabicDigits(Math.round(state.volume * 100))}٪`}
+          </Text>
+        </View>
+
         {!track.live && (
           <View className="mt-5 flex-row flex-wrap justify-center gap-2">
             <Chip
@@ -216,6 +248,9 @@ export default function PlayerScreen() {
               icon={Gauge}
               onPress={() => audio.setRate(nextRate(state.rate))}
             />
+            {state.queue.length > 1 && (
+              <Chip label={state.shuffle ? "عشوائي" : "بالترتيب"} active={state.shuffle} icon={Shuffle} onPress={audio.toggleShuffle} />
+            )}
             <Chip
               label={state.repeat === "one" ? "تكرار المقطع" : state.repeat === "all" ? "تكرار الكل" : "بلا تكرار"}
               active={state.repeat !== "off"}

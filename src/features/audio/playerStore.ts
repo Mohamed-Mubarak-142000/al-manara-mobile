@@ -46,6 +46,12 @@ export interface PlayerState {
   error: boolean;
   /** Index into [url, ...fallbackUrls] of the stream playing now; > 0 means a backup. */
   streamIndex: number;
+  /** The queue plays in a random order (the order it was given is kept to come back to). */
+  shuffle: boolean;
+  /** The recitation's own volume, 0–1, apart from the phone's. */
+  volume: number;
+  /** The recitation is silenced (the volume is kept for when it is turned back on). */
+  muted: boolean;
 }
 
 const INITIAL: PlayerState = {
@@ -61,6 +67,9 @@ const INITIAL: PlayerState = {
   sleepMinutes: null,
   error: false,
   streamIndex: 0,
+  shuffle: false,
+  volume: 1,
+  muted: false,
 };
 
 /** The website's radioFailover STALL_MS: a stream silent this long is given up on. */
@@ -71,10 +80,15 @@ const RETRY_MS = 20_000;
 const SAVE_EVERY_MS = 5_000;
 const KEY = "al-manara:player:v1";
 
-/** What survives a restart: the speed and repeat choices, and where the user stopped. */
+/** What survives a restart: the speed, repeat, shuffle and volume choices, and where the user stopped. */
 export interface SavedPlayer {
   rate: number;
   repeat: RepeatMode;
+  shuffle?: boolean;
+  volume?: number;
+  muted?: boolean;
+  /** The queue in the order it was given, while shuffled. */
+  original?: Track[];
   queue: Track[];
   index: number;
   position: number;
@@ -98,6 +112,9 @@ export function parseSaved(raw: string | null): Partial<PlayerState> {
     const patch: Partial<PlayerState> = {};
     if (typeof saved.rate === "number" && (PLAYBACK_RATES as readonly number[]).includes(saved.rate)) patch.rate = saved.rate;
     if (saved.repeat === "off" || saved.repeat === "one" || saved.repeat === "all") patch.repeat = saved.repeat;
+    if (typeof saved.shuffle === "boolean") patch.shuffle = saved.shuffle;
+    if (typeof saved.volume === "number" && saved.volume >= 0 && saved.volume <= 1) patch.volume = saved.volume;
+    if (typeof saved.muted === "boolean") patch.muted = saved.muted;
     const queue = Array.isArray(saved.queue) ? saved.queue.filter((t) => t && typeof t.id === "string" && typeof t.url === "string") : [];
     const index = typeof saved.index === "number" ? saved.index : 0;
     if (queue[index]) {
@@ -120,6 +137,32 @@ function readSaved(): Partial<PlayerState> {
   }
 }
 
+function readOriginal(): Track[] | null {
+  try {
+    const saved = JSON.parse(Storage.getItemSync(KEY) ?? "{}") as Partial<SavedPlayer>;
+    return saved.shuffle && Array.isArray(saved.original) ? saved.original.filter((t) => t && typeof t.id === "string") : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A copy in random order (Fisher–Yates). */
+export function shuffled<T>(list: readonly T[]): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
+/** The queue in a random order that starts with the track at `first` (the one playing or picked). */
+export function shuffleFrom(queue: readonly Track[], first: number): Track[] {
+  const start = queue[first];
+  if (!start) return shuffled(queue);
+  return [start, ...shuffled(queue.filter((_, index) => index !== first))];
+}
+
 let stallTimer: ReturnType<typeof setTimeout> | null = null;
 /** What the armed watchdog will do; also run at once when the stream reports an error. */
 let onStall: (() => void) | null = null;
@@ -134,6 +177,8 @@ let pendingSeek: number | null = null;
 let lastSaved = 0;
 
 let state: PlayerState = { ...INITIAL, ...readSaved() };
+/** While shuffled: the queue in the order it was given, to go back to when shuffle is turned off. */
+let original: Track[] | null = readOriginal();
 const listeners = new Set<() => void>();
 let player: AudioPlayer | null = null;
 let sleepTimer: ReturnType<typeof setTimeout> | null = null;
@@ -149,6 +194,10 @@ function save() {
   const saved: SavedPlayer = {
     rate: state.rate,
     repeat: state.repeat,
+    shuffle: state.shuffle,
+    volume: state.volume,
+    muted: state.muted,
+    ...(state.shuffle && original && track ? { original } : {}),
     queue: track ? state.queue : [],
     index: state.index,
     position: track?.live ? 0 : state.currentTime,
@@ -175,7 +224,15 @@ function getPlayer(): AudioPlayer {
   setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: "doNotMix" }).catch(() => {});
   player = createAudioPlayer(null, { updateInterval: 500 });
   player.addListener("playbackStatusUpdate", onStatus);
+  applyVolume();
   return player;
+}
+
+/** The recitation's own loudness: the volume, or silence while muted. The phone's volume is left alone. */
+function applyVolume() {
+  if (!player) return;
+  player.volume = state.muted ? 0 : state.volume;
+  player.muted = state.muted;
 }
 
 function clearStall() {
@@ -281,6 +338,7 @@ async function load(index: number, autoplay = true, streamIndex = 0, startAt = 0
     }
     audio.replace({ uri });
     sourceLoaded = true;
+    applyVolume();
     audio.setPlaybackRate(track.live ? 1 : state.rate);
     audio.setActiveForLockScreen(
       true,
@@ -314,10 +372,60 @@ function advance(finished: boolean) {
 }
 
 export const audio = {
-  /** Replaces the queue and starts playing `startIndex`. */
+  /**
+   * Replaces the queue and starts playing `startIndex`. With shuffle on, the picked track plays first and
+   * the rest follow in a random order.
+   */
   playQueue(queue: Track[], startIndex = 0) {
+    if (state.shuffle && queue.length > 1) {
+      original = queue;
+      set({ queue: shuffleFrom(queue, startIndex) });
+      void load(0);
+      return;
+    }
+    original = null;
     set({ queue });
     void load(startIndex);
+  },
+  /** Plays the whole list from its start, in order: «تشغيل الكل» turns shuffle off. */
+  playInOrder(queue: Track[]) {
+    if (state.shuffle) set({ shuffle: false });
+    audio.playQueue(queue, 0);
+  },
+  /** Plays the whole list in a random order (from a random track) and turns shuffle on. */
+  playShuffled(queue: Track[]) {
+    if (!queue.length) return;
+    original = queue;
+    set({ shuffle: true, queue: shuffled(queue) });
+    void load(0);
+  },
+  /**
+   * Turns shuffle on (the rest of the queue is mixed after the track playing now) or off (back to the
+   * order it was given, at the same track). The track playing is never interrupted.
+   */
+  toggleShuffle() {
+    const playing = currentTrack(state);
+    if (!state.shuffle) {
+      original = state.queue;
+      set({ shuffle: true, ...(playing && state.queue.length > 1 ? { queue: shuffleFrom(state.queue, state.index), index: 0 } : {}) });
+    } else {
+      const back = original && playing ? original.findIndex((track) => track.id === playing.id) : -1;
+      set({ shuffle: false, ...(original && back >= 0 ? { queue: original, index: back } : {}) });
+      original = null;
+    }
+    save();
+  },
+  /** The recitation's volume (0–1), apart from the phone's; raising it from zero also unmutes. */
+  setVolume(volume: number) {
+    const value = Math.min(1, Math.max(0, volume));
+    set({ volume: value, muted: value === 0 ? state.muted : false });
+    applyVolume();
+    save();
+  },
+  toggleMute() {
+    set({ muted: !state.muted, ...(state.muted && state.volume === 0 ? { volume: 1 } : {}) });
+    applyVolume();
+    save();
   },
   playTrack(track: Track) {
     audio.playQueue([track], 0);
@@ -397,7 +505,8 @@ export const audio = {
     player?.pause();
     player?.clearLockScreenControls();
     audio.setSleepTimer(null);
-    set({ ...INITIAL, rate: state.rate, repeat: state.repeat });
+    original = null;
+    set({ ...INITIAL, rate: state.rate, repeat: state.repeat, shuffle: state.shuffle, volume: state.volume, muted: state.muted });
     save();
   },
 };

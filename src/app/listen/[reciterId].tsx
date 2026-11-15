@@ -124,20 +124,10 @@ export default function ReciterScreen() {
                 </View>
               </View>
               <View className="mt-5 flex-row gap-3">
-                <Button className="flex-1" icon={Play} onPress={() => audio.playQueue(tracks, 0)}>
+                <Button className="flex-1" icon={Play} onPress={() => audio.playInOrder(tracks)}>
                   تشغيل الكل
                 </Button>
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  icon={Shuffle}
-                  onPress={() =>
-                    audio.playQueue(
-                      [...tracks].sort(() => Math.random() - 0.5),
-                      0,
-                    )
-                  }
-                >
+                <Button className="flex-1" variant="secondary" icon={Shuffle} onPress={() => audio.playShuffled(tracks)}>
                   عشوائي
                 </Button>
               </View>

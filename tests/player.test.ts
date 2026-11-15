@@ -125,3 +125,53 @@ describe("surah filter", () => {
     expect(filterSurahs(rows, " ")).toHaveLength(3);
   });
 });
+
+describe("shuffle and volume", () => {
+  const tracks = Array.from({ length: 6 }, (_, index) => ({
+    id: `t${index}`,
+    title: `T${index}`,
+    artist: "A",
+    url: `https://x/${index}.mp3`,
+  }));
+
+  it("shuffleFrom keeps the picked track first and every track once", () => {
+    const mixed = player.shuffleFrom(tracks, 3);
+    expect(mixed[0]!.id).toBe("t3");
+    expect(mixed.map((track) => track.id).sort()).toEqual(tracks.map((track) => track.id).sort());
+  });
+
+  it("toggleShuffle mixes the rest after the current track and restores the order", () => {
+    player.audio.playInOrder(tracks);
+    player.audio.next();
+    player.audio.next();
+    expect(player.getPlayerState().index).toBe(2);
+    player.audio.toggleShuffle();
+    const shuffledState = player.getPlayerState();
+    expect(shuffledState.shuffle).toBe(true);
+    expect(shuffledState.queue[shuffledState.index]!.id).toBe("t2");
+    expect(shuffledState.queue).toHaveLength(6);
+    player.audio.toggleShuffle();
+    const back = player.getPlayerState();
+    expect(back.shuffle).toBe(false);
+    expect(back.queue.map((track) => track.id)).toEqual(tracks.map((track) => track.id));
+    expect(back.index).toBe(2);
+  });
+
+  it("playInOrder turns shuffle off; playShuffled turns it on", () => {
+    player.audio.playShuffled(tracks);
+    expect(player.getPlayerState().shuffle).toBe(true);
+    player.audio.playInOrder(tracks);
+    expect(player.getPlayerState().shuffle).toBe(false);
+    expect(player.getPlayerState().queue[0]!.id).toBe("t0");
+  });
+
+  it("mute and volume are saved and read back", () => {
+    player.audio.setVolume(0.4);
+    player.audio.toggleMute();
+    const saved = player.parseSaved(mockStore["al-manara:player:v1"] ?? null);
+    expect(saved.volume).toBeCloseTo(0.4);
+    expect(saved.muted).toBe(true);
+    player.audio.toggleMute();
+    expect(player.getPlayerState().muted).toBe(false);
+  });
+});
